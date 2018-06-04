@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:jdbc="http://www.springframework.org/schema/jdbc" xmlns:jee="http://www.springframework.org/schema/jee"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:p="http://www.springframework.org/schema/p" xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+       xsi:schemaLocation="
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
+		http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-4.0.xsd
+		http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-4.0.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+		http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+       http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd"
+       default-lazy-init="true"
+>
+    <!--//任务监控-->
+    <bean id="dataSyncController" class="com.ideadata.web.controller.datahandler.DataSyncController" scope="prototype"/>
+    <bean id="dataPullController" class="com.ideadata.web.controller.datahandler.DataPullController" scope="prototype"/>
+    <!-- 微信定时任务  -->
+	<bean id="sendAllJob" class="com.ideadata.core.wechat.job.SendAllJob"></bean>  
+
+    <!-- 数据同步 -->
+    <bean id="dataPullControllerCronTriggerJobMethod"
+          class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject">
+            <ref bean="dataPullController"/>
+        </property>
+        <property name="targetMethod">
+            <value>handler</value>
+        </property>
+    </bean>
+    <bean id="dataPullControllerCronTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail" ref="dataPullControllerCronTriggerJobMethod"></property>
+        <property name="cronExpression" value="0 0 */1 * * ?"></property>
+    </bean>
+
+    <!-- 数据同步 -->
+    <bean id="dataSyncControllerCronTriggerJobMethod"
+          class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject">
+            <ref bean="dataSyncController"/>
+        </property>
+        <property name="targetMethod">
+            <value>handler</value>
+        </property>
+    </bean>
+    <bean id="dataSyncControllerCronTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail" ref="dataSyncControllerCronTriggerJobMethod"></property>
+        <property name="cronExpression" value="0 0 */1 * * ?"></property>
+    </bean>
+    
+	<bean id="sendAllJobDetail"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<!-- 指定任务类 -->
+		<property name="targetObject" ref="sendAllJob" />
+		<!-- 指定任务执行的方法 -->
+		<property name="targetMethod" value="execute" />
+	</bean>  
+	<bean id="sendAllJobTrigger"  
+	    class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">  
+	    <property name="jobDetail" ref="sendAllJobDetail" />  
+	    <!-- 10S运行一次 -->  
+<!-- 	    <property name="cronExpression" value="10 * * * * ?" /> -->
+	    <!-- 每周一8点运行一次 -->  
+	    <property name="cronExpression" value="0 0 8 * * ?" />
+	    <!-- 每周一10点运行一次 -->   
+<!-- 	    <property name="cronExpression" value="0 0 10 ? * 2" />    -->
+	</bean>
+
+    <!-- 调度器 -->
+    <bean id="schedulerFactoryBean" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+        <property name="triggers">
+            <list>
+                <ref bean="dataPullControllerCronTrigger"/>
+                <ref bean="dataSyncControllerCronTrigger"/>
+                <ref bean="sendAllJobTrigger" />  
+            </list>
+        </property>
+
+        <property name="autoStartup" value="true"/>
+    </bean>
+</beans>

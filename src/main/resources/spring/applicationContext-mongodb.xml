@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+        http://www.springframework.org/schema/data/mongo
+        http://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd"
+	default-autowire="byName"
+>
+
+	<!-- 主库的配置信息 -->
+	<bean id="userCredentials" class="org.springframework.data.authentication.UserCredentials">
+		<constructor-arg name="username" value="${mongodb.username}" />
+		<constructor-arg name="password" value="${mongodb.password}" />
+	</bean>
+	<mongo:mongo id="mongo" replica-set="${mongodb.replica.host}">
+		<mongo:options connect-timeout="3000" />
+	</mongo:mongo>
+	<mongo:db-factory dbname="${mongodb.dbname}" mongo-ref="mongo" />
+
+	<bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
+		<constructor-arg ref="mongo" />
+		<constructor-arg name="databaseName" value="${mongodb.dbname}"></constructor-arg>
+		<constructor-arg ref="userCredentials"/>
+	</bean>
+
+	<!-- 临时库的配置信息 -->
+	   <bean id="userCredentialsTemp" class="org.springframework.data.authentication.UserCredentials">
+        <constructor-arg name="username" value="${temp.mongodb.username}" />
+        <constructor-arg name="password" value="${temp.mongodb.password}" />
+    </bean>
+	<mongo:mongo id="tempMongo" replica-set="${temp.mongodb.replica.host}">
+		<mongo:options connect-timeout="3000" />
+	</mongo:mongo>
+	<mongo:db-factory dbname="${temp.mongodb.dbname}" mongo-ref="tempMongo" />
+
+	<bean id="tempMongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
+		<constructor-arg ref="tempMongo" />
+		<constructor-arg name="databaseName" value="${temp.mongodb.dbname}"></constructor-arg>
+		<constructor-arg ref="userCredentialsTemp"/>
+	</bean>
+
+</beans>
