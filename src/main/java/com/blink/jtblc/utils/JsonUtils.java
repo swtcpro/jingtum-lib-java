@@ -68,31 +68,32 @@ public class JsonUtils {
 	 * @param cla
 	 * @return
 	 */
-	public static <T> T toObj(String jsonStr, Class<T> cla) {
+	public static <T> T toEntity(String jsonStr, Class<T> cla) {
 		om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		if (jsonStr == null) {
 			return null;
 		}
 		try {
+			System.out.println("转换前： " + jsonStr);
 			Map res = om.readValue(jsonStr, Map.class);
 			String status = (String) res.get("status");
-			if(status.equals("success")) {
+			if (status.equals("success")) {
 				Map<String, Object> result = (Map) res.get("result");
-				//创建JavaBean对象  
-		        T obj = cla.newInstance();
-		        //获取指定类的BeanInfo对象  
-		        BeanInfo beanInfo = Introspector.getBeanInfo(cla, Object.class);
-		        //获取所有的属性描述器  
-		        PropertyDescriptor[] pds = beanInfo.getPropertyDescriptors();
-		        transfer(result,obj,pds);
-		        return obj;  
-			}else if(status.equals("error")) {
+				// 创建JavaBean对象
+				T obj = cla.newInstance();
+				// 获取指定类的BeanInfo对象
+				BeanInfo beanInfo = Introspector.getBeanInfo(cla, Object.class);
+				// 获取所有的属性描述器
+				PropertyDescriptor[] pds = beanInfo.getPropertyDescriptors();
+				transfer(result, obj, pds);
+				return obj;
+			} else if (status.equals("error")) {
 				String error = (String) res.get("error");
 				String error_code = String.valueOf(res.get("error_code"));
 				String error_message = (String) res.get("error_message");
 				String msg = error_code + ":" + error + ". " + error_message;
 				throw new RuntimeException(msg);
-			}else {
+			} else {
 				throw new RuntimeException("unknown error");
 			}
 		} catch (Exception e) {
@@ -101,51 +102,69 @@ public class JsonUtils {
 		return null;
 	}
 	
-	private static <T> void transfer(Map<String, Object> result, T obj, PropertyDescriptor[] pds) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+	private static <T> void transfer(Map<String, Object> result, T obj, PropertyDescriptor[] pds)
+	        throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		for (Map.Entry<String, Object> entry : result.entrySet()) {
 			String key = entry.getKey();
-			Object value = entry.getValue();
-			if(value instanceof Map) {
-				transfer((Map<String, Object>)value,obj,pds);
-			}else if(value instanceof List){
-				
-			}else{
-				String _key = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, key);
-		        for(PropertyDescriptor pd:pds){
-		        	if(_key.equals("ledgerIndex")) {
-		        		System.out.println("-----");
-		        	}
-		        	System.out.println(_key + "--" + pd.getName());
-		        	if(_key.equals(pd.getName())) {
-		        		Method setter = pd.getWriteMethod();
-		        		if(value instanceof Integer && _key.equals("ledgerIndex")) {
-		        			setter.invoke(obj, String.valueOf(value));
-		        		}else {
-		        			 setter.invoke(obj, value);
-		        		}
-			            break;
-		        	}
-		        }
+			Object val = entry.getValue();
+			if (val != null && val.toString().trim().length() > 0) {
+				if (val instanceof Map) {
+					transfer((Map<String, Object>) val, obj, pds);
+				} else if (val instanceof List) {
+				} else {
+					transfer(pds, obj, key, val);
+				}
 			}
 		}
 	}
-
+	
+	private static <T> void transfer(PropertyDescriptor[] pds, T obj, String key, Object val)
+	        throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		String mapKey = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, key);
+		for (PropertyDescriptor pd : pds) {
+			if (mapKey.equals("ledgerIndex")) {
+				System.out.println("-----");
+			}
+			System.out.println(mapKey + "  --  " + pd.getName() + "  --  " + pd.getPropertyType() + "  --  " + val);
+			if (mapKey.equals(pd.getName())) {
+				Method setter = pd.getWriteMethod();
+				if (pd.getPropertyType().equals(Integer.class)) {
+					setter.invoke(obj, Integer.parseInt(val.toString()));
+				} else if (pd.getPropertyType().equals(Long.class)) {
+					setter.invoke(obj, Long.parseLong(val.toString()));
+				} else if (pd.getPropertyType().equals(Short.class)) {
+					setter.invoke(obj, Short.parseShort(val.toString()));
+				} else if (pd.getPropertyType().equals(Short.class)) {
+					setter.invoke(obj, Short.parseShort(val.toString()));
+				} else if (pd.getPropertyType().equals(Float.class)) {
+					setter.invoke(obj, Float.parseFloat(val.toString()));
+				} else if (pd.getPropertyType().equals(Double.class)) {
+					setter.invoke(obj, Double.parseDouble(val.toString()));
+				} else {
+					setter.invoke(obj, val);
+				}
+				break;
+			}
+		}
+	}
+	
 	// 递归value如果是map一直遍历，并将值映射到javabean中
-	private static <T> void test(PropertyDescriptor pd, Object res, T obj) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-		if(res instanceof Map) {
-			Object res_temp = ((Map)res).get(pd.getName());
-			if(res_temp != null) {
-				Method setter = pd.getWriteMethod();  
-	            setter.invoke(obj, res);
-			}else {
-				test(pd,res_temp,obj);
+	private static <T> void test(PropertyDescriptor pd, Object res, T obj)
+	        throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		if (res instanceof Map) {
+			Object res_temp = ((Map) res).get(pd.getName());
+			if (res_temp != null) {
+				Method setter = pd.getWriteMethod();
+				setter.invoke(obj, res);
+			} else {
+				test(pd, res_temp, obj);
 			}
-		}else {
-         	Method setter = pd.getWriteMethod();  
-            setter.invoke(obj, res);
+		} else {
+			Method setter = pd.getWriteMethod();
+			setter.invoke(obj, res);
 		}
 	}
-
+	
 	public static void main(String[] args) {
 		// java数组转换成json串
 		String simpleArray[] = { "英国", "法国", "德国" };

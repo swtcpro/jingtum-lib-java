@@ -6,16 +6,16 @@ package com.blink.jtblc.client.bean;
  */
 public class LedgerInfo {
 	private Integer feeBase;// 基础费用(手续费计算公式因子)
-	private Integer feeRef;//
-	private String hostid;//
-	private String ledgerHash;//
-	private Integer ledgerIndex;//
-	private Integer ledgerTime;//
-	private String pubkeyNode;//
-	private Integer reserveBase;//
-	private Integer reserveInc;//
-	private String serverStatus;//
-	private String validatedLedgers;//
+	private Integer feeRef;// 引用费用(手续费计算公式因子)
+	private String hostid;// 主机名
+	private String ledgerHash;// 账本hash
+	private Integer ledgerIndex;// 区块高度
+	private Integer ledgerTime;// 账本关闭时间
+	private String pubkeyNode;// 节点公钥
+	private Integer reserveBase;// 账号保留值
+	private Integer reserveInc;// 用户每次挂单或信任冻结数量
+	private String serverStatus;// 服务器状态
+	private String validatedLedgers;// 账本区间
 	
 	public Integer getFeeBase() {
 		return feeBase;

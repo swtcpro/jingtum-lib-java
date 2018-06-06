@@ -6,9 +6,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.blink.jtblc.client.bean.*;
 import org.apache.commons.lang3.StringUtils;
 
+import com.blink.jtblc.client.bean.Account;
+import com.blink.jtblc.client.bean.AccountInfo;
+import com.blink.jtblc.client.bean.AccountOffers;
+import com.blink.jtblc.client.bean.AccountRelations;
+import com.blink.jtblc.client.bean.AccountTums;
+import com.blink.jtblc.client.bean.Amount;
+import com.blink.jtblc.client.bean.Ledger;
+import com.blink.jtblc.client.bean.LedgerClosed;
+import com.blink.jtblc.client.bean.LedgerInfo;
+import com.blink.jtblc.client.bean.ServerInfo;
 import com.blink.jtblc.connection.Connection;
 import com.blink.jtblc.exceptions.RemoteException;
 import com.blink.jtblc.utils.CheckUtils;
@@ -17,16 +26,16 @@ import com.blink.jtblc.utils.JsonUtils;
 public class Remote {
 	private String server = "";
 	// 签名默认为false,false需要传入密钥
-	private Boolean local_sign = false;
+	private Boolean localSign = false;
 	private Connection conn = null;
 	
 	public Remote(Connection conn) {
 		this.conn = conn;
 	}
 	
-	public Remote(Connection conn, Boolean local_sign) {
+	public Remote(Connection conn, Boolean localSign) {
 		this.conn = conn;
-		this.local_sign = local_sign;
+		this.localSign = localSign;
 	}
 	
 	/**
@@ -44,41 +53,43 @@ public class Remote {
 	}
 	
 	/**
-	 * 当
+	 * 4.2 创建连接 获取服务信息及帐本信息
 	 *
 	 * @return
 	 */
-	public String requestLedgerInfo() {
+	public LedgerInfo requestLedgerInfo() {
 		Map<String, Object> params = new HashMap();
 		params.put("streams", new String[] { "ledger", "server" });
-		String msg = sendMessage("subscribe", params);
-		return msg;
+		String res = sendMessage("subscribe", params);
+		return JsonUtils.toEntity(res, LedgerInfo.class);
 	}
-
-	//4.2  创建连接
-	public String subscribe()throws Exception{
+	
+	//
+	public LedgerInfo subscribe() throws Exception {
 		Map params = new HashMap();
 		Map message = new HashMap();
 		List<String> strs = new ArrayList<String>();
 		strs.add("ledger");
 		strs.add("server");
-		message.put("streams",strs);
-		params.put("message",message);
-		String msg = this.sendMessage("server",params);
-		return msg;
+		message.put("streams", strs);
+		params.put("message", message);
+		String res = this.sendMessage("server", params);
+		return JsonUtils.toObject(res, LedgerInfo.class);
 	}
+	
 	/**
 	 * 4.4 请求底层服务器信息
+	 * 
 	 * @return
 	 */
-	public ServerInfo requestServerInfo() throws Exception{
-		ServerInfo ser =new ServerInfo();
+	public ServerInfo requestServerInfo() throws Exception {
+		ServerInfo ser = new ServerInfo();
 		Map params = new HashMap();
-		String msg = this.sendMessage("server_info",params);
-		Map map = JsonUtils.toObject(msg,Map.class);
-		if(map.get("status").equals("success")){
-			Map result = (Map)map.get("result");
-			Map info = (Map)result.get("info");
+		String msg = this.sendMessage("server_info", params);
+		Map map = JsonUtils.toObject(msg, Map.class);
+		if (map.get("status").equals("success")) {
+			Map result = (Map) map.get("result");
+			Map info = (Map) result.get("info");
 			ser.setVersion(info.get("build_version").toString());
 			ser.setLedgers(info.get("complete_ledgers").toString());
 			ser.setNode(info.get("pubkey_node").toString());
@@ -86,58 +97,60 @@ public class Remote {
 		}
 		return ser;
 	}
-
+	
 	/**
 	 * 4.5 获取最新账本信息
+	 * 
 	 * @return
 	 * @throws Exception
 	 */
-	public LedgerClosed requestLedgerClosed() throws Exception{
+	public LedgerClosed requestLedgerClosed() throws Exception {
 		Map params = new HashMap();
-		String msg = this.sendMessage("ledger_closed",params);
-		Map map = JsonUtils.toObject(msg,Map.class);
+		String msg = this.sendMessage("ledger_closed", params);
+		Map map = JsonUtils.toObject(msg, Map.class);
 		LedgerClosed ledger = new LedgerClosed();
-		if(map.get("status").equals("success")){
-			Map result = (Map)map.get("result");
+		if (map.get("status").equals("success")) {
+			Map result = (Map) map.get("result");
 			ledger.setLedgerHash(result.get("ledger_hash").toString());
 			ledger.setLedgerIndex(result.get("ledger_index").toString());
 		}
 		return ledger;
 	}
-
+	
 	/**
 	 * 4.6 获取某一账本具体信息
 	 * 注：整体参数是Object类型，当参数都不填时，默认返回最新账本信息
-	 * @param ledger_index    井通区块高度
-	 * @param ledger_hash     井通区块hash(与上面ledger_index二选其一)
-	 * @param transactions    是否返回账本上的交易记录hash，默认false
+	 * 
+	 * @param ledger_index 井通区块高度
+	 * @param ledger_hash 井通区块hash(与上面ledger_index二选其一)
+	 * @param transactions 是否返回账本上的交易记录hash，默认false
 	 * @return
 	 */
-	public Ledger requestLedger(String ledger_index, String ledger_hash, boolean transactions){
+	public Ledger requestLedger(String ledger_index, String ledger_hash, boolean transactions) {
 		Map params = new HashMap();
-		//校验,并将参数写入message对象
+		// 校验,并将参数写入message对象
 		Map message = new HashMap();
-		if(StringUtils.isEmpty(ledger_index) && StringUtils.isEmpty(ledger_hash)) {
+		if (StringUtils.isEmpty(ledger_index) && StringUtils.isEmpty(ledger_hash)) {
 			message.put("ledger", new RemoteException("ledger_index and ledger_hash is null"));
 		}
-		if(!CheckUtils.isNumeric(ledger_index)) {
+		if (!CheckUtils.isNumeric(ledger_index)) {
 			message.put("ledger_index", new RemoteException("invalid ledger_index"));
 		}
-		if(!CheckUtils.isValidHash(ledger_hash)) {
+		if (!CheckUtils.isValidHash(ledger_hash)) {
 			message.put("ledger_hash", new RemoteException("invalid ledger_hash"));
 		}
 		params.put("message", message);
-		params.put("ledger_index",ledger_index);
-		params.put("ledger_hash",ledger_hash);
-		params.put("transactions",transactions);
-//        params.put("command", "ledger");
-		String msg = this.sendMessage("ledger",params);
-		Map map = JsonUtils.toObject(msg,Map.class);
-		Ledger ledger =  new Ledger();
-		if(map.get("status").equals("success")){
-			Map result = (Map)map.get("result");
-			Map ledgerMap = (Map)result.get("ledger");
-			ledger.setAccepted((Boolean)ledgerMap.get("accepted"));
+		params.put("ledger_index", ledger_index);
+		params.put("ledger_hash", ledger_hash);
+		params.put("transactions", transactions);
+		// params.put("command", "ledger");
+		String msg = this.sendMessage("ledger", params);
+		Map map = JsonUtils.toObject(msg, Map.class);
+		Ledger ledger = new Ledger();
+		if (map.get("status").equals("success")) {
+			Map result = (Map) map.get("result");
+			Map ledgerMap = (Map) result.get("ledger");
+			ledger.setAccepted((Boolean) ledgerMap.get("accepted"));
 			ledger.setLedgerHash(ledgerMap.get("account_hash").toString());
 			ledger.setLedgerIndex(ledgerMap.get("ledger_index").toString());
 			ledger.setParentHash(ledgerMap.get("parent_hash").toString());
@@ -146,7 +159,7 @@ public class Remote {
 		}
 		return ledger;
 	}
-
+	
 	/**
 	 * 4.7 查询某一交易具体信息
 	 *
@@ -155,19 +168,20 @@ public class Remote {
 	 */
 	public Account requestTx(String hash) {
 		Map params = new HashMap();
-		//校验,并将参数写入message对象
+		// 校验,并将参数写入message对象
 		Map message = new HashMap();
-		if(!CheckUtils.isValidHash(hash)) {
+		if (!CheckUtils.isValidHash(hash)) {
 			message.put("ledger_hash", new RemoteException("invalid tx hash"));
 		}
 		message.put("transaction", hash);
 		params.put("message", message);
 		params.put("transaction", hash);
-//        params.put("command", "tx");
-		String msg = this.sendMessage("tx",params);
-		Account account = JsonUtils.toObject(msg,Account.class);
+		// params.put("command", "tx");
+		String msg = this.sendMessage("tx", params);
+		Account account = JsonUtils.toObject(msg, Account.class);
 		return account;
 	}
+	
 	/**
 	 * 4.8 请求账号信息
 	 *
@@ -175,11 +189,11 @@ public class Remote {
 	 * @return
 	 */
 	public AccountInfo requestAccountInfo(String account) {
-		String msg =requestAccount("account_info", account, "");
-		AccountInfo accountInfo = JsonUtils.toObject(msg,AccountInfo.class);
+		String msg = requestAccount("account_info", account, "");
+		AccountInfo accountInfo = JsonUtils.toObject(msg, AccountInfo.class);
 		return accountInfo;
 	}
-
+	
 	/**
 	 * 4.9 获得账号可接收和发送的货币
 	 *
@@ -188,10 +202,10 @@ public class Remote {
 	 */
 	public AccountTums requestAccountTums(String account) {
 		String msg = requestAccount("account_currencies", account, "");
-		AccountTums accountTums = JsonUtils.toObject(msg,AccountTums.class);
+		AccountTums accountTums = JsonUtils.toObject(msg, AccountTums.class);
 		return accountTums;
 	}
-
+	
 	/**
 	 * 4.10 获得账号关系
 	 *
@@ -201,7 +215,7 @@ public class Remote {
 	 */
 	public AccountRelations requestAccountRelations(String account, String type) {
 		String command = "";
-		if(!CheckUtils.isValidType("relation",type)) {
+		if (!CheckUtils.isValidType("relation", type)) {
 			throw new RemoteException("invalid relation type");
 		}
 		switch (type) {
@@ -212,10 +226,10 @@ public class Remote {
 				command = "account_relation";
 		}
 		String msg = requestAccount(command, account, type);
-		AccountRelations accountRelations = JsonUtils.toObject(msg,AccountRelations.class);
+		AccountRelations accountRelations = JsonUtils.toObject(msg, AccountRelations.class);
 		return accountRelations;
 	}
-
+	
 	/**
 	 * 4.11 获得账号挂单
 	 *
@@ -224,10 +238,10 @@ public class Remote {
 	 */
 	public AccountOffers requestAccountOffers(String account) {
 		String msg = requestAccount("account_offers", account, "");
-		AccountOffers accountOffers = JsonUtils.toObject(msg,AccountOffers.class);
+		AccountOffers accountOffers = JsonUtils.toObject(msg, AccountOffers.class);
 		return accountOffers;
 	}
-
+	
 	/**
 	 * 获取账号信息
 	 * inner function
@@ -382,7 +396,7 @@ public class Remote {
 		tx.addMemo(memo);
 		Map params = new HashMap();
 		params.put("tx_json", tx_json);
-		String msg = tx.submit(this.conn, this.local_sign, params);
+		String msg = tx.submit(this.conn, this.localSign, params);
 		return msg;
 	}
 	
@@ -461,7 +475,7 @@ public class Remote {
 		}
 		Map params = new HashMap();
 		params.put("tx_json", tx_json);
-		String msg = tx.submit(this.conn, this.local_sign, params);
+		String msg = tx.submit(this.conn, this.localSign, params);
 		return msg;
 	}
 	
@@ -495,7 +509,7 @@ public class Remote {
 		tx_json.put("LimitAmount", toAmount(limit));
 		Map params = new HashMap();
 		params.put("tx_json", tx_json);
-		String msg = tx.submit(this.conn, this.local_sign, params);
+		String msg = tx.submit(this.conn, this.localSign, params);
 		return msg;
 	}
 	
@@ -549,7 +563,7 @@ public class Remote {
 		tx_json.put("Account", src);
 		tx_json.put("TransactionType", "AccountSet");
 		params.put("tx_json", tx_json);
-		String msg = tx.submit(this.conn, this.local_sign, params);
+		String msg = tx.submit(this.conn, this.localSign, params);
 		return msg;
 	}
 	
@@ -575,7 +589,7 @@ public class Remote {
 		tx_json.put("Account", src);
 		tx_json.put("RegularKey", delegate_key);
 		params.put("tx_json", tx_json);
-		String msg = tx.submit(this.conn, this.local_sign, params);
+		String msg = tx.submit(this.conn, this.localSign, params);
 		return msg;
 	}
 	
@@ -590,7 +604,7 @@ public class Remote {
 		// 校验,并将参数写入tx_json对象
 		Map tx_json = new HashMap();
 		params.put("tx_json", tx_json);
-		String msg = tx.submit(this.conn, this.local_sign, params);
+		String msg = tx.submit(this.conn, this.localSign, params);
 		return msg;
 	}
 	
@@ -639,7 +653,7 @@ public class Remote {
 		tx_json.put("TakerGets", toAmount(getsAmount));
 		Map params = new HashMap();
 		params.put("tx_json", tx_json);
-		String msg = tx.submit(this.conn, this.local_sign, params);
+		String msg = tx.submit(this.conn, this.localSign, params);
 		return msg;
 	}
 	
@@ -690,7 +704,7 @@ public class Remote {
 		tx_json.put("OfferSequence", sequence);
 		Map params = new HashMap();
 		params.put("tx_json", tx_json);
-		String msg = tx.submit(this.conn, this.local_sign, params);
+		String msg = tx.submit(this.conn, this.localSign, params);
 		return msg;
 	}
 	
@@ -716,10 +730,10 @@ public class Remote {
 	}
 	
 	public Boolean getLocal_sign() {
-		return local_sign;
+		return localSign;
 	}
 	
 	public void setLocal_sign(Boolean local_sign) {
-		this.local_sign = local_sign;
+		this.localSign = local_sign;
 	}
 }
