@@ -52,6 +52,7 @@ public class Remote {
 		return conn.submit(params);
 	}
 	
+	// 4.1 创建Remote对象
 	/**
 	 * 4.2 创建连接 获取服务信息及帐本信息
 	 *
@@ -64,25 +65,13 @@ public class Remote {
 		return JsonUtils.toEntity(res, LedgerInfo.class);
 	}
 	
-	//
-	public LedgerInfo subscribe() throws Exception {
-		Map params = new HashMap();
-		Map message = new HashMap();
-		List<String> strs = new ArrayList<String>();
-		strs.add("ledger");
-		strs.add("server");
-		message.put("streams", strs);
-		params.put("message", message);
-		String res = this.sendMessage("server", params);
-		return JsonUtils.toObject(res, LedgerInfo.class);
-	}
-	
+	// 4.3 关闭连接
 	/**
 	 * 4.4 请求底层服务器信息
 	 * 
 	 * @return
 	 */
-	public ServerInfo requestServerInfo() throws Exception {
+	public ServerInfo requestServerInfo() {
 		ServerInfo ser = new ServerInfo();
 		Map params = new HashMap();
 		String msg = this.sendMessage("server_info", params);
@@ -96,6 +85,19 @@ public class Remote {
 			ser.setState(info.get("server_state").toString());
 		}
 		return ser;
+	}
+	
+	//
+	public LedgerInfo subscribe() throws Exception {
+		Map params = new HashMap();
+		Map message = new HashMap();
+		List<String> strs = new ArrayList<String>();
+		strs.add("ledger");
+		strs.add("server");
+		message.put("streams", strs);
+		params.put("message", message);
+		String res = this.sendMessage("server", params);
+		return JsonUtils.toObject(res, LedgerInfo.class);
 	}
 	
 	/**

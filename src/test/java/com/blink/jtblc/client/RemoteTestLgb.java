@@ -3,6 +3,7 @@ package com.blink.jtblc.client;
 import org.junit.Test;
 
 import com.blink.jtblc.client.bean.LedgerInfo;
+import com.blink.jtblc.client.bean.ServerInfo;
 import com.blink.jtblc.connection.Connection;
 import com.blink.jtblc.connection.ConnectionFactory;
 import com.blink.jtblc.utils.JsonUtils;
@@ -23,20 +24,20 @@ public class RemoteTestLgb {
 		LedgerInfo res = remote.requestLedgerInfo();
 		System.out.println("requestLedgerInfo:" + JsonUtils.toJsonString(res));
 	}
-	//
-	// // 4.4 请求底层服务器信息
-	// @Test
-	// public void requestServerInfoTest() {
-	// String msg = remote.requestServerInfo();
-	// System.out.println("requestServerInfoTest:" + msg);
-	// }
-	//
-	// // 4.5 获取最新账本信息
-	// @Test
-	// public void requestLedgerClosedTest() {
-	// String msg = remote.requestLedgerClosed();
-	// System.out.println("requestLedgerClosedTest:" + msg);
-	// }
+	
+	// 4.4 请求底层服务器信息
+	@Test
+	public void requestServerInfoTest() {
+		ServerInfo res = remote.requestServerInfo();
+		System.out.println("requestServerInfoTest:" + JsonUtils.toJsonString(res));
+	}
+	
+	// 4.5 获取最新账本信息
+	@Test
+	public void requestLedgerClosedTest() {
+		String msg = remote.requestLedgerClosed();
+		System.out.println("requestLedgerClosedTest:" + msg);
+	}
 	//
 	// // 4.6 获取某一账本具体信息
 	// @Test
