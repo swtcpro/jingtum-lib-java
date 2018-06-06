@@ -1,4 +1,4 @@
-package com.blink.jtble.connection;
+package com.blink.jtblc.client;
 import com.blink.jtblc.client.RemoteImpl;
 import com.blink.jtblc.client.bean.*;
 import com.blink.jtblc.connection.Connection;
@@ -51,7 +51,7 @@ public class ConnectionTest {
     //4.7 查询某一交易具体信息 -未测试通过
     @Test
     public void requestTx() throws Exception{
-        Account str = remoteImpl.requestTx("6E7F4962B3B13E3D9C0D13120E17FE1B3DBF4EA677D1D19AAEC38C9B74EBF73B");
+        Account str = remoteImpl.requestTx("CC6F47B9AF3B4C0F463D22A97D62B116D509E2B2566B6A19975598E6FC95B058");
         ObjectMapper mapper = new ObjectMapper();
         System.out.println(mapper.writeValueAsString(str));
     }
@@ -61,7 +61,7 @@ public class ConnectionTest {
     //4.8 查询某一交易具体信息
     @Test
     public void requestAccountInfo() throws Exception{
-        AccountInfo str = remoteImpl.requestAccountInfo("j3rSRYho7u5uHm66E9oFDEQ2NLLMvfcCFg");
+        AccountInfo str = remoteImpl.requestAccountInfo("jK4kdiriyxErTfW8wMMjzP25oT2AKLWGfY");
         System.out.println(str);
         ObjectMapper mapper = new ObjectMapper();
         System.out.println(mapper.writeValueAsString(str));
