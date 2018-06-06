@@ -14,7 +14,6 @@ public class ConnectionTest {
 
     Connection connection = ConnectionFactory.getCollection("ws://ts5.jingtum.com:5020");
     RemoteImpl remoteImpl = new RemoteImpl(connection);
-
     //4.2  创建连接
     @Test
     public void subscribe() throws Exception{
