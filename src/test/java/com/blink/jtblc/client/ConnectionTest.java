@@ -11,7 +11,6 @@ import java.util.Map;
 
 public class ConnectionTest {
     //4.1 创建Connection对象
-
     Connection connection = ConnectionFactory.getCollection("ws://ts5.jingtum.com:5020");
     RemoteImpl remoteImpl = new RemoteImpl(connection);
     //4.2  创建连接
