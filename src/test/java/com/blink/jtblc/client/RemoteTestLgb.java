@@ -29,15 +29,14 @@ public class RemoteTestLgb {
 	@Test
 	public void requestServerInfoTest() {
 		ServerInfo res = remote.requestServerInfo();
-		System.out.println("requestServerInfoTest:" + JsonUtils.toJsonString(res));
+		System.out.println("4.4 :" + JsonUtils.toJsonString(res));
 	}
-	
-	// 4.5 获取最新账本信息
-	@Test
-	public void requestLedgerClosedTest() {
-		String msg = remote.requestLedgerClosed();
-		System.out.println("requestLedgerClosedTest:" + msg);
-	}
+	// // 4.5 获取最新账本信息
+	// @Test
+	// public void requestLedgerClosedTest() {
+	// String msg = remote.requestLedgerClosed();
+	// System.out.println("requestLedgerClosedTest:" + msg);
+	// }
 	//
 	// // 4.6 获取某一账本具体信息
 	// @Test

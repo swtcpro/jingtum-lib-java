@@ -1,5 +1,7 @@
 package com.blink.jtblc.client.bean;
 
+import java.util.List;
+
 /**
  * 账本详情
  * 调用方法：
@@ -16,6 +18,15 @@ public class LedgerInfo {
 	private Integer reserveInc;// 用户每次挂单或信任冻结数量
 	private String serverStatus;// 服务器状态
 	private String validatedLedgers;// 账本区间
+	private List<Line> lines;
+	
+	public List<Line> getLines() {
+		return lines;
+	}
+	
+	public void setLines(List<Line> lines) {
+		this.lines = lines;
+	}
 	
 	public Integer getFeeBase() {
 		return feeBase;
