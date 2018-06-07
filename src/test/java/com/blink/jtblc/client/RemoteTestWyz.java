@@ -1,30 +1,15 @@
-package com.blink.jtble.connection;
-import com.blink.jtblc.client.RemoteImpl;
+package com.blink.jtblc.client;
+
 import com.blink.jtblc.client.bean.*;
 import com.blink.jtblc.connection.Connection;
 import com.blink.jtblc.connection.ConnectionFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 
-import java.util.HashMap;
-import java.util.Map;
-
-public class ConnectionTest {
+public class RemoteTestWyz {
     //4.1 创建Connection对象
     Connection connection = ConnectionFactory.getCollection("ws://ts5.jingtum.com:5020");
     RemoteImpl remoteImpl = new RemoteImpl(connection);
-
-    //4.2  创建连接
-    @Test
-    public void subscribe() throws Exception{
-        String result = remoteImpl.subscribe();
-        System.out.println(result);
-    }
-    //4.3 关闭连接
-    @Test
-    public void disconnect(){
-        ConnectionFactory.close();
-    }
 
     //4-4 请求服务器信息
     @Test
@@ -43,6 +28,7 @@ public class ConnectionTest {
     //4.6 获取某一账本具体信息
     @Test
     public void requestLedger() throws Exception{
+
         Ledger str = remoteImpl.requestLedger("214541","CC6F47B9AF3B4C0F463D22A97D62B116D509E2B2566B6A19975598E6FC95B058",true);
         ObjectMapper mapper = new ObjectMapper();
         System.out.println(mapper.writeValueAsString(str));
@@ -51,17 +37,17 @@ public class ConnectionTest {
     //4.7 查询某一交易具体信息 -未测试通过
     @Test
     public void requestTx() throws Exception{
-        Account str = remoteImpl.requestTx("6E7F4962B3B13E3D9C0D13120E17FE1B3DBF4EA677D1D19AAEC38C9B74EBF73B");
+        Account str = remoteImpl.requestTx("CC6F47B9AF3B4C0F463D22A97D62B116D509E2B2566B6A19975598E6FC95B058");
         ObjectMapper mapper = new ObjectMapper();
         System.out.println(mapper.writeValueAsString(str));
     }
 
-//    secret=shEWLj5gnZu5d37AQiZ82Gfwvfhpg
+    //    secret=shEWLj5gnZu5d37AQiZ82Gfwvfhpg
 //    address=jKSEoGkxkuoyc5ypw99YrmMBk2rSfYp2ht
     //4.8 查询某一交易具体信息
     @Test
     public void requestAccountInfo() throws Exception{
-        AccountInfo str = remoteImpl.requestAccountInfo("j3rSRYho7u5uHm66E9oFDEQ2NLLMvfcCFg");
+        AccountInfo str = remoteImpl.requestAccountInfo("jK4kdiriyxErTfW8wMMjzP25oT2AKLWGfY");
         System.out.println(str);
         ObjectMapper mapper = new ObjectMapper();
         System.out.println(mapper.writeValueAsString(str));
