@@ -12,7 +12,7 @@ import org.java_websocket.handshake.ServerHandshake;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class WebSocket extends WebSocketClient {
-	private Map<String, String> results = new HashMap<String, String>();
+	private volatile Map<String, String> results = new HashMap<String, String>();
 	
 	public WebSocket(URI serverURI) {
 		super(serverURI);
@@ -20,6 +20,12 @@ public class WebSocket extends WebSocketClient {
 	
 	public String getMessage(String sessionId) {
 		return results.get(sessionId);
+	}
+	
+	public String getMessageAndClean(String sessionId) {
+		String msg = results.get(sessionId);
+		results.remove(sessionId);
+		return msg;
 	}
 	
 	public String send(Map<String, Object> params) throws Exception {

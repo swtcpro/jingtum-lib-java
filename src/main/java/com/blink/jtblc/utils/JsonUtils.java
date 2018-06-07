@@ -1,10 +1,14 @@
 package com.blink.jtblc.utils;
 
 import java.beans.BeanInfo;
+import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -20,7 +24,6 @@ import com.google.common.base.CaseFormat;
  * 地址：https://github.com/FasterXML/jackson
  */
 public class JsonUtils {
-	// can reuse, share globally
 	private static ObjectMapper om = new ObjectMapper();
 	
 	/**
@@ -85,7 +88,8 @@ public class JsonUtils {
 				BeanInfo beanInfo = Introspector.getBeanInfo(cla, Object.class);
 				// 获取所有的属性描述器
 				PropertyDescriptor[] pds = beanInfo.getPropertyDescriptors();
-				transfer(result, obj, pds);
+				Map<String, PropertyDescriptor> props = propDesc2Map(pds);
+				transfer(result, obj, props);
 				return obj;
 			} else if (status.equals("error")) {
 				String error = (String) res.get("error");
@@ -102,143 +106,154 @@ public class JsonUtils {
 		return null;
 	}
 	
-	private static <T> void transfer(Map<String, Object> result, T obj, PropertyDescriptor[] pds)
-	        throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+	/**
+	 * 工具方法：
+	 * 
+	 * @param props
+	 * @return
+	 */
+	private static Map<String, PropertyDescriptor> propDesc2Map(PropertyDescriptor[] props) {
+		Map res = new HashMap<String, PropertyDescriptor>();
+		if (props != null && props.length > 0) {
+			for (PropertyDescriptor prop : props) {
+				res.put(prop.getName(), prop);
+			}
+		}
+		return res;
+	}
+	
+	/**
+	 * 
+	 * @param result
+	 * @param obj
+	 * @param pds
+	 * @throws IllegalAccessException
+	 * @throws IllegalArgumentException
+	 * @throws InvocationTargetException
+	 * @throws SecurityException
+	 * @throws NoSuchFieldException
+	 * @throws InstantiationException
+	 * @throws IntrospectionException
+	 * @throws ClassNotFoundException
+	 */
+	private static <T> void transfer(Map<String, Object> result, T obj, Map<String, PropertyDescriptor> props)
+	        throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchFieldException, SecurityException,
+	        InstantiationException, IntrospectionException, ClassNotFoundException {
 		for (Map.Entry<String, Object> entry : result.entrySet()) {
 			String key = entry.getKey();
 			Object val = entry.getValue();
-			if (val != null && val.toString().trim().length() > 0) {
+			String attrKey = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, key);
+			PropertyDescriptor prop = props.get(attrKey);
+			if (val != null && prop != null) {
 				if (val instanceof Map) {
-					transfer((Map<String, Object>) val, obj, pds);
+					transferMap(prop, obj, attrKey, val);
 				} else if (val instanceof List) {
-				} else {
-					transfer(pds, obj, key, val);
+					transferList(prop, obj, attrKey, val);
+				} else if (val instanceof Integer || val instanceof Long || val instanceof Short || val instanceof Float
+				        || val instanceof String || val instanceof Double) {
+					transferValue(prop, obj, val);
 				}
 			}
 		}
 	}
 	
-	private static <T> void transfer(PropertyDescriptor[] pds, T obj, String key, Object val)
-	        throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-		String mapKey = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, key);
-		for (PropertyDescriptor pd : pds) {
-			if (mapKey.equals("ledgerIndex")) {
-				System.out.println("-----");
-			}
-			System.out.println(mapKey + "  --  " + pd.getName() + "  --  " + pd.getPropertyType() + "  --  " + val);
-			if (mapKey.equals(pd.getName())) {
-				Method setter = pd.getWriteMethod();
-				if (pd.getPropertyType().equals(Integer.class)) {
-					setter.invoke(obj, Integer.parseInt(val.toString()));
-				} else if (pd.getPropertyType().equals(Long.class)) {
-					setter.invoke(obj, Long.parseLong(val.toString()));
-				} else if (pd.getPropertyType().equals(Short.class)) {
-					setter.invoke(obj, Short.parseShort(val.toString()));
-				} else if (pd.getPropertyType().equals(Short.class)) {
-					setter.invoke(obj, Short.parseShort(val.toString()));
-				} else if (pd.getPropertyType().equals(Float.class)) {
-					setter.invoke(obj, Float.parseFloat(val.toString()));
-				} else if (pd.getPropertyType().equals(Double.class)) {
-					setter.invoke(obj, Double.parseDouble(val.toString()));
-				} else {
-					setter.invoke(obj, val);
-				}
-				break;
+	/**
+	 * 根据范型将Map的内容转为到子对像中
+	 * 
+	 * @param prop
+	 * @param obj
+	 * @param attrKey
+	 * @param val
+	 * @throws IllegalAccessException
+	 * @throws IllegalArgumentException
+	 * @throws InvocationTargetException
+	 * @throws NoSuchFieldException
+	 * @throws SecurityException
+	 * @throws ClassNotFoundException
+	 * @throws InstantiationException
+	 * @throws IntrospectionException
+	 */
+	private static <T> void transferMap(PropertyDescriptor prop, T obj, String attrKey, Object val)
+	        throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchFieldException, SecurityException,
+	        ClassNotFoundException, InstantiationException, IntrospectionException {
+		// Map->entity 一般对应一个实体
+		Field mapField = obj.getClass().getDeclaredField(attrKey);
+		Object chdObj = mapField.getType().newInstance();
+		BeanInfo beanInfo = Introspector.getBeanInfo(mapField.getType(), Object.class);
+		PropertyDescriptor[] chdPds = beanInfo.getPropertyDescriptors();
+		Map<String, PropertyDescriptor> chdProps = propDesc2Map(chdPds);
+		transfer((Map<String, Object>) val, chdObj, chdProps);
+		prop.getWriteMethod().invoke(obj, chdObj);
+	}
+	
+	/**
+	 * 根据范型将实体转换到List中
+	 * 
+	 * @param prop
+	 * @param obj
+	 * @param key
+	 * @param val
+	 * @throws IllegalAccessException
+	 * @throws IllegalArgumentException
+	 * @throws InvocationTargetException
+	 * @throws SecurityException
+	 * @throws NoSuchFieldException
+	 * @throws ClassNotFoundException
+	 * @throws InstantiationException
+	 * @throws IntrospectionException
+	 */
+	private static <T> void transferList(PropertyDescriptor prop, T obj, String attrKey, Object val)
+	        throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchFieldException, SecurityException,
+	        ClassNotFoundException, InstantiationException, IntrospectionException {
+		// list内放置一组
+		Field listField = obj.getClass().getDeclaredField(attrKey);
+		ParameterizedType listGenericType = (ParameterizedType) listField.getGenericType();
+		Type[] listActualTypeArguments = listGenericType.getActualTypeArguments();// List 只有一个参数
+		if (listActualTypeArguments != null && listActualTypeArguments.length > 0) {
+			List chdList = new ArrayList<>();
+			prop.getWriteMethod().invoke(obj, chdList);
+			Type actualType = listActualTypeArguments[0];
+			List<Map> items = (List) val;
+			for (Map map : items) {
+				Class clazz = Class.forName(actualType.getTypeName());
+				Object item = clazz.newInstance();
+				BeanInfo beanInfo = Introspector.getBeanInfo(clazz, Object.class);
+				PropertyDescriptor[] chdPds = beanInfo.getPropertyDescriptors();
+				Map<String, PropertyDescriptor> chdProps = propDesc2Map(chdPds);
+				transfer((Map<String, Object>) map, item, chdProps);
+				chdList.add(item);
 			}
 		}
 	}
 	
-	// 递归value如果是map一直遍历，并将值映射到javabean中
-	private static <T> void test(PropertyDescriptor pd, Object res, T obj)
+	/**
+	 * 将属性加入到实体中
+	 * 
+	 * @param prop
+	 * @param obj
+	 * @param key
+	 * @param val
+	 * @throws IllegalAccessException
+	 * @throws IllegalArgumentException
+	 * @throws InvocationTargetException
+	 */
+	private static <T> void transferValue(PropertyDescriptor prop, T obj, Object val)
 	        throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-		if (res instanceof Map) {
-			Object res_temp = ((Map) res).get(pd.getName());
-			if (res_temp != null) {
-				Method setter = pd.getWriteMethod();
-				setter.invoke(obj, res);
-			} else {
-				test(pd, res_temp, obj);
+		if (prop != null) {
+			Method setter = prop.getWriteMethod();
+			if (prop.getPropertyType().equals(Integer.class)) {
+				setter.invoke(obj, Integer.parseInt(val.toString()));
+			} else if (prop.getPropertyType().equals(Long.class)) {
+				setter.invoke(obj, Long.parseLong(val.toString()));
+			} else if (prop.getPropertyType().equals(Short.class)) {
+				setter.invoke(obj, Short.parseShort(val.toString()));
+			} else if (prop.getPropertyType().equals(String.class)) {
+				setter.invoke(obj, val.toString());
+			} else if (prop.getPropertyType().equals(Float.class)) {
+				setter.invoke(obj, Float.parseFloat(val.toString()));
+			} else if (prop.getPropertyType().equals(Double.class)) {
+				setter.invoke(obj, Double.parseDouble(val.toString()));
 			}
-		} else {
-			Method setter = pd.getWriteMethod();
-			setter.invoke(obj, res);
 		}
-	}
-	
-	public static void main(String[] args) {
-		// java数组转换成json串
-		String simpleArray[] = { "英国", "法国", "德国" };
-		String arrJson = JsonUtils.toJsonString(simpleArray);
-		System.out.println(arrJson);
-		// ["英国","法国","德国"]
-		// 简单list转换成json串
-		List simpleList = new ArrayList();
-		simpleList.add("中国");
-		simpleList.add("美国");
-		simpleList.add("俄罗斯");
-		String listJson = JsonUtils.toJsonString(simpleList);
-		System.out.println(listJson);
-		// ["中国","美国","俄罗斯"]
-		// 简单Map转换成json串
-		Map simpleMap = new HashMap();
-		simpleMap.put("name", "张三");
-		simpleMap.put("birthday", "1983");
-		String mapJson = JsonUtils.toJsonString(simpleMap);
-		System.out.println(mapJson);
-		// {"birthday":"1983","name":"张三"}
-		// 复杂List转换成json串
-		List<Object> fuzaList = new ArrayList<>();
-		fuzaList.add(simpleMap);
-		fuzaList.add(simpleArray);
-		fuzaList.add(simpleList);
-		String fuzaListJson = JsonUtils.toJsonString(fuzaList);
-		System.out.println(fuzaListJson);
-		// [{"birthday":"1983","name":"张三"},["英国","法国","德国"],["中国","美国","俄罗斯"]]
-		// 复杂Map转成json串
-		Map fuzaMap = new HashMap();
-		fuzaMap.put("count", 100);
-		fuzaMap.put("page_size", 10);
-		fuzaMap.put("data", fuzaList);
-		String json2 = JsonUtils.toJsonString(fuzaMap);
-		System.out.println(json2);
-		// {"page_size":10,"count":100,"data":[{"birthday":"1983","name":"张三"},["英国","法国","德国"],["中国","美国","俄罗斯"]]}
-		// json传还原成java数组
-		simpleArray = JsonUtils.toObject(arrJson, String[].class);
-		System.out.println(simpleArray);
-		for (int i = 0; i < simpleArray.length; i++) {
-			System.out.println(simpleArray[i]);// 英国 法国 德国
-		}
-		// json还原成list
-		simpleList = JsonUtils.toObject(listJson, List.class);
-		System.out.println(simpleList);
-		// [中国, 美国, 俄罗斯]
-		// json还原成简单map
-		simpleMap = JsonUtils.toObject(mapJson, Map.class);
-		System.out.println(simpleMap);
-		// {birthday=1983, name=张三}
-		// json还原成复杂List
-		fuzaList = JsonUtils.toObject(fuzaListJson, List.class);
-		simpleMap = (Map) fuzaList.get(0);
-		System.out.println(simpleMap);
-		// {birthday=1983, name=张三}
-		simpleList = (List) fuzaList.get(1);// array -> list
-		System.out.println(simpleList);
-		// [英国, 法国, 德国]
-		simpleList = (List) fuzaList.get(2);
-		System.out.println(simpleList);
-		// [中国, 美国, 俄罗斯]
-		// json还原成复杂map
-		fuzaMap = JsonUtils.toObject(json2, Map.class);
-		System.out.println(fuzaMap);
-		// {page_size=10, count=100, data=[{birthday=1983, name=张三}, [英国, 法国, 德国], [中国, 美国, 俄罗斯]]}
-		String ledger_index = "8488670";
-		String ledger_hash = "";
-		boolean transactions = true;
-		Map params = new HashMap();
-		params.put("ledger_index", ledger_index);
-		params.put("ledger_hash", ledger_hash);
-		params.put("transactions", transactions);
-		String data = JsonUtils.toJsonString(params);
-		System.out.println(data);
 	}
 }
