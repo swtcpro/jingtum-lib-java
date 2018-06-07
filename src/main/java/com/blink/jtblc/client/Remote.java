@@ -87,19 +87,6 @@ public class Remote {
 		return ser;
 	}
 	
-	//
-	public LedgerInfo subscribe() throws Exception {
-		Map params = new HashMap();
-		Map message = new HashMap();
-		List<String> strs = new ArrayList<String>();
-		strs.add("ledger");
-		strs.add("server");
-		message.put("streams", strs);
-		params.put("message", message);
-		String res = this.sendMessage("server", params);
-		return JsonUtils.toObject(res, LedgerInfo.class);
-	}
-	
 	/**
 	 * 4.5 获取最新账本信息
 	 * 
