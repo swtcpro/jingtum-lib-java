@@ -1,10 +1,10 @@
 package com.blink.jtblc.client.bean;
 
 /**
- * 返回挂单创建信息对象
- * 描述：buildOfferCreateTx返回对象
+ * 返回的关系信息对象
+ * 描述：buildAccountSetTx返回对象
  */
-public class OfferCreateInfo {
+public class AccountPropertyInfo {
 	// 请求结果 
 	private String engineResult;
 	// 请求结果编码
@@ -47,3 +47,4 @@ public class OfferCreateInfo {
 		this.txJson = txJson;
 	}
 }
+

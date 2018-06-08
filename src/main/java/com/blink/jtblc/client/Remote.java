@@ -11,12 +11,17 @@ import org.apache.commons.lang3.StringUtils;
 import com.blink.jtblc.client.bean.Account;
 import com.blink.jtblc.client.bean.AccountInfo;
 import com.blink.jtblc.client.bean.AccountOffers;
+import com.blink.jtblc.client.bean.AccountPropertyInfo;
 import com.blink.jtblc.client.bean.AccountRelations;
 import com.blink.jtblc.client.bean.AccountTums;
 import com.blink.jtblc.client.bean.Amount;
 import com.blink.jtblc.client.bean.Ledger;
 import com.blink.jtblc.client.bean.LedgerClosed;
 import com.blink.jtblc.client.bean.LedgerInfo;
+import com.blink.jtblc.client.bean.OfferCancelInfo;
+import com.blink.jtblc.client.bean.OfferCreateInfo;
+import com.blink.jtblc.client.bean.PaymentInfo;
+import com.blink.jtblc.client.bean.RelationInfo;
 import com.blink.jtblc.client.bean.ServerInfo;
 import com.blink.jtblc.connection.Connection;
 import com.blink.jtblc.exceptions.RemoteException;
@@ -87,6 +92,19 @@ public class Remote {
 		return ser;
 	}
 	
+	//
+	public LedgerInfo subscribe() throws Exception {
+		Map params = new HashMap();
+		Map message = new HashMap();
+		List<String> strs = new ArrayList<String>();
+		strs.add("ledger");
+		strs.add("server");
+		message.put("streams", strs);
+		params.put("message", message);
+		String res = this.sendMessage("server", params);
+		return JsonUtils.toEntity(res, LedgerInfo.class);
+	}
+	
 	/**
 	 * 4.5 获取最新账本信息
 	 * 
@@ -151,7 +169,7 @@ public class Remote {
 	
 	/**
 	 * 4.7 查询某一交易具体信息
-	 *
+	 * 
 	 * @param hash 交易hash
 	 * @return
 	 */
@@ -167,7 +185,7 @@ public class Remote {
 		params.put("transaction", hash);
 		// params.put("command", "tx");
 		String msg = this.sendMessage("tx", params);
-		Account account = JsonUtils.toObject(msg, Account.class);
+		Account account = JsonUtils.toEntity(msg, Account.class);
 		return account;
 	}
 	
@@ -179,7 +197,7 @@ public class Remote {
 	 */
 	public AccountInfo requestAccountInfo(String account) {
 		String msg = requestAccount("account_info", account, "");
-		AccountInfo accountInfo = JsonUtils.toObject(msg, AccountInfo.class);
+		AccountInfo accountInfo = JsonUtils.toEntity(msg, AccountInfo.class);
 		return accountInfo;
 	}
 	
@@ -191,7 +209,7 @@ public class Remote {
 	 */
 	public AccountTums requestAccountTums(String account) {
 		String msg = requestAccount("account_currencies", account, "");
-		AccountTums accountTums = JsonUtils.toObject(msg, AccountTums.class);
+		AccountTums accountTums = JsonUtils.toEntity(msg, AccountTums.class);
 		return accountTums;
 	}
 	
@@ -215,7 +233,7 @@ public class Remote {
 				command = "account_relation";
 		}
 		String msg = requestAccount(command, account, type);
-		AccountRelations accountRelations = JsonUtils.toObject(msg, AccountRelations.class);
+		AccountRelations accountRelations = JsonUtils.toEntity(msg, AccountRelations.class);
 		return accountRelations;
 	}
 	
@@ -227,7 +245,7 @@ public class Remote {
 	 */
 	public AccountOffers requestAccountOffers(String account) {
 		String msg = requestAccount("account_offers", account, "");
-		AccountOffers accountOffers = JsonUtils.toObject(msg, AccountOffers.class);
+		AccountOffers accountOffers = JsonUtils.toEntity(msg, AccountOffers.class);
 		return accountOffers;
 	}
 	
@@ -345,7 +363,7 @@ public class Remote {
 	 * @param memo 备注
 	 * @return
 	 */
-	public String buildPaymentTx(String account, String to, Amount amount, String memo, String secret) {
+	public PaymentInfo buildPaymentTx(String account, String to, Amount amount, String memo, String secret) {
 		Transaction tx = new Transaction();
 		tx.setAccount(account);
 		tx.setTo(to);
@@ -386,7 +404,8 @@ public class Remote {
 		Map params = new HashMap();
 		params.put("tx_json", tx_json);
 		String msg = tx.submit(this.conn, this.localSign, params);
-		return msg;
+		PaymentInfo bean = JsonUtils.toEntity(msg, PaymentInfo.class);
+		return bean;
 	}
 	
 	/**
@@ -400,7 +419,7 @@ public class Remote {
 	 * @param memo
 	 * @return
 	 */
-	public String buildRelationTx(String type_value, String account, String target, Amount limit, String memo, String secret) {
+	public RelationInfo buildRelationTx(String type_value, String account, String target, Amount limit, String memo, String secret) {
 		Transaction tx = new Transaction();
 		// 将参数写入tx对象,方便读取校验
 		tx.setAccount(account);
@@ -440,7 +459,7 @@ public class Remote {
 	 * @param tx Transaction
 	 * @return
 	 */
-	private String buildTrustSet(Transaction tx) {
+	private RelationInfo buildTrustSet(Transaction tx) {
 		String src = tx.getAccount();
 		Amount limit = tx.getLimit();
 		String quality_out = "";
@@ -465,7 +484,8 @@ public class Remote {
 		Map params = new HashMap();
 		params.put("tx_json", tx_json);
 		String msg = tx.submit(this.conn, this.localSign, params);
-		return msg;
+		RelationInfo bean = JsonUtils.toEntity(msg, RelationInfo.class);
+		return bean;
 	}
 	
 	/**
@@ -474,7 +494,7 @@ public class Remote {
 	 * @param tx Transaction
 	 * @return
 	 */
-	private String buildRelationSet(Transaction tx) {
+	private RelationInfo buildRelationSet(Transaction tx) {
 		String src = tx.getAccount();
 		Amount limit = tx.getLimit();
 		String des = tx.getTo();
@@ -499,7 +519,8 @@ public class Remote {
 		Map params = new HashMap();
 		params.put("tx_json", tx_json);
 		String msg = tx.submit(this.conn, this.localSign, params);
-		return msg;
+		RelationInfo bean = JsonUtils.toEntity(msg, RelationInfo.class);
+		return bean;
 	}
 	
 	/**
@@ -512,7 +533,7 @@ public class Remote {
 	 * @param memo
 	 * @return
 	 */
-	public String buildAccountSetTx(String type_value, String account, String set_flag, String memo, String secret) {
+	public AccountPropertyInfo buildAccountSetTx(String type_value, String account, String set_flag, String memo, String secret) {
 		Transaction tx = new Transaction();
 		tx.setAccount(account);
 		tx.setProperty_type(type_value);
@@ -541,7 +562,7 @@ public class Remote {
 	 * @param tx Transaction
 	 * @return
 	 */
-	private String buildAccountSet(Transaction tx) {
+	private AccountPropertyInfo buildAccountSet(Transaction tx) {
 		Map params = new HashMap();
 		String src = tx.getAccount();
 		// 校验,并将参数写入tx_json对象
@@ -553,7 +574,8 @@ public class Remote {
 		tx_json.put("TransactionType", "AccountSet");
 		params.put("tx_json", tx_json);
 		String msg = tx.submit(this.conn, this.localSign, params);
-		return msg;
+		AccountPropertyInfo bean = JsonUtils.toEntity(msg, AccountPropertyInfo.class);
+		return bean;
 	}
 	
 	/**
@@ -562,7 +584,7 @@ public class Remote {
 	 * @param tx Transaction
 	 * @return
 	 */
-	private String buildDelegateKeySet(Transaction tx) {
+	private AccountPropertyInfo buildDelegateKeySet(Transaction tx) {
 		Map params = new HashMap();
 		String src = tx.getAccount();
 		String delegate_key = "";
@@ -579,7 +601,8 @@ public class Remote {
 		tx_json.put("RegularKey", delegate_key);
 		params.put("tx_json", tx_json);
 		String msg = tx.submit(this.conn, this.localSign, params);
-		return msg;
+		AccountPropertyInfo bean = JsonUtils.toEntity(msg, AccountPropertyInfo.class);
+		return bean;
 	}
 	
 	/**
@@ -588,13 +611,14 @@ public class Remote {
 	 * @param tx Transaction
 	 * @return
 	 */
-	private String buildSignerSet(Transaction tx) {
+	private AccountPropertyInfo buildSignerSet(Transaction tx) {
 		Map params = new HashMap();
 		// 校验,并将参数写入tx_json对象
 		Map tx_json = new HashMap();
 		params.put("tx_json", tx_json);
 		String msg = tx.submit(this.conn, this.localSign, params);
-		return msg;
+		AccountPropertyInfo bean = JsonUtils.toEntity(msg, AccountPropertyInfo.class);
+		return bean;
 	}
 	
 	/**
@@ -608,7 +632,7 @@ public class Remote {
 	 * @param memo
 	 * @return
 	 */
-	public String buildOfferCreateTx(String type, String account, Amount getsAmount, Amount paysAmount, String memo, String secret) {
+	public OfferCreateInfo buildOfferCreateTx(String type, String account, Amount getsAmount, Amount paysAmount, String memo, String secret) {
 		Transaction tx = new Transaction();
 		tx.setCommand("submit");
 		tx.setSecret(secret);
@@ -643,7 +667,8 @@ public class Remote {
 		Map params = new HashMap();
 		params.put("tx_json", tx_json);
 		String msg = tx.submit(this.conn, this.localSign, params);
-		return msg;
+		OfferCreateInfo bean = JsonUtils.toEntity(msg, OfferCreateInfo.class);
+		return bean;
 	}
 	
 	/**
@@ -678,7 +703,7 @@ public class Remote {
 	 * @param memo
 	 * @return
 	 */
-	public String buildOfferCancelTx(String account, Integer sequence, String memo, String secret) {
+	public OfferCancelInfo buildOfferCancelTx(String account, Integer sequence, String memo, String secret) {
 		Transaction tx = new Transaction();
 		tx.setCommand("submit");
 		tx.setSecret(secret);
@@ -694,7 +719,8 @@ public class Remote {
 		Map params = new HashMap();
 		params.put("tx_json", tx_json);
 		String msg = tx.submit(this.conn, this.localSign, params);
-		return msg;
+		OfferCancelInfo bean = JsonUtils.toEntity(msg, OfferCancelInfo.class);
+		return bean;
 	}
 	
 	/**
