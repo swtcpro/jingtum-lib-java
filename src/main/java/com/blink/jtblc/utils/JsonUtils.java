@@ -116,7 +116,7 @@ public class JsonUtils {
 		Map res = new HashMap<String, PropertyDescriptor>();
 		if (props != null && props.length > 0) {
 			for (PropertyDescriptor prop : props) {
-				res.put(prop.getName(), prop);
+				res.put(prop.getName().toUpperCase(), prop);
 			}
 		}
 		return res;
@@ -143,7 +143,7 @@ public class JsonUtils {
 			String key = entry.getKey();
 			Object val = entry.getValue();
 			String attrKey = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, key);
-			PropertyDescriptor prop = props.get(attrKey);
+			PropertyDescriptor prop = props.get(attrKey.toUpperCase());
 			if (val != null && prop != null) {
 				if (val instanceof Map) {
 					transferMap(prop, obj, attrKey, val);
@@ -256,4 +256,5 @@ public class JsonUtils {
 			}
 		}
 	}
+
 }

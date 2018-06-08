@@ -11,7 +11,7 @@ public class Account {
     private Amount amount;
     private String destination;
     private String fee;
-    private Integer flags;
+    private Long flags;
     private List<String> memos;
     private Integer sequence;
     private String signingPubKey;
@@ -19,7 +19,7 @@ public class Account {
     private String transactionType;
     private String txnSignature;
     private Integer date;
-    private Integer hash;
+    private String hash;
     private Integer inLedger;
     private String ledger_index;
     private Meta meta;
@@ -58,11 +58,11 @@ public class Account {
         this.fee = fee;
     }
 
-    public Integer getFlags() {
+    public Long getFlags() {
         return flags;
     }
 
-    public void setFlags(Integer flags) {
+    public void setFlags(Long flags) {
         this.flags = flags;
     }
 
@@ -122,11 +122,11 @@ public class Account {
         this.date = date;
     }
 
-    public Integer getHash() {
+    public String getHash() {
         return hash;
     }
 
-    public void setHash(Integer hash) {
+    public void setHash(String hash) {
         this.hash = hash;
     }
 
