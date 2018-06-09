@@ -12,7 +12,7 @@ public class AccountOffers {
     private Integer ledgerIndex;
     private List<Offer> offers;
     
-    private Integer ledgerCurrentIndex;
+    private boolean validated;//
 
     public String getAccount() {
         return account;
@@ -46,12 +46,12 @@ public class AccountOffers {
         this.offers = offers;
     }
 
-	public Integer getLedgerCurrentIndex() {
-		return ledgerCurrentIndex;
-	}
+    public boolean isValidated() {
+        return validated;
+    }
 
-	public void setLedgerCurrentIndex(Integer ledgerCurrentIndex) {
-		this.ledgerCurrentIndex = ledgerCurrentIndex;
-	}
+    public void setValidated(boolean validated) {
+        this.validated = validated;
+    }
 }
 

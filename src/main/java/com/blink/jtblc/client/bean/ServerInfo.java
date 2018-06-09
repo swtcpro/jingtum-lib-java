@@ -4,46 +4,46 @@ package com.blink.jtblc.client.bean;
  * 服务器信息
  */
 public class ServerInfo {
-    private String version;
+    private String buildVersion;//服务器部署项目版本
 
 
-    private String ledgers;
+    private String completeLedgers;//账本区间
 
 
-    private String node;
+    private String pubkeyNode;//节点公钥
 
 
-    private String state;
+    private String serverState;//服务器状态
 
-    public String getVersion() {
-        return version;
+    public String getBuildVersion() {
+        return buildVersion;
     }
 
-    public void setVersion(String version) {
-        this.version = version;
+    public void setBuildVersion(String buildVersion) {
+        this.buildVersion = buildVersion;
     }
 
-    public String getLedgers() {
-        return ledgers;
+    public String getCompleteLedgers() {
+        return completeLedgers;
     }
 
-    public void setLedgers(String ledgers) {
-        this.ledgers = ledgers;
+    public void setCompleteLedgers(String completeLedgers) {
+        this.completeLedgers = completeLedgers;
     }
 
-    public String getNode() {
-        return node;
+    public String getPubkeyNode() {
+        return pubkeyNode;
     }
 
-    public void setNode(String node) {
-        this.node = node;
+    public void setPubkeyNode(String pubkeyNode) {
+        this.pubkeyNode = pubkeyNode;
     }
 
-    public String getState() {
-        return state;
+    public String getServerState() {
+        return serverState;
     }
 
-    public void setState(String state) {
-        this.state = state;
+    public void setServerState(String serverState) {
+        this.serverState = serverState;
     }
 }

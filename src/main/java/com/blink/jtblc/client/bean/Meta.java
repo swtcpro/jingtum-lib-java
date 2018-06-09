@@ -1,18 +1,20 @@
 package com.blink.jtblc.client.bean;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class Meta {
-    private List<String> AffectedNodes;
+    private List<Map> affectednodes = new ArrayList<>();
     private Integer TransactionInde;
-    private Integer ransactionResul;
+    private Integer ransactionResult;
 
-    public List<String> getAffectedNodes() {
-        return AffectedNodes;
+    public List<Map> getAffectednodes() {
+        return affectednodes;
     }
 
-    public void setAffectedNodes(List<String> affectedNodes) {
-        AffectedNodes = affectedNodes;
+    public void setAffectednodes(List<Map> affectednodes) {
+        this.affectednodes = affectednodes;
     }
 
     public Integer getTransactionInde() {
@@ -23,11 +25,11 @@ public class Meta {
         TransactionInde = transactionInde;
     }
 
-    public Integer getRansactionResul() {
-        return ransactionResul;
+    public Integer getRansactionResult() {
+        return ransactionResult;
     }
 
-    public void setRansactionResul(Integer ransactionResul) {
-        this.ransactionResul = ransactionResul;
+    public void setRansactionResult(Integer ransactionResult) {
+        this.ransactionResult = ransactionResult;
     }
 }

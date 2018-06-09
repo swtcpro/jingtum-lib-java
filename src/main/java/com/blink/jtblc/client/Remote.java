@@ -263,7 +263,7 @@ public class Remote {
 	 * @param limit 限定返回多少条记录，默认200
 	 * @return
 	 */
-	public String requestAccountTx(String account, Integer limit) {
+	public AccountTx requestAccountTx(String account, Integer limit) {
 		if (limit == null || limit == 0) {
 			limit = 200;
 		}
@@ -279,9 +279,13 @@ public class Remote {
 		params.put("message", message);
 		params.put("account", account);
 		params.put("command", "account_tx");
+		//新增参数start
+		params.put("ledger_index_min", 0);
+		params.put("ledger_index_max", -1);
+		//新增参数end
 		String msg = this.submit(params);
-		return msg;
-	}
+		return JsonUtils.toEntity(msg, AccountTx.class);
+}
 	
 	/**
 	 * 获得市场挂单列表
@@ -293,7 +297,7 @@ public class Remote {
 	 * @param limit 限定返回多少条记录
 	 * @return
 	 */
-	public String requestOrderBook(Amount taker_gets, Amount taker_pays, Integer limit) {
+	public BookOffer requestOrderBook(Amount taker_gets, Amount taker_pays, Integer limit) {
 		Map params = new HashMap();
 		/*
 		 * Map gets = new HashMap();
@@ -312,12 +316,13 @@ public class Remote {
 		if (!CheckUtils.isValidAmount(taker_pays)) {
 			throw new RemoteException("invalid taker pays amount");
 		}
-		params.put("limit", limit);
+//		params.put("limit", limit);
 		params.put("taker_gets", taker_gets);
 		params.put("taker_pays", taker_pays);
 		params.put("command", "book_offers");
+		params.put("taker","jjjjjjjjjjjjjjjjjjjjBZbvri");
 		String msg = this.submit(params);
-		return msg;
+		return JsonUtils.toEntity(msg, BookOffer.class);
 	}
 	
 	/**

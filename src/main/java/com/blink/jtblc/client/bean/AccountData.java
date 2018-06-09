@@ -8,11 +8,13 @@ public class AccountData {
     private String messageKey;
     private Integer ownerCount;
     private String previousTxnId;
-    private Integer eviousTxnLgrSeq;
+    private Integer previousTxnLgrSeq;
     private String regularKey;
     private Integer sequence;
     private Integer transferRate;
     private String index;
+
+    private String ledgerEntryType;
 
     public String getAccount() {
         return account;
@@ -70,12 +72,12 @@ public class AccountData {
         this.previousTxnId = previousTxnId;
     }
 
-    public Integer getEviousTxnLgrSeq() {
-        return eviousTxnLgrSeq;
+    public Integer getPreviousTxnLgrSeq() {
+        return previousTxnLgrSeq;
     }
 
-    public void setEviousTxnLgrSeq(Integer eviousTxnLgrSeq) {
-        this.eviousTxnLgrSeq = eviousTxnLgrSeq;
+    public void setPreviousTxnLgrSeq(Integer previousTxnLgrSeq) {
+        this.previousTxnLgrSeq = previousTxnLgrSeq;
     }
 
     public String getRegularKey() {
@@ -108,5 +110,13 @@ public class AccountData {
 
     public void setIndex(String index) {
         this.index = index;
+    }
+
+    public String getLedgerEntryType() {
+        return ledgerEntryType;
+    }
+
+    public void setLedgerEntryType(String ledgerEntryType) {
+        this.ledgerEntryType = ledgerEntryType;
     }
 }

@@ -1,7 +1,6 @@
 package com.blink.jtblc.client.bean;
 
 
-import java.util.List;
 
 /**
  * 交易信息
@@ -12,7 +11,7 @@ public class Account {
     private String destination;
     private String fee;
     private Long flags;
-    private List<String> memos;
+//    private List<String> memos; 返回值中没有，所以注释
     private Integer sequence;
     private String signingPubKey;
     private Integer timestamp;
@@ -21,7 +20,7 @@ public class Account {
     private Integer date;
     private String hash;
     private Integer inLedger;
-    private String ledger_index;
+    private String ledgerIndex;
     private Meta meta;
     private Boolean validated;
 
@@ -66,13 +65,6 @@ public class Account {
         this.flags = flags;
     }
 
-    public List<String> getMemos() {
-        return memos;
-    }
-
-    public void setMemos(List<String> memos) {
-        this.memos = memos;
-    }
 
     public Integer getSequence() {
         return sequence;
@@ -138,12 +130,12 @@ public class Account {
         this.inLedger = inLedger;
     }
 
-    public String getLedger_index() {
-        return ledger_index;
+    public String getLedgerIndex() {
+        return ledgerIndex;
     }
 
-    public void setLedger_index(String ledger_index) {
-        this.ledger_index = ledger_index;
+    public void setLedgerIndex(String ledgerIndex) {
+        this.ledgerIndex = ledgerIndex;
     }
 
     public Meta getMeta() {

@@ -8,78 +8,94 @@ import org.junit.Test;
 
 public class RemoteTestWyz {
     //4.1 创建Connection对象
-    Connection connection = ConnectionFactory.getCollection("ws://ts5.jingtum.com:5020");
-    RemoteImpl remoteImpl = new RemoteImpl(connection);
+    Connection connection = ConnectionFactory.getCollection("ws://101.200.176.238:5020");
+    Remote Remote = new Remote(connection);
+    ObjectMapper mapper = new ObjectMapper();
+
+    //4-1 创建连接 获取服务信息及帐本信息
+    @Test
+    public void requestLedgerInfo() throws Exception{
+        LedgerInfo ledgerInfo = Remote.requestLedgerInfo();
+        System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(ledgerInfo));
+    }
 
     //4-4 请求服务器信息
     @Test
     public void requestServerInfo() throws Exception{
-        ObjectMapper mapper = new ObjectMapper();
-        ServerInfo serverInfo = remoteImpl.requestServerInfo();
-        System.out.println(mapper.writeValueAsString(serverInfo));
+        ServerInfo serverInfo = Remote.requestServerInfo();
+        System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(serverInfo));
     }
     //4.5 获取最新账本信息
     @Test
     public void requestLedgerClosed() throws Exception{
-        LedgerClosed str = remoteImpl.requestLedgerClosed();
-        ObjectMapper mapper = new ObjectMapper();
-        System.out.println(mapper.writeValueAsString(str));
+        LedgerClosed str = Remote.requestLedgerClosed();
+        System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(str));
     }
-    //4.6 获取某一账本具体信息
+    //4.6 获取某一账本具体信息 -转换异常 嵌套类没有转成功
     @Test
     public void requestLedger() throws Exception{
-
-        Ledger str = remoteImpl.requestLedger("214541","CC6F47B9AF3B4C0F463D22A97D62B116D509E2B2566B6A19975598E6FC95B058",true);
-        ObjectMapper mapper = new ObjectMapper();
-        System.out.println(mapper.writeValueAsString(str));
+        Ledger str = Remote.requestLedger("","F6F728C3E39F731F3E4994B20AAACACBBFF9751B9D0F6CDA1C7A3D5BB1C502C4",true);
+        System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(str));
     }
 
-    //4.7 查询某一交易具体信息 -未测试通过
+    //4.7 查询某一交易具体信息 -转换异常 list中有map，map不需要转换
     @Test
     public void requestTx() throws Exception{
-        Account str = remoteImpl.requestTx("CC6F47B9AF3B4C0F463D22A97D62B116D509E2B2566B6A19975598E6FC95B058");
-        ObjectMapper mapper = new ObjectMapper();
-        System.out.println(mapper.writeValueAsString(str));
+            Account str = Remote.requestTx("32E57868F1453BA4F7A47D7DFB75AF2C241101FE346D2864D2790836838C3A26");
+        System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(str));
     }
 
     //    secret=shEWLj5gnZu5d37AQiZ82Gfwvfhpg
 //    address=jKSEoGkxkuoyc5ypw99YrmMBk2rSfYp2ht
-    //4.8 查询某一交易具体信息
+    //4.8 查询某一交易具体信息 转换正常validated值映射不上
     @Test
     public void requestAccountInfo() throws Exception{
-        AccountInfo str = remoteImpl.requestAccountInfo("jK4kdiriyxErTfW8wMMjzP25oT2AKLWGfY");
+        AccountInfo str = Remote.requestAccountInfo("jK4kdiriyxErTfW8wMMjzP25oT2AKLWGfY");
         System.out.println(str);
-        ObjectMapper mapper = new ObjectMapper();
-        System.out.println(mapper.writeValueAsString(str));
+        System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(str));
     }
 
 
-    //4.9 获得账号可接收和发送的货币
+    //4.9 获得账号可接收和发送的货币 转换正常validated值映射不上
     @Test
     public void requestAccountTums() throws Exception{
-        AccountTums str = remoteImpl.requestAccountTums("jKSEoGkxkuoyc5ypw99YrmMBk2rSfYp2ht");
-        System.out.println(str);
-        ObjectMapper mapper = new ObjectMapper();
-        System.out.println(mapper.writeValueAsString(str));
+        AccountTums str = Remote.requestAccountTums("jK4kdiriyxErTfW8wMMjzP25oT2AKLWGfY");
+        System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(str));
     }
 
 
-    //4.10 获得账号关系
+    //4.10 获得账号关系 转换正常validated值映射不上
     @Test
     public void requestAccountRelations() throws Exception{
-        AccountRelations str = remoteImpl.requestAccountRelations("jKSEoGkxkuoyc5ypw99YrmMBk2rSfYp2ht","trust");
-        System.out.println(str);
-        ObjectMapper mapper = new ObjectMapper();
-        System.out.println(mapper.writeValueAsString(str));
+        AccountRelations str = Remote.requestAccountRelations("jK4kdiriyxErTfW8wMMjzP25oT2AKLWGfY","trust");
+        System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(str));
     }
 
-    //4.11 获得账号挂单
+    //4.11 获得账号挂单  转换正常validated值映射不上
     @Test
     public void requestAccountOffers() throws Exception{
-        AccountOffers str = remoteImpl.requestAccountOffers("jKSEoGkxkuoyc5ypw99YrmMBk2rSfYp2ht");
-        System.out.println(str);
-        ObjectMapper mapper = new ObjectMapper();
-        System.out.println(mapper.writeValueAsString(str));
+        AccountOffers str = Remote.requestAccountOffers("jK4kdiriyxErTfW8wMMjzP25oT2AKLWGfY");
+        System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(str));
     }
+
+    //4.12 获得账号交易列表  接口返回不一致
+    @Test
+    public void requestAccountTx() throws Exception{
+        AccountTx str = Remote.requestAccountTx("jK4kdiriyxErTfW8wMMjzP25oT2AKLWGfY",1);
+        System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(str));
+    }
+    //4.13 获得市场挂单列表
+    @Test
+    public void requestOrderBook() throws Exception{
+        Amount takerGets = new Amount();
+        takerGets.setCurrency("SWT");
+        takerGets.setIssuer("jBciDE8Q3uJjf111VeiUNM775AMKHEbBLS");
+
+        Amount takerPays = new Amount();
+        takerPays.setCurrency("CNY");
+        BookOffer str = Remote.requestOrderBook(takerGets,takerPays,1);
+        System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(str));
+    }
+
 
 }

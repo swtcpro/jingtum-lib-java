@@ -7,25 +7,25 @@ import java.util.List;
  */
 public class AccountTums {
     private String ledgerHash;
-    private Integer ledgerCurrentIndex;
+    private Integer ledgerIndex;
     private List<String> receiveCurrencies;
     private List<String> sendCurrencies;
     private Boolean validated;
-    
-    public String getLedgerHash() {
+
+	public Integer getLedgerIndex() {
+		return ledgerIndex;
+	}
+
+	public void setLedgerIndex(Integer ledgerIndex) {
+		this.ledgerIndex = ledgerIndex;
+	}
+
+	public String getLedgerHash() {
 		return ledgerHash;
 	}
 
 	public void setLedgerHash(String ledgerHash) {
 		this.ledgerHash = ledgerHash;
-	}
-
-	public Integer getLedgerCurrentIndex() {
-		return ledgerCurrentIndex;
-	}
-
-	public void setLedgerCurrentIndex(Integer ledgerCurrentIndex) {
-		this.ledgerCurrentIndex = ledgerCurrentIndex;
 	}
 
 	public List<String> getReceiveCurrencies() {

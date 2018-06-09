@@ -6,9 +6,9 @@ package com.blink.jtblc.client.bean;
 public class AccountInfo {
 
     private AccountData accountData;
-    private String ledgerHash;
+    private String ledgerCurrentIndex;
     private Integer ledgerIndex;
-    private Boolean validated;
+    private String validated;
 
     public AccountData getAccountData() {
         return accountData;
@@ -18,12 +18,12 @@ public class AccountInfo {
         this.accountData = accountData;
     }
 
-    public String getLedgerHash() {
-        return ledgerHash;
+    public String getLedgerCurrentIndex() {
+        return ledgerCurrentIndex;
     }
 
-    public void setLedgerHash(String ledgerHash) {
-        this.ledgerHash = ledgerHash;
+    public void setLedgerCurrentIndex(String ledgerCurrentIndex) {
+        this.ledgerCurrentIndex = ledgerCurrentIndex;
     }
 
     public Integer getLedgerIndex() {
@@ -34,11 +34,11 @@ public class AccountInfo {
         this.ledgerIndex = ledgerIndex;
     }
 
-    public Boolean getValidated() {
+    public String getValidated() {
         return validated;
     }
 
-    public void setValidated(Boolean validated) {
+    public void setValidated(String validated) {
         this.validated = validated;
     }
 }
