@@ -6,23 +6,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.blink.jtblc.client.bean.*;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.apache.commons.lang3.StringUtils;
 
-import com.blink.jtblc.client.bean.Account;
-import com.blink.jtblc.client.bean.AccountInfo;
-import com.blink.jtblc.client.bean.AccountOffers;
-import com.blink.jtblc.client.bean.AccountPropertyInfo;
-import com.blink.jtblc.client.bean.AccountRelations;
-import com.blink.jtblc.client.bean.AccountTums;
-import com.blink.jtblc.client.bean.Amount;
-import com.blink.jtblc.client.bean.Ledger;
-import com.blink.jtblc.client.bean.LedgerClosed;
-import com.blink.jtblc.client.bean.LedgerInfo;
-import com.blink.jtblc.client.bean.OfferCancelInfo;
-import com.blink.jtblc.client.bean.OfferCreateInfo;
-import com.blink.jtblc.client.bean.PaymentInfo;
-import com.blink.jtblc.client.bean.RelationInfo;
-import com.blink.jtblc.client.bean.ServerInfo;
 import com.blink.jtblc.connection.Connection;
 import com.blink.jtblc.exceptions.RemoteException;
 import com.blink.jtblc.utils.CheckUtils;
@@ -70,7 +57,6 @@ public class Remote {
 		return JsonUtils.toEntity(res, LedgerInfo.class);
 	}
 	
-	// 4.3 关闭连接
 	/**
 	 * 4.4 请求底层服务器信息
 	 * 
@@ -80,31 +66,10 @@ public class Remote {
 		ServerInfo ser = new ServerInfo();
 		Map params = new HashMap();
 		String msg = this.sendMessage("server_info", params);
-		Map map = JsonUtils.toObject(msg, Map.class);
-		if (map.get("status").equals("success")) {
-			Map result = (Map) map.get("result");
-			Map info = (Map) result.get("info");
-			ser.setVersion(info.get("build_version").toString());
-			ser.setLedgers(info.get("complete_ledgers").toString());
-			ser.setNode(info.get("pubkey_node").toString());
-			ser.setState(info.get("server_state").toString());
-		}
-		return ser;
+		return JsonUtils.toEntity(msg, ServerInfo.class);
 	}
 	
-	//
-	public LedgerInfo subscribe() throws Exception {
-		Map params = new HashMap();
-		Map message = new HashMap();
-		List<String> strs = new ArrayList<String>();
-		strs.add("ledger");
-		strs.add("server");
-		message.put("streams", strs);
-		params.put("message", message);
-		String res = this.sendMessage("server", params);
-		return JsonUtils.toEntity(res, LedgerInfo.class);
-	}
-	
+
 	/**
 	 * 4.5 获取最新账本信息
 	 * 
@@ -114,20 +79,13 @@ public class Remote {
 	public LedgerClosed requestLedgerClosed() throws Exception {
 		Map params = new HashMap();
 		String msg = this.sendMessage("ledger_closed", params);
-		Map map = JsonUtils.toObject(msg, Map.class);
-		LedgerClosed ledger = new LedgerClosed();
-		if (map.get("status").equals("success")) {
-			Map result = (Map) map.get("result");
-			ledger.setLedgerHash(result.get("ledger_hash").toString());
-			ledger.setLedgerIndex(result.get("ledger_index").toString());
-		}
-		return ledger;
+		return JsonUtils.toEntity(msg, LedgerClosed.class);
 	}
-	
+
 	/**
 	 * 4.6 获取某一账本具体信息
 	 * 注：整体参数是Object类型，当参数都不填时，默认返回最新账本信息
-	 * 
+	 *
 	 * @param ledger_index 井通区块高度
 	 * @param ledger_hash 井通区块hash(与上面ledger_index二选其一)
 	 * @param transactions 是否返回账本上的交易记录hash，默认false
@@ -150,21 +108,24 @@ public class Remote {
 		params.put("ledger_index", ledger_index);
 		params.put("ledger_hash", ledger_hash);
 		params.put("transactions", transactions);
-		// params.put("command", "ledger");
 		String msg = this.sendMessage("ledger", params);
-		Map map = JsonUtils.toObject(msg, Map.class);
-		Ledger ledger = new Ledger();
-		if (map.get("status").equals("success")) {
-			Map result = (Map) map.get("result");
-			Map ledgerMap = (Map) result.get("ledger");
-			ledger.setAccepted((Boolean) ledgerMap.get("accepted"));
-			ledger.setLedgerHash(ledgerMap.get("account_hash").toString());
-			ledger.setLedgerIndex(ledgerMap.get("ledger_index").toString());
-			ledger.setParentHash(ledgerMap.get("parent_hash").toString());
-			ledger.setCloseTimeHuman(ledgerMap.get("close_time_human").toString());
-			ledger.setTotalCoins(ledgerMap.get("total_coins").toString());
-		}
-		return ledger;
+		//Map map = JsonUtils.toObject(msg, Map.class);
+//		Ledger ledger = new Ledger();
+//		if (map.get("status").equals("success")) {
+//			Map result = (Map) map.get("result");
+//			Map ledgerMap = (Map) result.get("ledger");
+//			LedgerDetail ledgerDetail = new LedgerDetail();
+//			ledgerDetail.setAccepted((Boolean) ledgerMap.get("accepted"));
+//			ledgerDetail.setParentHash(ledgerMap.get("parent_hash").toString());
+//			ledgerDetail.setCloseTimeHuman(ledgerMap.get("close_time_human").toString());
+//			ledgerDetail.setTotalCoins(ledgerMap.get("total_coins").toString());
+//
+//			ledger.setLedgerHash(ledgerMap.get("account_hash").toString());
+//			ledger.setLedgerIndex(ledgerMap.get("ledger_index").toString());
+//			ledger.setLedgerDetail(ledgerDetail);
+//		}
+//		return ledger;
+		return JsonUtils.toObject(msg, Ledger.class);
 	}
 	
 	/**
@@ -208,6 +169,7 @@ public class Remote {
 	 * @return
 	 */
 	public AccountTums requestAccountTums(String account) {
+
 		String msg = requestAccount("account_currencies", account, "");
 		AccountTums accountTums = JsonUtils.toEntity(msg, AccountTums.class);
 		return accountTums;
@@ -228,10 +190,14 @@ public class Remote {
 		switch (type) {
 			case "trust":
 				command = "account_lines";
+				break;
 			case "authorize":
+				break;
 			case "freeze":
 				command = "account_relation";
+				break;
 		}
+		System.out.println(command);
 		String msg = requestAccount(command, account, type);
 		AccountRelations accountRelations = JsonUtils.toEntity(msg, AccountRelations.class);
 		return accountRelations;
@@ -267,10 +233,13 @@ public class Remote {
 			switch (type) {
 				case "trustline":
 					relation_type = 0;
+					break;
 				case "authorize":
 					relation_type = 1;
+					break;
 				case "freeze":
 					relation_type = 3;
+					break;
 			}
 			message.put("relation_type", relation_type);
 		}
@@ -279,6 +248,7 @@ public class Remote {
 		} else {
 			message.put("account", account);
 		}
+		params.put("ledger_index","validated"); //4.9 新增参数ledger_index值
 		params.put("message", message);
 		params.put("account", account);
 		params.put("command", command);
