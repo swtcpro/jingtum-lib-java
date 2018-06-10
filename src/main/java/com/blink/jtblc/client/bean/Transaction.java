@@ -6,7 +6,7 @@ public class Transaction {
     private String amount;//交易金额对象
     private String destination;//
     private String fee;//手续费
-    private Integer flags;//
+    private Long flags;//
     private Integer sequence;//
     private String signingPubKey;//
     private Integer timestamp;//
@@ -49,11 +49,11 @@ public class Transaction {
         this.fee = fee;
     }
 
-    public Integer getFlags() {
+    public Long getFlags() {
         return flags;
     }
 
-    public void setFlags(Integer flags) {
+    public void setFlags(Long flags) {
         this.flags = flags;
     }
 

@@ -138,20 +138,16 @@ public class Account {
         this.ledgerIndex = ledgerIndex;
     }
 
-    public Meta getMeta() {
-        return meta;
-    }
-
-    public void setMeta(Meta meta) {
-        this.meta = meta;
-    }
-
     public Boolean getValidated() {
         return validated;
     }
 
     public void setValidated(Boolean validated) {
         this.validated = validated;
+    }
+
+    public void setMeta(Meta meta) {
+        this.meta = meta;
     }
 }
 

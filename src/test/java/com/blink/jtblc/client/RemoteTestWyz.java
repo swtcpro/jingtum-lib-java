@@ -41,7 +41,7 @@ public class RemoteTestWyz {
         System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(str));
     }
 
-    //4.7 查询某一交易具体信息 -转换异常 list中有map，map不需要转换
+    //4.7 查询某一交易具体信息
     @Test
     public void requestTx() throws Exception{
         Account str = Remote.requestTx("32E57868F1453BA4F7A47D7DFB75AF2C241101FE346D2864D2790836838C3A26");
@@ -80,7 +80,7 @@ public class RemoteTestWyz {
         System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(str));
     }
 
-    //4.12 获得账号交易列表 -转换异常
+    //4.12 获得账号交易列表
     @Test
     public void requestAccountTx() throws Exception{
         AccountTx str = Remote.requestAccountTx("jK4kdiriyxErTfW8wMMjzP25oT2AKLWGfY",1);
@@ -96,6 +96,11 @@ public class RemoteTestWyz {
         pays.put("currency", "SWT");
         OrderBook str = Remote.requestOrderBook(gets,pays,1);
         System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(str));
+    }
+    @Test
+    public void test(){
+        String str ="2147483648";
+        System.out.println(Long.valueOf(str));
     }
 
 }

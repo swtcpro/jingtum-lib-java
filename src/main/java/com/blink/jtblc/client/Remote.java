@@ -147,7 +147,38 @@ public class Remote {
 		params.put("transaction", hash);
 		// params.put("command", "tx");
 		String msg = this.sendMessage("tx", params);
-		Account account = JsonUtils.toEntity(msg, Account.class);
+		Map map = JsonUtils.toObject(msg,Map.class);
+		Account account = new Account();
+
+        if (map.get("status").equals("success")) {
+            account = JsonUtils.toEntity(msg, Account.class);
+            Meta meta = new Meta();
+            Map result = (Map)map.get("result");
+            Map metaMap = (Map)result.get("meta");
+            meta.setTransactionIndex(metaMap.get("TransactionIndex")!=null?Integer.valueOf(metaMap.get("TransactionIndex").toString()):0);
+            meta.setTransactionResult(metaMap.get("TransactionResult")!=null?metaMap.get("TransactionResult").toString():"");
+            if(metaMap.get("AffectedNodes")!=null){
+                List<AffectedNode> affectednodes = new ArrayList<>();
+                    List<Map> nodes =(List<Map>)metaMap.get("AffectedNodes");
+                    if(nodes!=null&&nodes.size()>0){
+                        for (Map node : nodes) {
+                            AffectedNode affectedNode = new AffectedNode();
+                            Map snode = (Map)node.get("ModifiedNode");
+                            String str = JsonUtils.toJsonString(snode);
+                            ModifiedNode modifiedNode = JsonUtils.toEntity(str,ModifiedNode.class);
+                            affectedNode.setModifiedNode(modifiedNode);
+                            affectednodes.add(affectedNode);
+                        }
+                    }
+                meta.setAffectednodes(affectednodes);
+            }
+            account.setMeta(meta);
+        } else if (map.get("status").equals("error")) {
+            msg ="接口调用出错";
+            throw new RuntimeException(msg);
+        } else {
+            throw new RuntimeException("unknown error");
+        }
 		return account;
 	}
 	
@@ -285,42 +316,45 @@ public class Remote {
 		params.put("ledger_index_max", -1);
 		//新增参数end
 		String msg = this.submit(params);
-//		AccountTx accountTx = new AccountTx();
-//		Map map = JsonUtils.toObject(msg,Map.class);
-//		if (map.get("status").equals("success")) {
-//			Map result = (Map)map.get("result");
-//			accountTx.setAccount(result.get("account").toString());
-//			accountTx.setLedgerIndexMax(result.get("ledger_index_max").toString());
-//			accountTx.setLedgerIndexMin(result.get("ledger_index_min").toString());
-//			List<Map> list = (List<Map>)result.get("transactions");
-//			List<com.blink.jtblc.client.bean.Transaction> txs =new ArrayList<>();
-//			for(Map txMap:list){
-//				com.blink.jtblc.client.bean.Transaction tx = new com.blink.jtblc.client.bean.Transaction();
-//				Map _map = (Map)txMap.get("tx");
-//				tx.setAccount(_map.get("Account").toString());
-//				tx.setAmount(_map.get("Amount").toString());
-//				tx.setDestination(_map.get("Destination").toString());
-//				tx.setFee(_map.get("Fee").toString());
-//				//tx.setFlags(_map.get("Flags").toString().);
-//				tx.setSequence(Integer.valueOf(_map.get("Sequence").toString()));
-//				tx.setSigningPubKey(_map.get("SigningPubKey").toString());
-//				tx.setTimestamp(Integer.valueOf(_map.get("Timestamp").toString()));
-//				tx.setTransactionType(_map.get("TransactionType").toString());
-//				tx.setTxnSignature(_map.get("TxnSignature").toString());
-//				tx.setDate(Integer.valueOf(_map.get("Date").toString()));
-//				tx.setHash(_map.get("hash").toString());
-//				tx.setInLedger(Integer.valueOf(_map.get("inLedger").toString()));
-//				tx.setLedgerIndex(Integer.valueOf(_map.get("ledger_index").toString()));
-//				txs.add(tx);
-//			}
-//			accountTx.setTx(txs);
-//		} else if (map.get("status").equals("error")) {
-//			msg ="接口调用出错";
-//			throw new RuntimeException(msg);
-//		} else {
-//			throw new RuntimeException("unknown error");
-//		}
-		return JsonUtils.toEntity(msg,AccountTx.class);
+		AccountTx accountTx = new AccountTx();
+		Map map = JsonUtils.toObject(msg,Map.class);
+		if (map.get("status").equals("success")) {
+			Map result = (Map)map.get("result");
+			accountTx.setAccount(result.get("account").toString());
+			accountTx.setLedgerIndexMax(result.get("ledger_index_max").toString());
+			accountTx.setLedgerIndexMin(result.get("ledger_index_min").toString());
+			List<Map> list = (List<Map>)result.get("transactions");
+			List<com.blink.jtblc.client.bean.Transaction> txs =new ArrayList<>();
+			for(Map txMap:list){
+				com.blink.jtblc.client.bean.Transaction tx = new com.blink.jtblc.client.bean.Transaction();
+				Map _map = (Map)txMap.get("tx");
+				tx.setAccount(_map.get("Account")!=null?_map.get("Account").toString():"");
+				tx.setAmount(_map.get("Amount")!=null?_map.get("Amount").toString():"");
+				tx.setDestination(_map.get("Destination")!=null?_map.get("Destination").toString():"");
+				tx.setFee(_map.get("Fee")!=null?_map.get("Fee").toString():"");
+				tx.setFlags(_map.get("Flags")!=null?Long.valueOf(_map.get("Flags").toString()):0);
+				tx.setSequence(Integer.valueOf(_map.get("Sequence").toString()));
+				tx.setSigningPubKey(_map.get("SigningPubKey")!=null?_map.get("SigningPubKey").toString():"");
+				tx.setTimestamp(_map.get("Timestamp")!=null?Integer.valueOf(_map.get("Timestamp").toString()):0);
+				tx.setTransactionType(_map.get("TransactionType")!=null?_map.get("TransactionType").toString():"");
+				tx.setTxnSignature(_map.get("TxnSignature")!=null?_map.get("TxnSignature").toString():"");
+				if(_map.get("Date")!=null){
+                    tx.setDate(Integer.valueOf(_map.get("Date").toString()));
+
+                }
+				tx.setHash(_map.get("hash")!=null?_map.get("hash").toString():"");
+				tx.setInLedger(_map.get("inLedger")!=null?Integer.valueOf(_map.get("inLedger").toString()):0);
+				tx.setLedgerIndex(_map.get("ledger_index")!=null?Integer.valueOf(_map.get("ledger_index").toString()):0);
+				txs.add(tx);
+			}
+			accountTx.setTx(txs);
+		} else if (map.get("status").equals("error")) {
+			msg ="接口调用出错";
+			throw new RuntimeException(msg);
+		} else {
+			throw new RuntimeException("unknown error");
+		}
+		return accountTx;
 }
 	
 	/**

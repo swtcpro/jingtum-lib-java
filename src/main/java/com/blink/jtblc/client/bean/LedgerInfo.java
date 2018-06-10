@@ -31,7 +31,7 @@ public class LedgerInfo {
 	public Integer getFeeBase() {
 		return feeBase;
 	}
-	
+
 	public void setFeeBase(Integer feeBase) {
 		this.feeBase = feeBase;
 	}

@@ -5,15 +5,15 @@ import java.util.List;
 import java.util.Map;
 
 public class Meta {
-    private List<Object> affectednodes = new ArrayList<>();
+    private List<AffectedNode> affectednodes = new ArrayList<>();
     private Integer transactionIndex;
     private String transactionResult;
 
-    public List<Object> getAffectednodes() {
+    public List<AffectedNode> getAffectednodes() {
         return affectednodes;
     }
 
-    public void setAffectednodes(List<Object> affectednodes) {
+    public void setAffectednodes(List<AffectedNode> affectednodes) {
         this.affectednodes = affectednodes;
     }
 
