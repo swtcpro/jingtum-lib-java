@@ -7,12 +7,12 @@ import java.util.List;
  */
 public class AccountOffers {
 
-    private String account;
-    private String ledgerHash;
-    private Integer ledgerIndex;
-    private List<Offer> offers;
-    
-    private boolean validated;//
+    private String account;//钱包地址
+    private String ledgerHash;//账本hash
+    private Integer ledgerIndex;//账本高度
+    private List<Offer> offers;//该账户的挂单列表
+
+    private Boolean validated;//交易是否通过验证
 
     public String getAccount() {
         return account;
@@ -46,11 +46,11 @@ public class AccountOffers {
         this.offers = offers;
     }
 
-    public boolean isValidated() {
+    public Boolean isValidated() {
         return validated;
     }
 
-    public void setValidated(boolean validated) {
+    public void setValidated(Boolean validated) {
         this.validated = validated;
     }
 }

@@ -1,13 +1,16 @@
 package com.blink.jtblc.client.bean;
 
+/**
+ * 该账户的信任线
+ */
 public class Line {
-    private String account;
-    private String balance;
-    private String currency;
-    private String limit;
-    private String limitPeer;
-    private Integer qualityIn;
-    private Integer qualityOut;
+    private String account;//信任的银关
+    private String balance;//余额
+    private String currency;//货币种类
+    private String limit;//信任额度
+    private String limitPeer;//对方设置的信任额度，默认0
+    private Integer qualityIn;//兑换比例，默认0，暂时未用
+    private Integer qualityOut;//兑换比例，默认0，暂时未用
 
     public String getAccount() {
         return account;

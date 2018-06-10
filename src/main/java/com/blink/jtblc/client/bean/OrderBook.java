@@ -2,9 +2,12 @@ package com.blink.jtblc.client.bean;
 
 import java.util.List;
 
+/**
+ * 市场挂单列表
+ */
 public class OrderBook {
-    private String ledgerCurrentIndex;
-    private List<BookOffer> offers;
+    private String ledgerCurrentIndex;//当前账本号
+    private List<BookOffer> offers;//市场挂单列表
 
     public String getLedgerCurrentIndex() {
         return ledgerCurrentIndex;

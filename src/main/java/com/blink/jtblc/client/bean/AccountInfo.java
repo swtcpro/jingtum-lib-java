@@ -5,10 +5,11 @@ package com.blink.jtblc.client.bean;
  */
 public class AccountInfo {
 
-    private AccountData accountData;
-    private String ledgerCurrentIndex;
-    private Integer ledgerIndex;
-    private String validated;
+    private AccountData accountData;//账号信息
+    private String ledgerHash;//账本hash
+    private Integer ledgerIndex;//账本高度
+//    private String validated;//
+    private Boolean validated;//交易是否通过验证
 
     public AccountData getAccountData() {
         return accountData;
@@ -18,12 +19,12 @@ public class AccountInfo {
         this.accountData = accountData;
     }
 
-    public String getLedgerCurrentIndex() {
-        return ledgerCurrentIndex;
+    public String getLedgerHash() {
+        return ledgerHash;
     }
 
-    public void setLedgerCurrentIndex(String ledgerCurrentIndex) {
-        this.ledgerCurrentIndex = ledgerCurrentIndex;
+    public void setLedgerHash(String ledgerHash) {
+        this.ledgerHash = ledgerHash;
     }
 
     public Integer getLedgerIndex() {
@@ -34,11 +35,11 @@ public class AccountInfo {
         this.ledgerIndex = ledgerIndex;
     }
 
-    public String getValidated() {
+    public Boolean isValidated() {
         return validated;
     }
 
-    public void setValidated(String validated) {
+    public void setValidated(Boolean validated) {
         this.validated = validated;
     }
 }

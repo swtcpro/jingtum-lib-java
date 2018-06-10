@@ -1,9 +1,12 @@
 package com.blink.jtblc.client.bean;
 
+/**
+ * 信任额度
+ */
 public class TakerPay {
-    private String value;
-    private String currency;
-    private String issuer;
+    private String value;//金额
+    private String currency;//货币种类
+    private String issuer;//货币
 
     public String getValue() {
         return value;

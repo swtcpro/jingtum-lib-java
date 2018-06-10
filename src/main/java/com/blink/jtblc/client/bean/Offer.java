@@ -1,11 +1,11 @@
 package com.blink.jtblc.client.bean;
 
 public class Offer {
-    private Integer flags;
-    private String seq;
-    private Boolean validated;
-    private TakerGet takerGets;
-    private TakerPay takerPays;
+    private Integer flags;//买卖类型(131072表示卖，否则是买)
+    private String seq;//余额
+    private Boolean validated;//
+    private TakerGet takerGets;//货币种类
+    private TakerPay takerPays;//信任额度
 
     public Integer getFlags() {
         return flags;

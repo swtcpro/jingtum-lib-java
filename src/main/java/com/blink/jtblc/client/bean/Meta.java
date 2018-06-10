@@ -5,31 +5,31 @@ import java.util.List;
 import java.util.Map;
 
 public class Meta {
-    private List<Map> affectednodes = new ArrayList<>();
-    private Integer TransactionInde;
-    private Integer ransactionResult;
+    private List<Object> affectednodes = new ArrayList<>();
+    private Integer transactionIndex;
+    private String transactionResult;
 
-    public List<Map> getAffectednodes() {
+    public List<Object> getAffectednodes() {
         return affectednodes;
     }
 
-    public void setAffectednodes(List<Map> affectednodes) {
+    public void setAffectednodes(List<Object> affectednodes) {
         this.affectednodes = affectednodes;
     }
 
-    public Integer getTransactionInde() {
-        return TransactionInde;
+    public Integer getTransactionIndex() {
+        return transactionIndex;
     }
 
-    public void setTransactionInde(Integer transactionInde) {
-        TransactionInde = transactionInde;
+    public void setTransactionIndex(Integer transactionIndex) {
+        this.transactionIndex = transactionIndex;
     }
 
-    public Integer getRansactionResult() {
-        return ransactionResult;
+    public String getTransactionResult() {
+        return transactionResult;
     }
 
-    public void setRansactionResult(Integer ransactionResult) {
-        this.ransactionResult = ransactionResult;
+    public void setTransactionResult(String transactionResult) {
+        this.transactionResult = transactionResult;
     }
 }

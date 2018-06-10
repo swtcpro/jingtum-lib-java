@@ -2,19 +2,22 @@ package com.blink.jtblc.client.bean;
 
 import java.util.List;
 
+/**
+ * 账本详情
+ */
 public class LedgerDetail {
-    private Boolean accepted;
-    private String accountHash;
-    private Integer closeTime;
-    private String closeTimeHuman;
-    private Integer closeTimeResolution;
-    private Boolean closed;
-    private String hash;
-    private String parentHash;
-    private String seqNum;
-    private String totalCoins;
-    private String transactionHash;
-    private List<String> transactions;
+    private Boolean accepted;//区块是否已经产生
+    private String accountHash;//状态hash树根
+    private Integer closeTime;//关闭时间
+    private String closeTimeHuman;//关闭时间
+    private Integer closeTimeResolution;//关闭周期
+    private Boolean closed;//账本是否已经关闭
+    private String hash;//账本hash
+    private String parentHash;//上一区块hash值
+    private String seqNum;//账本高度/区块高度
+    private String totalCoins;//swt总量
+    private String transactionHash;//交易hash树根
+    private List<String> transactions;//该账本里的交易列表
 
     public Boolean getAccepted() {
         return accepted;

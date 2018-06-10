@@ -1,20 +1,23 @@
 package com.blink.jtblc.client.bean;
 
+/**
+ * 账本信息
+ */
 public class AccountData {
-    private String account;
-    private String balance;
-    private String domain;
-    private Integer flags;
-    private String messageKey;
-    private Integer ownerCount;
-    private String previousTxnId;
-    private Integer previousTxnLgrSeq;
-    private String regularKey;
-    private Integer sequence;
-    private Integer transferRate;
-    private String index;
+    private String account;//钱包地址
+    private String balance;//swt数量
+//    private String domain;//
+    private Integer flags;//属性标志
+//    private String messageKey;//公共密钥，用于发送加密的邮件到这个帐户
+    private Integer ownerCount;//用户拥有的挂单数和信任线数量的总和
+    private String previousTxnId;//操作该帐号的上一笔交易hash
+    private Integer previousTxnLgrSeq;//该帐号上一笔交易所在的账本号
+//    private String regularKey;
+    private Integer sequence;//账号当前序列号
+//    private Integer transferRate;
+    private String index;//该数据所在索引hash
 
-    private String ledgerEntryType;
+    private String ledgerEntryType;//
 
     public String getAccount() {
         return account;
@@ -32,14 +35,6 @@ public class AccountData {
         this.balance = balance;
     }
 
-    public String getDomain() {
-        return domain;
-    }
-
-    public void setDomain(String domain) {
-        this.domain = domain;
-    }
-
     public Integer getFlags() {
         return flags;
     }
@@ -48,13 +43,6 @@ public class AccountData {
         this.flags = flags;
     }
 
-    public String getMessageKey() {
-        return messageKey;
-    }
-
-    public void setMessageKey(String messageKey) {
-        this.messageKey = messageKey;
-    }
 
     public Integer getOwnerCount() {
         return ownerCount;
@@ -80,13 +68,6 @@ public class AccountData {
         this.previousTxnLgrSeq = previousTxnLgrSeq;
     }
 
-    public String getRegularKey() {
-        return regularKey;
-    }
-
-    public void setRegularKey(String regularKey) {
-        this.regularKey = regularKey;
-    }
 
     public Integer getSequence() {
         return sequence;
@@ -96,13 +77,6 @@ public class AccountData {
         this.sequence = sequence;
     }
 
-    public Integer getTransferRate() {
-        return transferRate;
-    }
-
-    public void setTransferRate(Integer transferRate) {
-        this.transferRate = transferRate;
-    }
 
     public String getIndex() {
         return index;

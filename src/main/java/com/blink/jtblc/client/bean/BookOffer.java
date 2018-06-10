@@ -1,38 +1,31 @@
 package com.blink.jtblc.client.bean;
 
+/**
+ * 市场挂单列表
+ */
 public class BookOffer {
-    private Integer account;
+    private String account;//账号地址
+    private String bookDirectory;//
+    private String bookNode;//
+    private Integer flags;//挂单买卖标记
+    private String ledgerEntryType;//账本数据结构类型
+    private String ownerNode;//
+    private String previousTxnId;//上一笔交易hash
+    private Integer previousTxnLgrSeq;//上一笔交易所在账本号
+    private Integer sequence;//单子序列号
+    private boolean validated;//
+    private TakerGet takergets;//对方得到的。(买卖双方，当货币是swt时，数据类型 为对象;否则为string)
+    private String takerPays;//对方支付的
+    private String index;//该数据所在索引hash
+    private String ownerFunds;//用户swt资产
+    private String quality;//价格或价格的倒数
 
-    private String ookDirector;
-    private String bookNode;
-
-    private Integer flags;
-
-    private String dgerEntryTy;
-    private String ownerNode;
-
-    private String previousTxnId;
-    private Integer previousTxnLgrSeq;
-    private Integer sequence;
-    private boolean validated;
-
-    private TakerGet takerGets;
-    private BookTakerPay takerPays;
-
-    public Integer getAccount() {
+    public String getAccount() {
         return account;
     }
 
-    public void setAccount(Integer account) {
+    public void setAccount(String account) {
         this.account = account;
-    }
-
-    public String getOokDirector() {
-        return ookDirector;
-    }
-
-    public void setOokDirector(String ookDirector) {
-        this.ookDirector = ookDirector;
     }
 
     public String getBookNode() {
@@ -51,13 +44,6 @@ public class BookOffer {
         this.flags = flags;
     }
 
-    public String getDgerEntryTy() {
-        return dgerEntryTy;
-    }
-
-    public void setDgerEntryTy(String dgerEntryTy) {
-        this.dgerEntryTy = dgerEntryTy;
-    }
 
     public String getOwnerNode() {
         return ownerNode;
@@ -99,19 +85,43 @@ public class BookOffer {
         this.validated = validated;
     }
 
-    public TakerGet getTakerGets() {
-        return takerGets;
+    public TakerGet getTakergets() {
+        return takergets;
     }
 
-    public void setTakerGets(TakerGet takerGets) {
-        this.takerGets = takerGets;
+    public void setTakergets(TakerGet takergets) {
+        this.takergets = takergets;
     }
 
-    public BookTakerPay getTakerPays() {
+    public String getTakerPays() {
         return takerPays;
     }
 
-    public void setTakerPays(BookTakerPay takerPays) {
+    public void setTakerPays(String takerPays) {
         this.takerPays = takerPays;
+    }
+
+    public String getIndex() {
+        return index;
+    }
+
+    public void setIndex(String index) {
+        this.index = index;
+    }
+
+    public String getOwnerFunds() {
+        return ownerFunds;
+    }
+
+    public void setOwnerFunds(String ownerFunds) {
+        this.ownerFunds = ownerFunds;
+    }
+
+    public String getQuality() {
+        return quality;
+    }
+
+    public void setQuality(String quality) {
+        this.quality = quality;
     }
 }

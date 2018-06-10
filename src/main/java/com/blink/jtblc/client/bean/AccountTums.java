@@ -6,11 +6,11 @@ import java.util.List;
  * 账号可接收和发送的货币
  */
 public class AccountTums {
-    private String ledgerHash;
-    private Integer ledgerIndex;
-    private List<String> receiveCurrencies;
-    private List<String> sendCurrencies;
-    private Boolean validated;
+    private String ledgerHash;//账本hash
+    private Integer ledgerIndex;//账本高度
+    private List<String> receiveCurrencies;//可接收的货币列表
+    private List<String> sendCurrencies;//可发送的货币列表
+    private Boolean validated;//可发送的货币列表
 
 	public Integer getLedgerIndex() {
 		return ledgerIndex;

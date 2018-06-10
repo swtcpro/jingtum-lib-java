@@ -6,23 +6,23 @@ package com.blink.jtblc.client.bean;
  * 交易信息
  */
 public class Account {
-    private String account;
-    private Amount amount;
-    private String destination;
-    private String fee;
-    private Long flags;
+    private String account;//钱包地址
+    private String amount;//交易金额
+    private String destination;//交易对家地址
+    private String fee;//交易费
+    private Long flags;//交易标记
 //    private List<String> memos; 返回值中没有，所以注释
-    private Integer sequence;
-    private String signingPubKey;
-    private Integer timestamp;
-    private String transactionType;
-    private String txnSignature;
-    private Integer date;
-    private String hash;
-    private Integer inLedger;
-    private String ledgerIndex;
-    private Meta meta;
-    private Boolean validated;
+    private Integer sequence;//自身账号的交易号
+    private String signingPubKey;//签名公钥
+    private Integer timestamp;//交易提交时间戳
+    private String transactionType;//交易类型
+    private String txnSignature;//交易签名
+    private Integer date;//交易进账本时间
+    private String hash;//交易hash
+    private Integer inLedger;//交易所在的账本号
+    private String ledgerIndex;//账本高度
+    private Meta meta;//交易影响的节点
+    private Boolean validated;//交易是否通过验证
 
 
     public String getAccount() {
@@ -33,11 +33,11 @@ public class Account {
         this.account = account;
     }
 
-    public Amount getAmount() {
+    public String getAmount() {
         return amount;
     }
 
-    public void setAmount(Amount amount) {
+    public void setAmount(String amount) {
         this.amount = amount;
     }
 

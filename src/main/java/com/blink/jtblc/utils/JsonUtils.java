@@ -18,6 +18,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.base.CaseFormat;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 
 /**
  * 据说Jackson 较 json-lib 性能要快很多
@@ -150,7 +151,7 @@ public class JsonUtils {
 				} else if (val instanceof List) {
 					transferList(prop, obj, attrKey, val);
 				} else if (val instanceof Integer || val instanceof Long || val instanceof Short || val instanceof Float
-				        || val instanceof String || val instanceof Double) {
+				        || val instanceof String || val instanceof Double || val instanceof Boolean) {
 					transferValue(prop, obj, val);
 				}
 			}
@@ -253,6 +254,8 @@ public class JsonUtils {
 				setter.invoke(obj, Float.parseFloat(val.toString()));
 			} else if (prop.getPropertyType().equals(Double.class)) {
 				setter.invoke(obj, Double.parseDouble(val.toString()));
+			}else if (prop.getPropertyType().equals(Boolean.class)){
+				setter.invoke(obj, Boolean.parseBoolean(val.toString()));
 			}
 		}
 	}

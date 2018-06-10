@@ -14,6 +14,7 @@ import com.blink.jtblc.connection.Connection;
 import com.blink.jtblc.exceptions.RemoteException;
 import com.blink.jtblc.utils.CheckUtils;
 import com.blink.jtblc.utils.JsonUtils;
+import sun.util.resources.cldr.mas.CalendarData_mas_KE;
 
 public class Remote {
 	private String server = "";
@@ -125,7 +126,7 @@ public class Remote {
 //			ledger.setLedgerDetail(ledgerDetail);
 //		}
 //		return ledger;
-		return JsonUtils.toObject(msg, Ledger.class);
+		return JsonUtils.toEntity(msg, Ledger.class);
 	}
 	
 	/**
@@ -284,7 +285,42 @@ public class Remote {
 		params.put("ledger_index_max", -1);
 		//新增参数end
 		String msg = this.submit(params);
-		return JsonUtils.toEntity(msg, AccountTx.class);
+//		AccountTx accountTx = new AccountTx();
+//		Map map = JsonUtils.toObject(msg,Map.class);
+//		if (map.get("status").equals("success")) {
+//			Map result = (Map)map.get("result");
+//			accountTx.setAccount(result.get("account").toString());
+//			accountTx.setLedgerIndexMax(result.get("ledger_index_max").toString());
+//			accountTx.setLedgerIndexMin(result.get("ledger_index_min").toString());
+//			List<Map> list = (List<Map>)result.get("transactions");
+//			List<com.blink.jtblc.client.bean.Transaction> txs =new ArrayList<>();
+//			for(Map txMap:list){
+//				com.blink.jtblc.client.bean.Transaction tx = new com.blink.jtblc.client.bean.Transaction();
+//				Map _map = (Map)txMap.get("tx");
+//				tx.setAccount(_map.get("Account").toString());
+//				tx.setAmount(_map.get("Amount").toString());
+//				tx.setDestination(_map.get("Destination").toString());
+//				tx.setFee(_map.get("Fee").toString());
+//				//tx.setFlags(_map.get("Flags").toString().);
+//				tx.setSequence(Integer.valueOf(_map.get("Sequence").toString()));
+//				tx.setSigningPubKey(_map.get("SigningPubKey").toString());
+//				tx.setTimestamp(Integer.valueOf(_map.get("Timestamp").toString()));
+//				tx.setTransactionType(_map.get("TransactionType").toString());
+//				tx.setTxnSignature(_map.get("TxnSignature").toString());
+//				tx.setDate(Integer.valueOf(_map.get("Date").toString()));
+//				tx.setHash(_map.get("hash").toString());
+//				tx.setInLedger(Integer.valueOf(_map.get("inLedger").toString()));
+//				tx.setLedgerIndex(Integer.valueOf(_map.get("ledger_index").toString()));
+//				txs.add(tx);
+//			}
+//			accountTx.setTx(txs);
+//		} else if (map.get("status").equals("error")) {
+//			msg ="接口调用出错";
+//			throw new RuntimeException(msg);
+//		} else {
+//			throw new RuntimeException("unknown error");
+//		}
+		return JsonUtils.toEntity(msg,AccountTx.class);
 }
 	
 	/**
@@ -324,7 +360,25 @@ public class Remote {
 		String msg = this.submit(params);
 		return JsonUtils.toEntity(msg, BookOffer.class);
 	}
-	
+
+	/**
+	 * 4.13 获得市场挂单列表
+	 * @param taker_gets 对家想要获得的货币信息
+	 * @param taker_pays 对家想要支付的货币信息
+	 * @param limit
+	 * @return
+	 */
+	public OrderBook requestOrderBook(Map taker_gets, Map taker_pays, Integer limit) {
+		Map params = new HashMap();
+		params.put("taker_gets", taker_gets);
+		params.put("taker_pays", taker_pays);
+		params.put("command", "book_offers");
+		params.put("taker","jjjjjjjjjjjjjjjjjjjjBZbvri");
+		params.put("limit", limit);
+		String msg = this.submit(params);
+		return JsonUtils.toEntity(msg, OrderBook.class);
+	}
+
 	/**
 	 * 获取交易对象
 	 *

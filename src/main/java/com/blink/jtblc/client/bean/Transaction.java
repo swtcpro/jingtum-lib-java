@@ -1,17 +1,101 @@
 package com.blink.jtblc.client.bean;
 
-import java.util.List;
 
 public class Transaction {
-    private Integer date;
-    private String hash;
-    private String transactionType;
-    private String fee;
-    private String transactionResult;
-//    private List memos;//接口返回暂时没有
-    private String counterparty;//接口返回暂时没有
-    private List effects;
-    private Amount amount;
+    private String account;//
+    private String amount;//交易金额对象
+    private String destination;//
+    private String fee;//手续费
+    private Integer flags;//
+    private Integer sequence;//
+    private String signingPubKey;//
+    private Integer timestamp;//
+    private String transactionType;//交易类型
+    private String txnSignature;//
+    private Integer date;//时间戳
+    private String hash;//交易hash
+    private Integer inLedger;//
+    private Integer ledgerIndex;//
+
+    public String getAccount() {
+        return account;
+    }
+
+    public void setAccount(String account) {
+        this.account = account;
+    }
+
+    public String getAmount() {
+        return amount;
+    }
+
+    public void setAmount(String amount) {
+        this.amount = amount;
+    }
+
+    public String getDestination() {
+        return destination;
+    }
+
+    public void setDestination(String destination) {
+        this.destination = destination;
+    }
+
+    public String getFee() {
+        return fee;
+    }
+
+    public void setFee(String fee) {
+        this.fee = fee;
+    }
+
+    public Integer getFlags() {
+        return flags;
+    }
+
+    public void setFlags(Integer flags) {
+        this.flags = flags;
+    }
+
+    public Integer getSequence() {
+        return sequence;
+    }
+
+    public void setSequence(Integer sequence) {
+        this.sequence = sequence;
+    }
+
+    public String getSigningPubKey() {
+        return signingPubKey;
+    }
+
+    public void setSigningPubKey(String signingPubKey) {
+        this.signingPubKey = signingPubKey;
+    }
+
+    public Integer getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(Integer timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public String getTransactionType() {
+        return transactionType;
+    }
+
+    public void setTransactionType(String transactionType) {
+        this.transactionType = transactionType;
+    }
+
+    public String getTxnSignature() {
+        return txnSignature;
+    }
+
+    public void setTxnSignature(String txnSignature) {
+        this.txnSignature = txnSignature;
+    }
 
     public Integer getDate() {
         return date;
@@ -29,53 +113,19 @@ public class Transaction {
         this.hash = hash;
     }
 
-
-    public String getFee() {
-        return fee;
+    public Integer getInLedger() {
+        return inLedger;
     }
 
-    public void setFee(String fee) {
-        this.fee = fee;
+    public void setInLedger(Integer inLedger) {
+        this.inLedger = inLedger;
     }
 
-
-    public String getCounterparty() {
-        return counterparty;
+    public Integer getLedgerIndex() {
+        return ledgerIndex;
     }
 
-    public void setCounterparty(String counterparty) {
-        this.counterparty = counterparty;
-    }
-
-    public List getEffects() {
-        return effects;
-    }
-
-    public void setEffects(List effects) {
-        this.effects = effects;
-    }
-
-    public Amount getAmount() {
-        return amount;
-    }
-
-    public void setAmount(Amount amount) {
-        this.amount = amount;
-    }
-
-    public String getTransactionType() {
-        return transactionType;
-    }
-
-    public void setTransactionType(String transactionType) {
-        this.transactionType = transactionType;
-    }
-
-    public String getTransactionResult() {
-        return transactionResult;
-    }
-
-    public void setTransactionResult(String transactionResult) {
-        this.transactionResult = transactionResult;
+    public void setLedgerIndex(Integer ledgerIndex) {
+        this.ledgerIndex = ledgerIndex;
     }
 }

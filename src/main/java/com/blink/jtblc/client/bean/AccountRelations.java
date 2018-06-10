@@ -6,11 +6,11 @@ import java.util.List;
  * 账号关系
  */
 public class AccountRelations {
-    private String account;
-    private String ledgerHash;
-    private Integer ledgerIndex;
-    private Boolean validated;
-    private List<Line> lines;
+    private String account;//钱包地址
+    private String ledgerHash;//账本hash
+    private Integer ledgerIndex;//账本高度
+    private Boolean validated;//交易是否通过验证
+    private List<Line> lines;//该账户的信任线
 
     public String getAccount() {
         return account;
