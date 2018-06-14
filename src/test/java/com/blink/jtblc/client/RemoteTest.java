@@ -8,7 +8,9 @@ import com.blink.jtblc.client.bean.AccountOffers;
 import com.blink.jtblc.client.bean.AccountPropertyInfo;
 import com.blink.jtblc.client.bean.AccountRelations;
 import com.blink.jtblc.client.bean.AccountTums;
+import com.blink.jtblc.client.bean.AccountTx;
 import com.blink.jtblc.client.bean.Amount;
+import com.blink.jtblc.client.bean.BookOffer;
 import com.blink.jtblc.client.bean.Ledger;
 import com.blink.jtblc.client.bean.LedgerClosed;
 import com.blink.jtblc.client.bean.OfferCancelInfo;
@@ -18,7 +20,6 @@ import com.blink.jtblc.client.bean.RelationInfo;
 import com.blink.jtblc.client.bean.ServerInfo;
 import com.blink.jtblc.connection.Connection;
 import com.blink.jtblc.connection.ConnectionFactory;
-import com.blink.jtblc.utils.JsonUtils;
 
 public class RemoteTest {
 	// 井通节点websocket链接：
@@ -39,7 +40,7 @@ public class RemoteTest {
 	//@Test
 	public void requestServerInfoTest() {
 		ServerInfo bean = remote.requestServerInfo();
-		System.out.println("state:" + bean.getState());
+		System.out.println("state:" + bean.getServerState());
 	}
 	
 	// 4.5 获取最新账本信息
@@ -78,7 +79,7 @@ public class RemoteTest {
 	//@Test
 	public void requestAccountTumsTest() {
 		AccountTums bean = remote.requestAccountTums(account_2);
-		System.out.println("requestAccountTumsTest:" + bean.getLedgerCurrentIndex());
+		System.out.println("requestAccountTumsTest:" + bean.getLedgerIndex());
 	}
 	
 	// 4.10 获得账号关系
@@ -99,8 +100,8 @@ public class RemoteTest {
 	// 4.12 获得账号交易列表
 	//@Test
 	public void requestAccountTxTest() {
-		String msg = remote.requestAccountTx(account_2, limit_num);
-		System.out.println("requestAccountTxTest:" + msg);
+		AccountTx bean = remote.requestAccountTx(account_2, limit_num);
+		System.out.println("requestAccountTxTest:" + bean.getAccount());
 	}
 	
 	// 4.13 获得市场挂单列表
@@ -116,9 +117,8 @@ public class RemoteTest {
 		Amount taker_pays = new Amount();
 		taker_pays.setCurrency(paysCurrency);
 		taker_pays.setIssuer(paysIssuer);
-		String msg = remote.requestOrderBook(taker_gets, taker_pays, limit_num);
-		AccountOffers bean = JsonUtils.toEntity(msg, AccountOffers.class);
-		System.out.println("requestOrderBookTest:" + msg);
+		BookOffer bean = remote.requestOrderBook(taker_gets, taker_pays, limit_num);
+		System.out.println("requestOrderBookTest:" + bean.getAccount());
 	}
 	
 	// 4.14 支付
