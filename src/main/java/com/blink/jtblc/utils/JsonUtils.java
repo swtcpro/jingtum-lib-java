@@ -154,6 +154,10 @@ public class JsonUtils {
 				        || val instanceof String || val instanceof Double || val instanceof Boolean) {
 					transferValue(prop, obj, val);
 				}
+			}else if(val != null && prop == null) {
+				if (val instanceof Map) {
+					transfer((Map<String, Object>) val,obj,props);
+				} 
 			}
 		}
 	}
