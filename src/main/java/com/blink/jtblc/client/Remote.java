@@ -17,14 +17,11 @@ import com.blink.jtblc.client.bean.AccountPropertyInfo;
 import com.blink.jtblc.client.bean.AccountRelations;
 import com.blink.jtblc.client.bean.AccountTums;
 import com.blink.jtblc.client.bean.AccountTx;
-import com.blink.jtblc.client.bean.AffectedNode;
 import com.blink.jtblc.client.bean.Amount;
 import com.blink.jtblc.client.bean.BookOffer;
 import com.blink.jtblc.client.bean.Ledger;
 import com.blink.jtblc.client.bean.LedgerClosed;
 import com.blink.jtblc.client.bean.LedgerInfo;
-import com.blink.jtblc.client.bean.Meta;
-import com.blink.jtblc.client.bean.ModifiedNode;
 import com.blink.jtblc.client.bean.OfferCancelInfo;
 import com.blink.jtblc.client.bean.OfferCreateInfo;
 import com.blink.jtblc.client.bean.OrderBook;
@@ -151,31 +148,8 @@ public class Remote {
 		String msg = this.sendMessage("tx", params);
 		Map map = JsonUtils.toObject(msg, Map.class);
 		Account account = new Account();
-		account = JsonUtils.toEntity(msg, Account.class);
 		if (map.get("status").equals("success")) {
 			account = JsonUtils.toEntity(msg, Account.class);
-			Meta meta = new Meta();
-			Map result = (Map) map.get("result");
-			Map metaMap = (Map) result.get("meta");
-			meta.setTransactionIndex(
-			        metaMap.get("TransactionIndex") != null ? Integer.valueOf(metaMap.get("TransactionIndex").toString()) : 0);
-			meta.setTransactionResult(metaMap.get("TransactionResult") != null ? metaMap.get("TransactionResult").toString() : "");
-			if (metaMap.get("AffectedNodes") != null) {
-				List<AffectedNode> affectednodes = new ArrayList<>();
-				List<Map> nodes = (List<Map>) metaMap.get("AffectedNodes");
-				if (nodes != null && nodes.size() > 0) {
-					for (Map node : nodes) {
-						AffectedNode affectedNode = new AffectedNode();
-						Map snode = (Map) node.get("ModifiedNode");
-						String str = JsonUtils.toJsonString(snode);
-						ModifiedNode modifiedNode = JsonUtils.toEntity(str, ModifiedNode.class);
-						affectedNode.setModifiedNode(modifiedNode);
-						affectednodes.add(affectedNode);
-					}
-				}
-				meta.setAffectedNodes(affectednodes);
-			}
-			account.setMeta(meta);
 		} else if (map.get("status").equals("error")) {
 			msg = "接口调用出错";
 			throw new RuntimeException(msg);
