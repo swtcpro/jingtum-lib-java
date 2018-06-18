@@ -8,10 +8,13 @@ import java.util.Map;
 import org.apache.commons.lang3.RandomUtils;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class WebSocket extends WebSocketClient {
+	final static Logger logger = LoggerFactory.getLogger(WebSocket.class);
 	private volatile Map<String, String> results = new HashMap<String, String>();
 	
 	public WebSocket(URI serverURI) {
@@ -40,13 +43,12 @@ public class WebSocket extends WebSocketClient {
 	
 	@Override
 	public void onOpen(ServerHandshake handshakedata) {
-		System.out.println("已连接");
+		logger.info("已连接");
 	}
 	
 	@Override
 	public void onMessage(String message) {
 		try {
-			System.out.println("收到消息" + message);
 			ObjectMapper mapper = new ObjectMapper();
 			Map map = mapper.readValue(message, Map.class);
 			results.put(map.get("id").toString(), message);
@@ -57,12 +59,11 @@ public class WebSocket extends WebSocketClient {
 	
 	@Override
 	public void onClose(int code, String reason, boolean remote) {
-		System.out.println("已离线");
+		logger.info("已离线");
 	}
 	
 	@Override
 	public void onError(Exception ex) {
-		System.out.println("发生错误");
-		ex.printStackTrace();
+		logger.error(ex.getMessage(), ex);
 	}
 }

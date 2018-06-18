@@ -33,13 +33,18 @@ public class NameUtils {
 	/**
 	 * covert field name to column name
 	 */
-	public static String getHumnName(String fieldName) {
+	public static String getCamelName(String fieldName) {
 		if (null == fieldName) {
 			return "";
 		}
-		fieldName = fieldName.toLowerCase();
-		char[] chars = fieldName.toCharArray();
 		StringBuffer sb = new StringBuffer();
+		if (fieldName.contains("_")) {
+			fieldName = fieldName.toLowerCase();
+		}
+		char[] chars = fieldName.toCharArray();
+		if (isUpper(chars[0])) {
+			chars[0] = toLower(chars[0]);
+		}
 		for (int i = 0; i < chars.length; i++) {
 			char c = chars[i];
 			if (c == '_') {
@@ -53,5 +58,35 @@ public class NameUtils {
 			}
 		}
 		return sb.toString();
+	}
+	
+	public static boolean isUpper(char c) {
+		return (c >= 'A' && c <= 'Z') ? true : false;
+	}
+	
+	public static boolean isLower(char c) {
+		return (c >= 'a' && c <= 'z') ? true : false;
+	}
+	
+	public static char toUpper(char c) {
+		return (char) (c & 223);
+	}
+	
+	public static char toLower(char c) {
+		return (char) (c | 32);
+	}
+	
+	public static void main(String[] args) {
+		System.out.println(NameUtils.getCamelName("aa_bb_cc"));
+		System.out.println(NameUtils.getCamelName("aaBb_cc"));
+		System.out.println(NameUtils.getCamelName("AaBbCc"));
+		System.out.println(NameUtils.isUpper('A'));
+		System.out.println(NameUtils.isUpper('a'));
+		System.out.println(NameUtils.isLower('A'));
+		System.out.println(NameUtils.isLower('a'));
+		System.out.println(NameUtils.toUpper('A'));
+		System.out.println(NameUtils.toUpper('a'));
+		System.out.println(NameUtils.toLower('A'));
+		System.out.println(NameUtils.toLower('a'));
 	}
 }

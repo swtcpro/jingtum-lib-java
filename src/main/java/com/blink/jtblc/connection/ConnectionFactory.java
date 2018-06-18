@@ -2,38 +2,24 @@ package com.blink.jtblc.connection;
 
 import java.net.URI;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class ConnectionFactory {
-
-	private static Connection connection;
-
-	private static WebSocket webSocket;
-	/**
-	 * 4.1 创建Connection对象
-	 * @return Connection
-	 */
-	public static Connection getCollection(String url){
+	final static Logger logger = LoggerFactory.getLogger(Connection.class);
+	
+	public static Connection getCollection(String url) {
+		Connection connection = null;
+		WebSocket webSocket = null;
 		try {
-			if(connection==null){
+			if (connection == null) {
 				webSocket = new WebSocket(URI.create(url));
 				webSocket.connect();
 				connection = new Connection(webSocket);
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error(e.getMessage(), e);
 		}
 		return connection;
 	}
-
-
-	/**
-	 * 关闭websocket连接
-	 */
-	public static void close(){
-		try {
-			webSocket.close();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
 }

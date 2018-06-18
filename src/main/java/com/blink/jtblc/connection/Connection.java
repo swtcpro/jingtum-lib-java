@@ -4,9 +4,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Future;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class Connection {
+	final static Logger logger = LoggerFactory.getLogger(Connection.class);
 	private static WebSocket webSocket;
 	
 	public Connection(WebSocket webSocket) {
@@ -31,8 +35,7 @@ public class Connection {
 				e.printStackTrace();
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
-			System.out.println("处理请求失败");
+			logger.error(e.getMessage(), e);
 		}
 		return result;
 	}
@@ -57,9 +60,17 @@ public class Connection {
 				e.printStackTrace();
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
-			System.out.println("处理请求失败");
+			logger.error(e.getMessage(), e);
 		}
 		return map;
+	}
+	
+	/**
+	 * 关闭webSocket连接
+	 */
+	public static void close() {
+		if (webSocket != null) {
+			webSocket.close();
+		}
 	}
 }

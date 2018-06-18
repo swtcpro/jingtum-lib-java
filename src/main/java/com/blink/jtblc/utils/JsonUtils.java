@@ -17,8 +17,6 @@ import java.util.Map;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.google.common.base.CaseFormat;
-import com.sun.org.apache.xpath.internal.operations.Bool;
 
 /**
  * 据说Jackson 较 json-lib 性能要快很多
@@ -37,7 +35,7 @@ public class JsonUtils {
 		try {
 			// 避免属性值为空转换异常的问题
 			om.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-			return om.writeValueAsString(obj);
+			return om.writerWithDefaultPrettyPrinter().writeValueAsString(obj);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -78,7 +76,6 @@ public class JsonUtils {
 			return null;
 		}
 		try {
-			System.out.println("转换前： " + jsonStr);
 			Map res = om.readValue(jsonStr, Map.class);
 			String status = (String) res.get("status");
 			if (status.equals("success")) {
@@ -143,9 +140,11 @@ public class JsonUtils {
 		for (Map.Entry<String, Object> entry : result.entrySet()) {
 			String key = entry.getKey();
 			Object val = entry.getValue();
-			String attrKey = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, key);
+			//
+			String attrKey = NameUtils.getCamelName(key);
 			PropertyDescriptor prop = props.get(attrKey.toUpperCase());
 			if (val != null && prop != null) {
+				System.out.println(key + "\t" + val + "\t" + attrKey);
 				if (val instanceof Map) {
 					transferMap(prop, obj, attrKey, val);
 				} else if (val instanceof List) {
@@ -154,10 +153,10 @@ public class JsonUtils {
 				        || val instanceof String || val instanceof Double || val instanceof Boolean) {
 					transferValue(prop, obj, val);
 				}
-			}else if(val != null && prop == null) {
+			} else if (val != null && prop == null) {
 				if (val instanceof Map) {
-					transfer((Map<String, Object>) val,obj,props);
-				} 
+					transfer((Map<String, Object>) val, obj, props);
+				}
 			}
 		}
 	}
@@ -182,6 +181,7 @@ public class JsonUtils {
 	        throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchFieldException, SecurityException,
 	        ClassNotFoundException, InstantiationException, IntrospectionException {
 		// Map->entity 一般对应一个实体
+		System.out.println("attrKey=" + attrKey + "\t" + obj.toString());
 		Field mapField = obj.getClass().getDeclaredField(attrKey);
 		Object chdObj = mapField.getType().newInstance();
 		BeanInfo beanInfo = Introspector.getBeanInfo(mapField.getType(), Object.class);
@@ -258,10 +258,9 @@ public class JsonUtils {
 				setter.invoke(obj, Float.parseFloat(val.toString()));
 			} else if (prop.getPropertyType().equals(Double.class)) {
 				setter.invoke(obj, Double.parseDouble(val.toString()));
-			}else if (prop.getPropertyType().equals(Boolean.class)){
+			} else if (prop.getPropertyType().equals(Boolean.class)) {
 				setter.invoke(obj, Boolean.parseBoolean(val.toString()));
 			}
 		}
 	}
-
 }

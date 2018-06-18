@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.blink.jtblc.client.bean.Account;
 import com.blink.jtblc.client.bean.AccountInfo;
@@ -35,6 +37,7 @@ import com.blink.jtblc.utils.CheckUtils;
 import com.blink.jtblc.utils.JsonUtils;
 
 public class Remote {
+	protected static final Logger logger = LoggerFactory.getLogger(Remote.class);
 	private String server = "";
 	// 签名默认为false,false需要传入密钥
 	private Boolean localSign = false;
@@ -60,6 +63,8 @@ public class Remote {
 		Map<String, Object> params = new HashMap();
 		params.put("command", command);
 		params.putAll(data);
+		logger.debug("WebSocket参数： " + JsonUtils.toJsonString(params));
+		System.out.println("WebSocket参数： " + JsonUtils.toJsonString(params));
 		return conn.submit(params);
 	}
 	
@@ -88,7 +93,6 @@ public class Remote {
 		return JsonUtils.toEntity(msg, ServerInfo.class);
 	}
 	
-
 	/**
 	 * 4.5 获取最新账本信息
 	 * 
@@ -100,7 +104,7 @@ public class Remote {
 		String msg = this.sendMessage("ledger_closed", params);
 		return JsonUtils.toEntity(msg, LedgerClosed.class);
 	}
-
+	
 	/**
 	 * 4.6 获取某一账本具体信息
 	 * 注：整体参数是Object类型，当参数都不填时，默认返回最新账本信息
@@ -110,40 +114,24 @@ public class Remote {
 	 * @param transactions 是否返回账本上的交易记录hash，默认false
 	 * @return
 	 */
-	public Ledger requestLedger(String ledger_index, String ledger_hash, boolean transactions) {
+	public Ledger requestLedger(String ledgerIndexOrHash, boolean transactions) {
 		Map params = new HashMap();
 		// 校验,并将参数写入message对象
 		Map message = new HashMap();
-		if (StringUtils.isEmpty(ledger_index) && StringUtils.isEmpty(ledger_hash)) {
-			message.put("ledger", new RemoteException("ledger_index and ledger_hash is null"));
+		if (StringUtils.isEmpty(ledgerIndexOrHash)) {
+			throw new RemoteException("ledger_index and ledger_hash is null");
 		}
-		if (!CheckUtils.isNumeric(ledger_index)) {
-			message.put("ledger_index", new RemoteException("invalid ledger_index"));
+		if (StringUtils.isBlank(ledgerIndexOrHash)) {
+			throw new RemoteException("invalid ledger_index or ledger_hash is null");
 		}
-		if (!CheckUtils.isValidHash(ledger_hash)) {
-			message.put("ledger_hash", new RemoteException("invalid ledger_hash"));
+		if (CheckUtils.isNumeric(ledgerIndexOrHash)) {
+			params.put("ledger_index", Integer.parseInt(ledgerIndexOrHash));
+		} else {
+			params.put("ledger_hash", ledgerIndexOrHash);
 		}
-		params.put("message", message);
-		params.put("ledger_index", ledger_index);
-		params.put("ledger_hash", ledger_hash);
+		// params.put("message", message);
 		params.put("transactions", transactions);
 		String msg = this.sendMessage("ledger", params);
-		//Map map = JsonUtils.toObject(msg, Map.class);
-//		Ledger ledger = new Ledger();
-//		if (map.get("status").equals("success")) {
-//			Map result = (Map) map.get("result");
-//			Map ledgerMap = (Map) result.get("ledger");
-//			LedgerDetail ledgerDetail = new LedgerDetail();
-//			ledgerDetail.setAccepted((Boolean) ledgerMap.get("accepted"));
-//			ledgerDetail.setParentHash(ledgerMap.get("parent_hash").toString());
-//			ledgerDetail.setCloseTimeHuman(ledgerMap.get("close_time_human").toString());
-//			ledgerDetail.setTotalCoins(ledgerMap.get("total_coins").toString());
-//
-//			ledger.setLedgerHash(ledgerMap.get("account_hash").toString());
-//			ledger.setLedgerIndex(ledgerMap.get("ledger_index").toString());
-//			ledger.setLedgerDetail(ledgerDetail);
-//		}
-//		return ledger;
 		return JsonUtils.toEntity(msg, Ledger.class);
 	}
 	
@@ -156,47 +144,44 @@ public class Remote {
 	public Account requestTx(String hash) {
 		Map params = new HashMap();
 		// 校验,并将参数写入message对象
-		Map message = new HashMap();
 		if (!CheckUtils.isValidHash(hash)) {
-			message.put("ledger_hash", new RemoteException("invalid tx hash"));
+			throw new RemoteException("invalid tx hash");
 		}
-		message.put("transaction", hash);
-		params.put("message", message);
 		params.put("transaction", hash);
-		// params.put("command", "tx");
 		String msg = this.sendMessage("tx", params);
-		Map map = JsonUtils.toObject(msg,Map.class);
+		Map map = JsonUtils.toObject(msg, Map.class);
 		Account account = new Account();
-
-        if (map.get("status").equals("success")) {
-            account = JsonUtils.toEntity(msg, Account.class);
-            Meta meta = new Meta();
-            Map result = (Map)map.get("result");
-            Map metaMap = (Map)result.get("meta");
-            meta.setTransactionIndex(metaMap.get("TransactionIndex")!=null?Integer.valueOf(metaMap.get("TransactionIndex").toString()):0);
-            meta.setTransactionResult(metaMap.get("TransactionResult")!=null?metaMap.get("TransactionResult").toString():"");
-            if(metaMap.get("AffectedNodes")!=null){
-                List<AffectedNode> affectednodes = new ArrayList<>();
-                    List<Map> nodes =(List<Map>)metaMap.get("AffectedNodes");
-                    if(nodes!=null&&nodes.size()>0){
-                        for (Map node : nodes) {
-                            AffectedNode affectedNode = new AffectedNode();
-                            Map snode = (Map)node.get("ModifiedNode");
-                            String str = JsonUtils.toJsonString(snode);
-                            ModifiedNode modifiedNode = JsonUtils.toEntity(str,ModifiedNode.class);
-                            affectedNode.setModifiedNode(modifiedNode);
-                            affectednodes.add(affectedNode);
-                        }
-                    }
-                meta.setAffectednodes(affectednodes);
-            }
-            account.setMeta(meta);
-        } else if (map.get("status").equals("error")) {
-            msg ="接口调用出错";
-            throw new RuntimeException(msg);
-        } else {
-            throw new RuntimeException("unknown error");
-        }
+		account = JsonUtils.toEntity(msg, Account.class);
+		if (map.get("status").equals("success")) {
+			account = JsonUtils.toEntity(msg, Account.class);
+			Meta meta = new Meta();
+			Map result = (Map) map.get("result");
+			Map metaMap = (Map) result.get("meta");
+			meta.setTransactionIndex(
+			        metaMap.get("TransactionIndex") != null ? Integer.valueOf(metaMap.get("TransactionIndex").toString()) : 0);
+			meta.setTransactionResult(metaMap.get("TransactionResult") != null ? metaMap.get("TransactionResult").toString() : "");
+			if (metaMap.get("AffectedNodes") != null) {
+				List<AffectedNode> affectednodes = new ArrayList<>();
+				List<Map> nodes = (List<Map>) metaMap.get("AffectedNodes");
+				if (nodes != null && nodes.size() > 0) {
+					for (Map node : nodes) {
+						AffectedNode affectedNode = new AffectedNode();
+						Map snode = (Map) node.get("ModifiedNode");
+						String str = JsonUtils.toJsonString(snode);
+						ModifiedNode modifiedNode = JsonUtils.toEntity(str, ModifiedNode.class);
+						affectedNode.setModifiedNode(modifiedNode);
+						affectednodes.add(affectedNode);
+					}
+				}
+				meta.setAffectedNodes(affectednodes);
+			}
+			account.setMeta(meta);
+		} else if (map.get("status").equals("error")) {
+			msg = "接口调用出错";
+			throw new RuntimeException(msg);
+		} else {
+			throw new RuntimeException("unknown error");
+		}
 		return account;
 	}
 	
@@ -219,7 +204,6 @@ public class Remote {
 	 * @return
 	 */
 	public AccountTums requestAccountTums(String account) {
-
 		String msg = requestAccount("account_currencies", account, "");
 		AccountTums accountTums = JsonUtils.toEntity(msg, AccountTums.class);
 		return accountTums;
@@ -298,7 +282,7 @@ public class Remote {
 		} else {
 			message.put("account", account);
 		}
-		params.put("ledger_index","validated"); //4.9 新增参数ledger_index值
+		params.put("ledger_index", "validated"); // 4.9 新增参数ledger_index值
 		params.put("message", message);
 		params.put("account", account);
 		params.put("command", command);
@@ -329,51 +313,50 @@ public class Remote {
 		params.put("message", message);
 		params.put("account", account);
 		params.put("command", "account_tx");
-		//新增参数start
+		// 新增参数start
 		params.put("ledger_index_min", 0);
 		params.put("ledger_index_max", -1);
-		//新增参数end
+		// 新增参数end
 		String msg = this.submit(params);
 		AccountTx accountTx = new AccountTx();
-		Map map = JsonUtils.toObject(msg,Map.class);
+		Map map = JsonUtils.toObject(msg, Map.class);
 		if (map.get("status").equals("success")) {
-			Map result = (Map)map.get("result");
+			Map result = (Map) map.get("result");
 			accountTx.setAccount(result.get("account").toString());
 			accountTx.setLedgerIndexMax(result.get("ledger_index_max").toString());
 			accountTx.setLedgerIndexMin(result.get("ledger_index_min").toString());
-			List<Map> list = (List<Map>)result.get("transactions");
-			List<com.blink.jtblc.client.bean.Transaction> txs =new ArrayList<>();
-			for(Map txMap:list){
+			List<Map> list = (List<Map>) result.get("transactions");
+			List<com.blink.jtblc.client.bean.Transaction> txs = new ArrayList<>();
+			for (Map txMap : list) {
 				com.blink.jtblc.client.bean.Transaction tx = new com.blink.jtblc.client.bean.Transaction();
-				Map _map = (Map)txMap.get("tx");
-				tx.setAccount(_map.get("Account")!=null?_map.get("Account").toString():"");
-				tx.setAmount(_map.get("Amount")!=null?_map.get("Amount").toString():"");
-				tx.setDestination(_map.get("Destination")!=null?_map.get("Destination").toString():"");
-				tx.setFee(_map.get("Fee")!=null?_map.get("Fee").toString():"");
-				tx.setFlags(_map.get("Flags")!=null?Long.valueOf(_map.get("Flags").toString()):0);
+				Map _map = (Map) txMap.get("tx");
+				tx.setAccount(_map.get("Account") != null ? _map.get("Account").toString() : "");
+				tx.setAmount(_map.get("Amount") != null ? _map.get("Amount").toString() : "");
+				tx.setDestination(_map.get("Destination") != null ? _map.get("Destination").toString() : "");
+				tx.setFee(_map.get("Fee") != null ? _map.get("Fee").toString() : "");
+				tx.setFlags(_map.get("Flags") != null ? Long.valueOf(_map.get("Flags").toString()) : 0);
 				tx.setSequence(Integer.valueOf(_map.get("Sequence").toString()));
-				tx.setSigningPubKey(_map.get("SigningPubKey")!=null?_map.get("SigningPubKey").toString():"");
-				tx.setTimestamp(_map.get("Timestamp")!=null?Integer.valueOf(_map.get("Timestamp").toString()):0);
-				tx.setTransactionType(_map.get("TransactionType")!=null?_map.get("TransactionType").toString():"");
-				tx.setTxnSignature(_map.get("TxnSignature")!=null?_map.get("TxnSignature").toString():"");
-				if(_map.get("Date")!=null){
-                    tx.setDate(Integer.valueOf(_map.get("Date").toString()));
-
-                }
-				tx.setHash(_map.get("hash")!=null?_map.get("hash").toString():"");
-				tx.setInLedger(_map.get("inLedger")!=null?Integer.valueOf(_map.get("inLedger").toString()):0);
-				tx.setLedgerIndex(_map.get("ledger_index")!=null?Integer.valueOf(_map.get("ledger_index").toString()):0);
+				tx.setSigningPubKey(_map.get("SigningPubKey") != null ? _map.get("SigningPubKey").toString() : "");
+				tx.setTimestamp(_map.get("Timestamp") != null ? Integer.valueOf(_map.get("Timestamp").toString()) : 0);
+				tx.setTransactionType(_map.get("TransactionType") != null ? _map.get("TransactionType").toString() : "");
+				tx.setTxnSignature(_map.get("TxnSignature") != null ? _map.get("TxnSignature").toString() : "");
+				if (_map.get("Date") != null) {
+					tx.setDate(Integer.valueOf(_map.get("Date").toString()));
+				}
+				tx.setHash(_map.get("hash") != null ? _map.get("hash").toString() : "");
+				tx.setInLedger(_map.get("inLedger") != null ? Integer.valueOf(_map.get("inLedger").toString()) : 0);
+				tx.setLedgerIndex(_map.get("ledger_index") != null ? Integer.valueOf(_map.get("ledger_index").toString()) : 0);
 				txs.add(tx);
 			}
 			accountTx.setTx(txs);
 		} else if (map.get("status").equals("error")) {
-			msg ="接口调用出错";
+			msg = "接口调用出错";
 			throw new RuntimeException(msg);
 		} else {
 			throw new RuntimeException("unknown error");
 		}
 		return accountTx;
-}
+	}
 	
 	/**
 	 * 获得市场挂单列表
@@ -404,17 +387,18 @@ public class Remote {
 		if (!CheckUtils.isValidAmount(taker_pays)) {
 			throw new RemoteException("invalid taker pays amount");
 		}
-//		params.put("limit", limit);
+		// params.put("limit", limit);
 		params.put("taker_gets", taker_gets);
 		params.put("taker_pays", taker_pays);
 		params.put("command", "book_offers");
-		params.put("taker","jjjjjjjjjjjjjjjjjjjjBZbvri");
+		params.put("taker", "jjjjjjjjjjjjjjjjjjjjBZbvri");
 		String msg = this.submit(params);
 		return JsonUtils.toEntity(msg, BookOffer.class);
 	}
-
+	
 	/**
 	 * 4.13 获得市场挂单列表
+	 * 
 	 * @param taker_gets 对家想要获得的货币信息
 	 * @param taker_pays 对家想要支付的货币信息
 	 * @param limit
@@ -425,12 +409,12 @@ public class Remote {
 		params.put("taker_gets", taker_gets);
 		params.put("taker_pays", taker_pays);
 		params.put("command", "book_offers");
-		params.put("taker","jjjjjjjjjjjjjjjjjjjjBZbvri");
+		params.put("taker", "jjjjjjjjjjjjjjjjjjjjBZbvri");
 		params.put("limit", limit);
 		String msg = this.submit(params);
 		return JsonUtils.toEntity(msg, OrderBook.class);
 	}
-
+	
 	/**
 	 * 获取交易对象
 	 *
@@ -713,7 +697,8 @@ public class Remote {
 	 * @param memo
 	 * @return
 	 */
-	public OfferCreateInfo buildOfferCreateTx(String type, String account, Amount getsAmount, Amount paysAmount, String memo, String secret) {
+	public OfferCreateInfo buildOfferCreateTx(String type, String account, Amount getsAmount, Amount paysAmount, String memo,
+	        String secret) {
 		Transaction tx = new Transaction();
 		tx.setCommand("submit");
 		tx.setSecret(secret);

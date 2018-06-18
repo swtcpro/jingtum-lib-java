@@ -3,9 +3,13 @@ package com.blink.jtblc.connection;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.blink.jtblc.utils.JsonUtils;
 
 public class HandleProcessTask implements Callable<String> {
+	final static Logger logger = LoggerFactory.getLogger(HandleProcessTask.class);
 	private Map<String, Object> params;
 	private WebSocket webSocket;
 	
