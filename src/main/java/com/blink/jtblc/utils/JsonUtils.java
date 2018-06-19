@@ -144,7 +144,7 @@ public class JsonUtils {
 			String attrKey = NameUtils.getCamelName(key);
 			PropertyDescriptor prop = props.get(attrKey.toUpperCase());
 			if (val != null && prop != null) {
-				System.out.println(key + "\t" + val + "\t" + attrKey);
+				// System.out.println(key + "\t" + val + "\t" + attrKey);
 				if (val instanceof Map) {
 					transferMap(prop, obj, attrKey, val);
 				} else if (val instanceof List) {
@@ -181,7 +181,7 @@ public class JsonUtils {
 	        throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchFieldException, SecurityException,
 	        ClassNotFoundException, InstantiationException, IntrospectionException {
 		// Map->entity 一般对应一个实体
-		System.out.println("attrKey=" + attrKey + "\t" + obj.toString());
+		// System.out.println("attrKey=" + attrKey + "\t" + obj.toString());
 		Field mapField = obj.getClass().getDeclaredField(attrKey);
 		Object chdObj = mapField.getType().newInstance();
 		BeanInfo beanInfo = Introspector.getBeanInfo(mapField.getType(), Object.class);
@@ -218,15 +218,19 @@ public class JsonUtils {
 			List chdList = new ArrayList<>();
 			prop.getWriteMethod().invoke(obj, chdList);
 			Type actualType = listActualTypeArguments[0];
-			List<Map> items = (List) val;
-			for (Map map : items) {
-				Class clazz = Class.forName(actualType.getTypeName());
-				Object item = clazz.newInstance();
-				BeanInfo beanInfo = Introspector.getBeanInfo(clazz, Object.class);
-				PropertyDescriptor[] chdPds = beanInfo.getPropertyDescriptors();
-				Map<String, PropertyDescriptor> chdProps = propDesc2Map(chdPds);
-				transfer((Map<String, Object>) map, item, chdProps);
-				chdList.add(item);
+			if (actualType.getTypeName().contains("java.lang.") || actualType.getTypeName().contains("java.util.")) {
+				chdList = (List) val;
+			} else {
+				List<Map> items = (List) val;
+				for (Map map : items) {
+					Class clazz = Class.forName(actualType.getTypeName());
+					Object item = clazz.newInstance();
+					BeanInfo beanInfo = Introspector.getBeanInfo(clazz, Object.class);
+					PropertyDescriptor[] chdPds = beanInfo.getPropertyDescriptors();
+					Map<String, PropertyDescriptor> chdProps = propDesc2Map(chdPds);
+					transfer((Map<String, Object>) map, item, chdProps);
+					chdList.add(item);
+				}
 			}
 		}
 	}

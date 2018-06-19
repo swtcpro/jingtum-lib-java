@@ -14,6 +14,7 @@ public class Test2 {
 	private static ObjectMapper om = new ObjectMapper();
 	
 	public static void main(String[] args) throws Exception {
+		System.out.println(Map.class);
 		TestClass t = new TestClass();
 		TestClass t1 = new TestClass();
 		t1.setName("t1");

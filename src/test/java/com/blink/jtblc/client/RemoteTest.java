@@ -112,7 +112,7 @@ public class RemoteTest {
 		String hash = "162D46BFD8A001D96F8E440B8A75E2EF5CD22538C1EDB039389AE589914E70A8";
 		Account bean = remote.requestTx(hash);
 		System.out.println("requestTxTest:" + bean.getAccount());
-		System.out.println("4.6 requestLedgerTest:\n" + JsonUtils.toJsonString(bean));
+		System.out.println("4.7 requestTxTest:\n" + JsonUtils.toJsonString(bean));
 	}
 	
 	// 4.8 请求账号信息
@@ -120,14 +120,18 @@ public class RemoteTest {
 	public void requestAccountInfoTest() {
 		AccountInfo bean = remote.requestAccountInfo(account_1);
 		System.out.println("账号金额：" + bean.getAccountData().getBalance());
-		System.out.println("4.6 requestLedgerTest:\n" + JsonUtils.toJsonString(bean));
+		System.out.println("4.8 requestAccountInfoTest:\n" + JsonUtils.toJsonString(bean));
+		bean = remote.requestAccountInfo(account_2);
+		System.out.println("账号金额：" + bean.getAccountData().getBalance());
+		System.out.println("4.8 requestAccountInfoTest:\n" + JsonUtils.toJsonString(bean));
 	}
 	
 	// 4.9 获得账号可接收和发送的货币
-	// @Test
+	@Test
 	public void requestAccountTumsTest() {
 		AccountTums bean = remote.requestAccountTums(account_2);
 		System.out.println("requestAccountTumsTest:" + bean.getLedgerIndex());
+		System.out.println("4.9 requestAccountTumsTest:\n" + JsonUtils.toJsonString(bean));
 	}
 	
 	// 4.10 获得账号关系

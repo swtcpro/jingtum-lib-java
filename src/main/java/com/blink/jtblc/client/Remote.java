@@ -772,6 +772,7 @@ public class Remote {
 		params.remove("message");
 		System.out.println("参数：" + JsonUtils.toJsonString(params));
 		String msg = this.conn.submit(params);
+		System.out.println(msg);
 		return msg;
 	}
 	
