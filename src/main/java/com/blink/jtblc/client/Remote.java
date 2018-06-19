@@ -16,7 +16,7 @@ import com.blink.jtblc.client.bean.AccountRelations;
 import com.blink.jtblc.client.bean.AccountTums;
 import com.blink.jtblc.client.bean.AccountTx;
 import com.blink.jtblc.client.bean.Amount;
-import com.blink.jtblc.client.bean.BookOffer;
+import com.blink.jtblc.client.bean.BookOffers;
 import com.blink.jtblc.client.bean.Ledger;
 import com.blink.jtblc.client.bean.LedgerClosed;
 import com.blink.jtblc.client.bean.LedgerInfo;
@@ -338,7 +338,7 @@ public class Remote {
 	 * @param limit 限定返回多少条记录
 	 * @return
 	 */
-	public BookOffer requestOrderBook(Amount taker_gets, Amount taker_pays, Integer limit) {
+	public BookOffers requestOrderBook(Amount taker_gets, Amount taker_pays, Integer limit) {
 		Map params = new HashMap();
 		/*
 		 * Map gets = new HashMap();
@@ -365,7 +365,7 @@ public class Remote {
 		params.put("command", "book_offers");
 		params.put("taker", Config.ACCOUNT_ONE);
 		String msg = this.submit(params);
-		return JsonUtils.toEntity(msg, BookOffer.class);
+		return JsonUtils.toEntity(msg, BookOffers.class);
 	}
 	
 	/**

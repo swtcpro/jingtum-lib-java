@@ -25,7 +25,7 @@ public class CheckUtils {
 		return false;
 	}
 	
-	public static final String CURRENCY_RE = "/^([a-zA-Z0-9]{3,6}|[A-F0-9]{40})$/";// 邮政编码的正则表达式
+	public static final String CURRENCY_RE = "(([a-zA-Z0-9]{3,6})|([A-F0-9]{40}))";// 邮政编码的正则表达式
 	public static Pattern pattern = Pattern.compile(CURRENCY_RE);
 	
 	/**
@@ -35,13 +35,13 @@ public class CheckUtils {
 	 * @return
 	 */
 	public static boolean isValidAmount(Amount amount) {
-		if (StringUtils.isBlank(amount.getCurrency().trim()) || !pattern.matcher(amount.getCurrency()).find()) {
+		if (StringUtils.isBlank(amount.getCurrency()) || !pattern.matcher(amount.getCurrency()).find()) {
 			return false;
 		}
 		if (amount.getCurrency().equals(Config.CURRENCY) && StringUtils.isNotBlank(amount.getIssuer())) {
 			return false;
 		}
-		if (!amount.getCurrency().equals(Config.CURRENCY) && Wallet.isValidAddress(amount.getIssuer())) {
+		if (!amount.getCurrency().equals(Config.CURRENCY) && !Wallet.isValidAddress(amount.getIssuer())) {
 			return false;
 		}
 		return true;

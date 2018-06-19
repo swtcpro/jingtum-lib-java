@@ -12,7 +12,7 @@ import com.blink.jtblc.client.bean.AccountRelations;
 import com.blink.jtblc.client.bean.AccountTums;
 import com.blink.jtblc.client.bean.AccountTx;
 import com.blink.jtblc.client.bean.Amount;
-import com.blink.jtblc.client.bean.BookOffer;
+import com.blink.jtblc.client.bean.BookOffers;
 import com.blink.jtblc.client.bean.Ledger;
 import com.blink.jtblc.client.bean.LedgerClosed;
 import com.blink.jtblc.client.bean.LedgerInfo;
@@ -170,15 +170,15 @@ public class RemoteTest {
 		String getsCurrency = "SWT";
 		String getsIssuer = "";
 		String paysCurrency = "CNY";
-		String paysIssuer = "jGa9J9TkqtBcUoHe2zqhVFFbgUVED6o9or";
+		String paysIssuer = "jBciDE8Q3uJjf111VeiUNM775AMKHEbBLS";
 		Amount taker_gets = new Amount();
 		taker_gets.setCurrency(getsCurrency);
 		taker_gets.setIssuer(getsIssuer);
 		Amount taker_pays = new Amount();
 		taker_pays.setCurrency(paysCurrency);
 		taker_pays.setIssuer(paysIssuer);
-		BookOffer bean = remote.requestOrderBook(taker_gets, taker_pays, limit_num);
-		System.out.println("requestOrderBookTest:" + bean.getAccount());
+		BookOffers bean = remote.requestOrderBook(taker_gets, taker_pays, limit_num);
+		System.out.println("4.13 requestOrderBookTest:\n" + JsonUtils.toJsonString(bean));
 	}
 	
 	// 4.14 支付
