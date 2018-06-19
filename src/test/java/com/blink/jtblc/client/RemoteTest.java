@@ -36,7 +36,7 @@ public class RemoteTest {
 	// 主账号
 	String account_2 = "j47gDd3ethDU4UJMD2rosg9WrSXeh9bLd1";
 	String secret_2 = "shFsfC6b1GCfxHn4Y4b3TSALHo37i";
-	Integer limit_num = 10;
+	Integer limit_num = 100;
 	Connection conn = ConnectionFactory.getCollection(server);
 	Remote remote = new Remote(conn);
 	
@@ -135,29 +135,37 @@ public class RemoteTest {
 	}
 	
 	// 4.10 获得账号关系
-	// @Test
+	@Test
 	public void requestAccountRelationsTest() {
 		String type = "trust";
-		AccountRelations bean = remote.requestAccountRelations(account_1, type);
-		System.out.println("requestAccountRelationsTest:" + bean.getAccount());
+		AccountRelations bean = null;
+		// bean = remote.requestAccountRelations(account_1, type);
+		// System.out.println("4.10 requestAccountRelationsTest:\n" + JsonUtils.toJsonString(bean));
+		type = "authorize";
+		// bean = remote.requestAccountRelations(account_1, type);
+		// System.out.println("4.10 requestAccountRelationsTest:\n" + JsonUtils.toJsonString(bean));
+		type = "freeze";
+		bean = remote.requestAccountRelations(account_1, type);
+		System.out.println("4.10 requestAccountRelationsTest:\n" + JsonUtils.toJsonString(bean));
+		// 信任(trust)、授权(authorize)、冻结(freeze)。
 	}
 	
 	// 4.11 获得账号挂单
-	// @Test
+	@Test
 	public void requestAccountOffersTest() {
-		AccountOffers bean = remote.requestAccountOffers(account_2);
-		System.out.println("requestAccountOffersTest:" + bean.getAccount());
+		AccountOffers bean = remote.requestAccountOffers("jB7rxgh43ncbTX4WeMoeadiGMfmfqY2xLZ");
+		System.out.println("4.11 requestAccountOffersTest:\n" + JsonUtils.toJsonString(bean));
 	}
 	
 	// 4.12 获得账号交易列表
-	// @Test
+	@Test
 	public void requestAccountTxTest() {
-		AccountTx bean = remote.requestAccountTx(account_2, limit_num);
-		System.out.println("requestAccountTxTest:" + bean.getAccount());
+		AccountTx bean = remote.requestAccountTx("jB7rxgh43ncbTX4WeMoeadiGMfmfqY2xLZ", limit_num);
+		System.out.println("4.12 requestAccountTxTest:\n" + JsonUtils.toJsonString(bean));
 	}
 	
 	// 4.13 获得市场挂单列表
-	// @Test
+	@Test
 	public void requestOrderBookTest() {
 		String getsCurrency = "SWT";
 		String getsIssuer = "";

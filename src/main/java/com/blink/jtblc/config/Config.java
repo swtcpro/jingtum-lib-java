@@ -10,10 +10,14 @@ import com.blink.jtblc.encoding.base58.B58;
 // Somewhat of a global registry, dependency injection ala guice would be nicer, but trying to KISS
 public class Config {
 	public static final String DEFAULT_ALPHABET = "jpshnaf39wBUDNEGHJKLM4PQRST7VWXYZ2bcdeCg65rkm8oFqi1tuvAxyz";
-	private static B58IdentiferCodecs b58IdentiferCodecs;
-	private static double feeCushion;
-	private static B58 b58;
+	public static B58IdentiferCodecs b58IdentiferCodecs;
+	public static double feeCushion;
+	public static B58 b58;
 	public static int SEED_PREFIX = 33;
+	public static String CURRENCY = "SWT";
+	public static String ACCOUNT_ZERO = "jjjjjjjjjjjjjjjjjjjjjhoLvTp";
+	public static String ACCOUNT_ONE = "jjjjjjjjjjjjjjjjjjjjBZbvri";
+	public static Integer FEE = 10000;
 	
 	public static void setAlphabet(String alphabet) {
 		b58 = new B58(alphabet);

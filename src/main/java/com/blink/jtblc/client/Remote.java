@@ -1,9 +1,7 @@
 package com.blink.jtblc.client;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
@@ -28,6 +26,7 @@ import com.blink.jtblc.client.bean.OrderBook;
 import com.blink.jtblc.client.bean.PaymentInfo;
 import com.blink.jtblc.client.bean.RelationInfo;
 import com.blink.jtblc.client.bean.ServerInfo;
+import com.blink.jtblc.config.Config;
 import com.blink.jtblc.connection.Connection;
 import com.blink.jtblc.exceptions.RemoteException;
 import com.blink.jtblc.utils.CheckUtils;
@@ -200,12 +199,10 @@ public class Remote {
 				command = "account_lines";
 				break;
 			case "authorize":
-				break;
 			case "freeze":
 				command = "account_relation";
 				break;
 		}
-		System.out.println(command);
 		String msg = requestAccount(command, account, type);
 		AccountRelations accountRelations = JsonUtils.toEntity(msg, AccountRelations.class);
 		return accountRelations;
@@ -235,7 +232,6 @@ public class Remote {
 	private String requestAccount(String command, String account, String type) {
 		Map params = new HashMap();
 		// 校验,并将参数写入message对象
-		Map message = new HashMap();
 		if (StringUtils.isNotEmpty(type)) {
 			Integer relation_type = null;
 			switch (type) {
@@ -249,15 +245,15 @@ public class Remote {
 					relation_type = 3;
 					break;
 			}
-			message.put("relation_type", relation_type);
+			params.put("relation_type", relation_type);
 		}
 		if (!CheckUtils.isValidAddress(account)) {
 			throw new RemoteException("invalid account");
 		} else {
-			message.put("account", account);
+			params.put("account", account);
 		}
 		params.put("ledger_index", "validated"); // 4.9 新增参数ledger_index值
-		params.put("message", message);
+		// params.put("message", message);
 		params.put("account", account);
 		params.put("command", command);
 		String msg = this.submit(params);
@@ -277,14 +273,14 @@ public class Remote {
 		}
 		Map params = new HashMap();
 		// 校验,并将参数写入message对象
-		Map message = new HashMap();
-		message.put("limit", limit);
 		if (!CheckUtils.isValidAddress(account)) {
 			throw new RemoteException("account parameter is invalid");
 		} else {
-			message.put("account", account);
+			params.put("account", account);
 		}
-		params.put("message", message);
+		if (limit != null) {
+			params.put("limit", limit);
+		}
 		params.put("account", account);
 		params.put("command", "account_tx");
 		// 新增参数start
@@ -292,43 +288,43 @@ public class Remote {
 		params.put("ledger_index_max", -1);
 		// 新增参数end
 		String msg = this.submit(params);
-		AccountTx accountTx = new AccountTx();
-		Map map = JsonUtils.toObject(msg, Map.class);
-		if (map.get("status").equals("success")) {
-			Map result = (Map) map.get("result");
-			accountTx.setAccount(result.get("account").toString());
-			accountTx.setLedgerIndexMax(result.get("ledger_index_max").toString());
-			accountTx.setLedgerIndexMin(result.get("ledger_index_min").toString());
-			List<Map> list = (List<Map>) result.get("transactions");
-			List<com.blink.jtblc.client.bean.Transaction> txs = new ArrayList<>();
-			for (Map txMap : list) {
-				com.blink.jtblc.client.bean.Transaction tx = new com.blink.jtblc.client.bean.Transaction();
-				Map _map = (Map) txMap.get("tx");
-				tx.setAccount(_map.get("Account") != null ? _map.get("Account").toString() : "");
-				tx.setAmount(_map.get("Amount") != null ? _map.get("Amount").toString() : "");
-				tx.setDestination(_map.get("Destination") != null ? _map.get("Destination").toString() : "");
-				tx.setFee(_map.get("Fee") != null ? _map.get("Fee").toString() : "");
-				tx.setFlags(_map.get("Flags") != null ? Long.valueOf(_map.get("Flags").toString()) : 0);
-				tx.setSequence(Integer.valueOf(_map.get("Sequence").toString()));
-				tx.setSigningPubKey(_map.get("SigningPubKey") != null ? _map.get("SigningPubKey").toString() : "");
-				tx.setTimestamp(_map.get("Timestamp") != null ? Integer.valueOf(_map.get("Timestamp").toString()) : 0);
-				tx.setTransactionType(_map.get("TransactionType") != null ? _map.get("TransactionType").toString() : "");
-				tx.setTxnSignature(_map.get("TxnSignature") != null ? _map.get("TxnSignature").toString() : "");
-				if (_map.get("Date") != null) {
-					tx.setDate(Integer.valueOf(_map.get("Date").toString()));
-				}
-				tx.setHash(_map.get("hash") != null ? _map.get("hash").toString() : "");
-				tx.setInLedger(_map.get("inLedger") != null ? Integer.valueOf(_map.get("inLedger").toString()) : 0);
-				tx.setLedgerIndex(_map.get("ledger_index") != null ? Integer.valueOf(_map.get("ledger_index").toString()) : 0);
-				txs.add(tx);
-			}
-			accountTx.setTx(txs);
-		} else if (map.get("status").equals("error")) {
-			msg = "接口调用出错";
-			throw new RuntimeException(msg);
-		} else {
-			throw new RuntimeException("unknown error");
-		}
+		AccountTx accountTx = JsonUtils.toEntity(msg, AccountTx.class);
+		// Map map = JsonUtils.toObject(msg, Map.class);
+		// if (map.get("status").equals("success")) {
+		// Map result = (Map) map.get("result");
+		// accountTx.setAccount(result.get("account").toString());
+		// accountTx.setLedgerIndexMax(result.get("ledger_index_max").toString());
+		// accountTx.setLedgerIndexMin(result.get("ledger_index_min").toString());
+		// List<Map> list = (List<Map>) result.get("transactions");
+		// List<com.blink.jtblc.client.bean.Transaction> txs = new ArrayList<>();
+		// for (Map txMap : list) {
+		// com.blink.jtblc.client.bean.Transaction tx = new com.blink.jtblc.client.bean.Transaction();
+		// Map _map = (Map) txMap.get("tx");
+		// tx.setAccount(_map.get("Account") != null ? _map.get("Account").toString() : "");
+		// tx.setAmount(_map.get("Amount") != null ? _map.get("Amount").toString() : "");
+		// tx.setDestination(_map.get("Destination") != null ? _map.get("Destination").toString() : "");
+		// tx.setFee(_map.get("Fee") != null ? _map.get("Fee").toString() : "");
+		// tx.setFlags(_map.get("Flags") != null ? Long.valueOf(_map.get("Flags").toString()) : 0);
+		// tx.setSequence(Integer.valueOf(_map.get("Sequence").toString()));
+		// tx.setSigningPubKey(_map.get("SigningPubKey") != null ? _map.get("SigningPubKey").toString() : "");
+		// tx.setTimestamp(_map.get("Timestamp") != null ? Integer.valueOf(_map.get("Timestamp").toString()) : 0);
+		// tx.setTransactionType(_map.get("TransactionType") != null ? _map.get("TransactionType").toString() : "");
+		// tx.setTxnSignature(_map.get("TxnSignature") != null ? _map.get("TxnSignature").toString() : "");
+		// if (_map.get("Date") != null) {
+		// tx.setDate(Integer.valueOf(_map.get("Date").toString()));
+		// }
+		// tx.setHash(_map.get("hash") != null ? _map.get("hash").toString() : "");
+		// tx.setInLedger(_map.get("inLedger") != null ? Integer.valueOf(_map.get("inLedger").toString()) : 0);
+		// tx.setLedgerIndex(_map.get("ledger_index") != null ? Integer.valueOf(_map.get("ledger_index").toString()) : 0);
+		// txs.add(tx);
+		// }
+		// accountTx.setTx(txs);
+		// } else if (map.get("status").equals("error")) {
+		// msg = "接口调用出错";
+		// throw new RuntimeException(msg);
+		// } else {
+		// throw new RuntimeException("unknown error");
+		// }
 		return accountTx;
 	}
 	
@@ -361,11 +357,13 @@ public class Remote {
 		if (!CheckUtils.isValidAmount(taker_pays)) {
 			throw new RemoteException("invalid taker pays amount");
 		}
-		// params.put("limit", limit);
+		if (limit != null) {
+			params.put("limit", limit);
+		}
 		params.put("taker_gets", taker_gets);
 		params.put("taker_pays", taker_pays);
 		params.put("command", "book_offers");
-		params.put("taker", "jjjjjjjjjjjjjjjjjjjjBZbvri");
+		params.put("taker", Config.ACCOUNT_ONE);
 		String msg = this.submit(params);
 		return JsonUtils.toEntity(msg, BookOffer.class);
 	}
