@@ -1,8 +1,15 @@
 package com.blink.jtblc.client;
 
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -31,9 +38,12 @@ import com.blink.jtblc.connection.Connection;
 import com.blink.jtblc.exceptions.RemoteException;
 import com.blink.jtblc.utils.CheckUtils;
 import com.blink.jtblc.utils.JsonUtils;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class Remote {
 	protected static final Logger logger = LoggerFactory.getLogger(Remote.class);
+	ObjectMapper mapper = new ObjectMapper();
 	private String server = "";
 	// 签名默认为false,false需要传入密钥
 	private Boolean localSign = false;
@@ -288,45 +298,505 @@ public class Remote {
 		params.put("ledger_index_max", -1);
 		// 新增参数end
 		String msg = this.submit(params);
-		AccountTx accountTx = JsonUtils.toEntity(msg, AccountTx.class);
-		// Map map = JsonUtils.toObject(msg, Map.class);
-		// if (map.get("status").equals("success")) {
-		// Map result = (Map) map.get("result");
-		// accountTx.setAccount(result.get("account").toString());
-		// accountTx.setLedgerIndexMax(result.get("ledger_index_max").toString());
-		// accountTx.setLedgerIndexMin(result.get("ledger_index_min").toString());
-		// List<Map> list = (List<Map>) result.get("transactions");
-		// List<com.blink.jtblc.client.bean.Transaction> txs = new ArrayList<>();
-		// for (Map txMap : list) {
-		// com.blink.jtblc.client.bean.Transaction tx = new com.blink.jtblc.client.bean.Transaction();
-		// Map _map = (Map) txMap.get("tx");
-		// tx.setAccount(_map.get("Account") != null ? _map.get("Account").toString() : "");
-		// tx.setAmount(_map.get("Amount") != null ? _map.get("Amount").toString() : "");
-		// tx.setDestination(_map.get("Destination") != null ? _map.get("Destination").toString() : "");
-		// tx.setFee(_map.get("Fee") != null ? _map.get("Fee").toString() : "");
-		// tx.setFlags(_map.get("Flags") != null ? Long.valueOf(_map.get("Flags").toString()) : 0);
-		// tx.setSequence(Integer.valueOf(_map.get("Sequence").toString()));
-		// tx.setSigningPubKey(_map.get("SigningPubKey") != null ? _map.get("SigningPubKey").toString() : "");
-		// tx.setTimestamp(_map.get("Timestamp") != null ? Integer.valueOf(_map.get("Timestamp").toString()) : 0);
-		// tx.setTransactionType(_map.get("TransactionType") != null ? _map.get("TransactionType").toString() : "");
-		// tx.setTxnSignature(_map.get("TxnSignature") != null ? _map.get("TxnSignature").toString() : "");
-		// if (_map.get("Date") != null) {
-		// tx.setDate(Integer.valueOf(_map.get("Date").toString()));
-		// }
-		// tx.setHash(_map.get("hash") != null ? _map.get("hash").toString() : "");
-		// tx.setInLedger(_map.get("inLedger") != null ? Integer.valueOf(_map.get("inLedger").toString()) : 0);
-		// tx.setLedgerIndex(_map.get("ledger_index") != null ? Integer.valueOf(_map.get("ledger_index").toString()) : 0);
-		// txs.add(tx);
-		// }
-		// accountTx.setTx(txs);
-		// } else if (map.get("status").equals("error")) {
-		// msg = "接口调用出错";
-		// throw new RuntimeException(msg);
-		// } else {
-		// throw new RuntimeException("unknown error");
-		// }
+		AccountTx accountTx = new AccountTx();
+		Map map = JsonUtils.toObject(msg, Map.class);
+		if (map.get("status").equals("success")) {
+			Map result = (Map) map.get("result");
+			accountTx.setAccount(result.get("account").toString());
+			accountTx.setLedgerIndexMax(result.get("ledger_index_max").toString());
+			accountTx.setLedgerIndexMin(result.get("ledger_index_min").toString());
+			List<Map> list = (List<Map>) result.get("transactions");
+			List<com.blink.jtblc.client.bean.Transaction> txs = new ArrayList<>();
+			for (Map txMap : list) {
+				com.blink.jtblc.client.bean.Transaction tx = new com.blink.jtblc.client.bean.Transaction();
+				try {
+					tx = processTx(txMap,account);
+				} catch (Exception e) {
+					throw new RemoteException("exchange error");
+				}
+				txs.add(tx);
+			}
+			accountTx.setTransactions(txs);
+		}
+			
 		return accountTx;
 	}
+	
+	public com.blink.jtblc.client.bean.Transaction processTx(Map txMap,String account) throws Exception{
+		com.blink.jtblc.client.bean.Transaction transtacion = new com.blink.jtblc.client.bean.Transaction();
+		Map tx = new HashMap();
+		Map meta = new HashMap();
+		if(txMap.get("tx")!=null) {
+			tx = (Map)txMap.get("tx");
+		}else if(txMap.get("transaction")!=null) {
+			tx = (Map)txMap.get("transaction");
+		}else {
+			tx = txMap;
+		}
+		meta = (Map)txMap.get("meta");
+		String hex = "0x386D4380";
+		Integer x = Integer.parseInt(hex.substring(2),16);
+		if(tx.get("date")!=null) {
+			transtacion.setDate(Integer.valueOf(tx.get("date").toString())+x);
+		}else{
+			transtacion.setDate(Integer.valueOf(tx.get("Timestamp").toString())+x);
+		}
+		if(tx.get("hash")!=null) {
+			transtacion.setHash(tx.get("hash").toString());
+		}
+		transtacion.setType(txnType(tx,account));
+		transtacion.setFee((Integer.valueOf((tx.get("Fee").toString()))/1000000.0)+"");
+		
+		if(meta.get("TransactionResult")!=null) {
+			transtacion.setResult(meta.get("TransactionResult").toString());
+		}else {
+			transtacion.setResult("failed");
+		}
+		transtacion.setMemos(new HashMap());
+		
+		switch(transtacion.getType()) {
+        case "sent":
+        	transtacion.setCounterparty(tx.get("Destination").toString());
+        	transtacion.setAmount(parseAmount(tx,"Amount"));
+            break;
+        case "received":
+        	transtacion.setCounterparty(tx.get("Account").toString());
+        	transtacion.setAmount(parseAmount(tx,"Amount"));
+            break;
+        case "trusted":
+        	transtacion.setCounterparty(tx.get("Account").toString());
+            transtacion.setAmount(this.reverseAmount((Map)tx.get("LimitAmount"),tx.get("Account").toString()));
+            break;
+        case "trusting":
+        	transtacion.setCounterparty(((Map)tx.get("LimitAmount")).get("issuer").toString());
+        	transtacion.setAmount(tx.get("LimitAmount").toString());
+            break;
+        case "convert":
+        	transtacion.setSpent(parseAmount(tx,"SendMax"));
+            transtacion.setAmount(parseAmount(tx,"Account"));
+            break;
+        case "offernew":
+        	//Transaction.flags.OfferCreate.Sell 是一个常量
+        	transtacion.setOffertype((tx.get("Flags")!=null?"sell" : "buy"));
+        	transtacion.setGets(parseAmount(tx,"TakerGets"));
+        	transtacion.setPays(parseAmount(tx,"TakerPays"));
+        	transtacion.setSeq(tx.get("Sequence").toString());
+            break;
+        case "offercancel":
+        	transtacion.setOfferseq(tx.get("Sequence").toString());
+            break;
+        case "relationset":
+        	transtacion.setCounterparty(account.equals(tx.get("Target").toString())?tx.get("Account").toString():tx.get("Target").toString());
+        	transtacion.setTransactionType(tx.get("RelationType").toString().equals("3")? "freeze":"authorize");
+        	transtacion.setIsactive(account.equals(tx.get("Target").toString())? false : true);
+            transtacion.setAmount(parseAmount(tx,"LimitAmount"));
+            break;
+        case "relationdel":
+        	transtacion.setCounterparty(account.equals(tx.get("Target").toString())?tx.get("Account").toString():tx.get("Target").toString());
+        	transtacion.setTransactionType(tx.get("RelationType").toString().equals("3")? "unfreeze":"unknown");
+        	transtacion.setIsactive(account.equals(tx.get("Target").toString())? false : true);
+            transtacion.setAmount(parseAmount(tx,"LimitAmount"));
+            break;
+        case "configcontract":
+        	transtacion.setParams(formatArgs((List<Map>)tx.get("Args")));
+            if(tx.get("Method").equals("0")){
+            	transtacion.setMethod("deploy");
+            	transtacion.setPayload(tx.get("Payload").toString());
+            
+            }else  if(tx.get("Method").equals("1")){
+                transtacion.setMethod("call");
+            	transtacion.setPayload(tx.get("Destination").toString());
+            }
+            break;
+        default :
+            // TODO parse other type
+            break;
+		}  
+        if(tx.get("Memos")!=null&&tx.get("Memos").getClass().isArray()&&((List)tx.get("Memos")).size()>0) {
+        	List menos=((List)tx.get("Memos"));
+        	for(int i=0;i<menos.size();i++) {
+        		Map<String,String> meno=(Map)((Map)menos.get(i)).get("Memo");
+	        		for (Map.Entry<String,String> entry : meno.entrySet()) { 
+        		     String str  = URLEncoder.encode(new String(entry.getValue().getBytes("UTF-8")), "UTF-8"); 
+        			  entry.setValue(str);
+        		}
+        		transtacion.setMemos(meno);
+        	}
+        }
+        transtacion.setEffects(new ArrayList());
+        if (meta==null || !meta.get("TransactionResult").toString().equals("tesSUCCESS")) {
+            return transtacion;
+        }
+        List<Map> maps = (List<Map>)meta.get("AffectedNodes");
+        for(int i=0;i<maps.size();i++) {
+        	Map map = maps.get(i);
+        	Map node = processAffectNode(map);
+        	Map effect =new HashMap();
+        	if (node.get("entryType").equals("Offer")) {
+        		 Map fieldSet = (Map)node.get("fields");
+        		 boolean sell = ((Map)node.get("fields")).get("Flags")!=null?true:false;
+        		 if (((Map)node.get("fields")).get("Account").equals(account)) {
+	                if (node.get("diffType").equals("ModifiedNode") || 
+	                		(node.get("diffType").equals("DeletedNode")&& (((Map)node.get("fieldsPrev")).get("TakerGets")!=null && 
+	                				!isAmountZero(parseAmount(((Map)node.get("fieldsFinal")),"TakerGets"))))) {
+	                		
+	                 effect.put("effect", "offer_partially_funded");
+               		 Map _map =new HashMap();
+               		_map.put("account", tx.get("Account"));
+               		_map.put("seq", tx.get("Sequence"));
+               		_map.put("hash",tx.get("hash"));
+            	       try {
+            	    	   effect.put("counterparty", mapper.writeValueAsString(map));
+            			} catch (JsonProcessingException e) {
+            				e.printStackTrace();
+            			}
+               		 	if(node.get("diffType").equals("DeletedNode")) {
+	                        if(isAmountZero(parseAmount((Map)node.get("fields"),"TakerGets"))){
+        						effect.put("remaining", false);
+        					}else {
+        						effect.put("remaining", true);
+        					}
+               		 	}else {
+               		 		effect.put("cancelled", true);
+               		 	}
+               		 	effect.put("gets", parseAmount(fieldSet,"TakerGets"));
+               		 	effect.put("pays", parseAmount(fieldSet,"TakerPays"));
+               		    effect.put("paid", AmountSubtract(
+               		      mapper.readValue(parseAmount(((Map)node.get("fieldsPrev")),"TakerGets"), Map.class),
+               		      mapper.readValue(parseAmount(((Map)node.get("fields")),"TakerGets"),Map.class)));
+        			    effect.put("got", AmountSubtract(
+                     		      mapper.readValue(parseAmount(((Map)node.get("fieldsPrev")),"TakerPays"), Map.class),
+                     		      mapper.readValue(parseAmount(((Map)node.get("fields")),"TakerPays"),Map.class)));
+        			    
+        			    effect.put("type", sell ? "sold" : "bought");
+        			 
+	                }else {
+	                     effect.put("effect", node.get("diffType").equals("CreatedNode") ? "offer_created" : ((Map)node.get("fieldsPrev")).get("TakerPays")!=null ? "offer_funded" : "offer_cancelled");
+	                	 
+	                	 if (effect.get("effect").equals("offer_funded")) {
+	                		 fieldSet = (Map)node.get("fieldsPrev");
+	                		 Map _map =new HashMap();
+	                		 _map.put("account",tx.get("Account"));
+	                		 _map.put("seq",tx.get("Sequence"));
+	                		 _map.put("hash",tx.get("hash"));
+	                	       try {
+	                	    	   effect.put("counterparty", mapper.writeValueAsString(_map));
+	                			} catch (JsonProcessingException e) {
+	                				e.printStackTrace();
+	                			}
+	                	       effect.put("paid", AmountSubtract(
+	                      		      mapper.readValue(parseAmount(((Map)node.get("fieldsPrev")),"TakerGets"), Map.class),
+	                      		      mapper.readValue(parseAmount(((Map)node.get("fields")),"TakerGets"),Map.class)));
+	                	       
+	                	       effect.put("got", AmountSubtract(
+	                      		      mapper.readValue(parseAmount(((Map)node.get("fieldsPrev")),"TakerPays"), Map.class),
+	                      		      mapper.readValue(parseAmount(((Map)node.get("fields")),"TakerPays"),Map.class)));
+	                	       
+	            			 effect.put("type", sell ? "sold" : "bought");
+	                     }
+	                     // 3. offer_created
+	                     if (effect.get("effect").equals("offer_created")) {
+	                    	 effect.put("gets", parseAmount(fieldSet,"TakerGets"));
+	                    	 effect.put("pays", parseAmount(fieldSet,"TakerPays"));
+	                    	 effect.put("type", sell ? "sell" : "buy");
+	                     }
+	                     // 4. offer_cancelled
+	                     if (effect.get("effect").equals("offer_cancelled")) {
+	                    	
+	                    	 effect.put("hash", ((Map)node.get("fields")).get("PreviousTxnID"));
+	                         // collect data for cancel transaction type
+	                         if (transtacion.getType().equals("offercancel")) {
+		                    	 transtacion.setGets(parseAmount(fieldSet,"TakerGets"));
+		                    	 transtacion.setPays(parseAmount(fieldSet,"TakerPays"));
+	                         }
+                        	 effect.put("gets", parseAmount(fieldSet,"TakerGets"));
+	                    	 effect.put("pays", parseAmount(fieldSet,"TakerPays"));
+	                         effect.put("type", sell ? "sell" : "buy");
+	                     }
+	                	 
+	                }
+	                effect.put("seq", ((Map)node.get("fields")).get("Sequence"));
+        		 }else if (tx.get("Account").equals(account) && node.get("fieldsPrev")!=null) {
+        			 effect.put("effect", "offer_bought");
+        			 Map _map =new HashMap();
+        			 _map.put("account",((Map)node.get("fields")).get("Account"));
+        			 _map.put("seq", ((Map)node.get("fields")).get("Sequence"));
+            		 if(node.get("PreviousTxnID")!=null) {
+            			 _map.put("hash",node.get("PreviousTxnID"));
+            		 }else {
+            			 _map.put("hash",((Map)node.get("fields")).get("PreviousTxnID"));
+            		 }
+            	       try {
+            	    	   effect.put("counterparty", mapper.writeValueAsString(_map));
+            			} catch (JsonProcessingException e) {
+            				e.printStackTrace();
+            			}
+        			 effect.put("type", sell ? "bought" : "sold");
+        			 effect.put("paid", AmountSubtract(
+                 		      mapper.readValue(parseAmount(((Map)node.get("fieldsPrev")),"TakerPays"), Map.class),
+                 		      mapper.readValue(parseAmount(((Map)node.get("fields")),"TakerPays"),Map.class)));
+        			 effect.put("got", AmountSubtract(
+                		      mapper.readValue(parseAmount(((Map)node.get("fieldsPrev")),"TakerGets"), Map.class),
+                		      mapper.readValue(parseAmount(((Map)node.get("fields")),"TakerGets"),Map.class)));
+                 }
+                 // add price
+        		if ((effect.get("gets")!=null && effect.get("pays")!=null) || (effect.get("got")!=null && effect.get("paid")!=null)) {
+        			Boolean created=effect.get("effect").toString().equals("offer_created")&&effect.get("type").toString().equals("buy");
+                    Boolean funded=effect.get("effect").toString().equals("offer_funded")&&effect.get("type").toString().equals("bought");
+                    Boolean cancelled=effect.get("effect").toString().equals("offer_cancelled")&&effect.get("type").toString().equals("buy");
+                    Boolean bought=effect.get("effect").toString().equals("offer_bought")&&effect.get("type").toString().equals("bought");
+                    Boolean partially_funded=effect.get("effect").toString().equals("offer_partially_funded")&&effect.get("type").toString().equals("bought");
+                    effect.put("price", getPrice(effect, (created || funded || cancelled || bought ||  partially_funded ))) ;
+                 }
+        	}
+        	if(transtacion.getType().equals("offereffect") && node.get("entryType").equals("AccountRoot")){
+                if(((Map)node.get("fields")).get("RegularKey").equals(account)){
+                	effect.put("effect", "set_regular_key");
+                	effect.put("type", "null");
+                	effect.put("account", ((Map)node.get("fields")).get("Account"));
+                	effect.put("regularkey", account);
+                }
+            }
+            // add effect
+            if (effect!=null) {
+                if (node.get("diffType").equals("DeletedNode")&& effect.get("effect").equals("offer_bought")) {
+                	effect.put("deleted", true);
+                }
+                transtacion.getEffects().add(effect);
+            }
+        }
+		
+
+		return transtacion;
+	}
+	public Boolean isAmountZero(String amount) {
+		if (amount=="") return false;
+	       Map map = new HashMap();
+		try {
+			map = mapper.readValue(amount, Map.class);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+
+	    return Integer.valueOf((map.get("value").toString())) < 1e-12;
+	}
+
+	public String getPrice(Map effect ,boolean funded) {
+		Map g = (Map)(effect.get("got")!=null ? effect.get("got") : effect.get("pays"));
+		Map p = (Map)(effect.get("paid")!=null ? effect.get("paid") : effect.get("gets"));
+	    if(!funded){
+	        return AmountRatio(g, p);
+	    } else {
+	        return AmountRatio(p, g);
+	    }
+	}
+	public String AmountRatio(Map amount1,Map amount2 ) {
+		BigDecimal bi1 = new BigDecimal(amount1.get("value").toString());
+    	BigDecimal bi2 = new BigDecimal(amount2.get("value").toString());
+    	BigDecimal bi3 = bi1.divide(bi2);
+    	return bi3+"";
+	}
+
+	public Map AmountSubtract(Map amount1,Map amount2) {
+		return AmountAdd(amount1, AmountNegate(amount2));
+	}
+	public Map AmountNegate(Map amount) {
+		 if (amount==null) return amount;
+		 Map map = new HashMap();
+		 map.put("value", (new BigInteger(amount.get("value").toString())).negate());
+	     map.put("currency",amount.get("currency"));
+	     map.put("issuer", amount.get("issuer"));
+	     return map;
+	}
+	public Map AmountAdd(Map amount1,Map amount2) {
+		 if (amount1==null) return amount2;
+		    if (amount2==null) return amount1;
+		    if (amount1!=null && amount2!=null) {
+		    	Map map = new HashMap();
+				 map.put("value", (new BigInteger(amount1.get("value").toString())).and(new BigInteger(amount2.get("value").toString())));
+			     map.put("currency",amount1.get("currency"));
+			     map.put("issuer", amount1.get("issuer"));
+			     return map;
+		    }
+		    return null;
+	}
+	public Map processAffectNode(Map map) {
+		Map result = new HashMap();
+		String[] arrays =new String[]{"CreatedNode", "ModifiedNode", "DeletedNode"};
+		 for(int i=0;i<arrays.length;i++) {
+			 if(map.get(arrays[i])!=null) {
+				 result.put("diffType", arrays[i]);
+			 }
+		 }
+	    if(result.get("diffType")==null) {
+	    	return null;
+	    }
+	    map = (Map)map.get(result.get("diffType"));
+	    result.put("entryType",map.get("LedgerEntryType"));
+	    result.put("ledgerIndex",map.get("LedgerIndex"));
+	    Map _map =new HashMap();
+	    if(map.get("PreviousFields")!=null) {
+	    	result.put("fieldsPrev", map.get("PreviousFields"));
+	    	_map.putAll((Map)map.get("PreviousFields"));
+	    }
+	    if(map.get("NewFields")!=null){
+	    	 result.put("fieldsNew",map.get("NewFields"));
+	    	 _map.putAll((Map)map.get("NewFields"));
+	    }
+	    if(map.get("FinalFields")!=null){
+	    	 result.put("fieldsFinal",map.get("FinalFields"));
+	    	 _map.putAll((Map)map.get("FinalFields"));
+	    }
+	    if(map.get("PreviousTxnID")!=null){
+	    	 result.put("PreviousTxnID",map.get("PreviousTxnID"));
+	    }
+	    result.put("fields", _map);
+	    return result;
+	}
+	public List formatArgs(List<Map> args) {
+		 List list = new ArrayList();
+		    if(args!=null)
+		        for(int i = 0; i < args.size(); i++){
+		            list.add(hexToString(((Map)args.get(i).get("Arg")).get("Parameter").toString()));
+		     }
+		 return list;
+	}
+	
+	public String hexToString(String str) {
+		 List<String> list = new ArrayList<String>();
+		 int i=0;
+		    if (str.length() % 2==0) {
+		        list.add(unicode2String(String.valueOf(Integer.parseInt(str.substring(0, 1), 16))));
+		        i = 1;
+		    }
+
+		    for (; i<str.length(); i+=2) {
+		        list.add(unicode2String(String.valueOf(Integer.parseInt(str.substring(i, i+2), 16))));
+		    }
+		    return String.join("",list);
+	}
+	public static String unicode2String(String unicode) {
+		 
+	    StringBuffer string = new StringBuffer();
+	 
+	    String[] hex = unicode.split("\\\\u");
+	 
+	    for (int i = 1; i < hex.length; i++) {
+	 
+	        // 转换出每一个代码点
+	        int data = Integer.parseInt(hex[i], 16);
+	 
+	        // 追加成string
+	        string.append((char) data);
+	    }
+	 
+	    return string.toString();
+	}
+	
+
+	public String reverseAmount(Map limitAmount,String account) {
+		Map map = new HashMap();
+		map.put("value", limitAmount.get("value"));
+    	map.put("currency",limitAmount.get("currency"));
+    	map.put("issuer", account);
+        try {
+			return mapper.writeValueAsString(map);
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
+        return "";
+	}
+	public String txnType(Map tx,String account) {
+		if((tx.get("Account")!=null&&tx.get("Account").toString().equals(account))||(tx.get("Target")!=null&&tx.get("Target").toString().equals(account))||
+				(tx.get("Destination")!=null&&tx.get("Destination").toString().equals(account))||(tx.get("LimitAmount")!=null&&((Map)tx.get("LimitAmount")).get("issuer").toString().equals(account))) {
+			switch(tx.get("TransactionType").toString()) {
+            case "Payment":
+                return tx.get("Account")!=null&&tx.get("Account").toString().equals(account) ?
+                		tx.get("Destination")!=null&&tx.get("Destination").toString().equals(account) ? "convert" : "sent" : "received";
+            case "OfferCreate":
+                return "offernew";
+            case "OfferCancel":
+                return "offercancel";
+            case "TrustSet":
+                return tx.get("Account")!=null&&tx.get("Account").toString().equals(account) ? "trusting" : "trusted";
+            case "RelationDel":
+            case "AccountSet":
+            case "SetRegularKey":
+            case "RelationSet":
+            case "SignSet":
+            case "Operation":
+            case "ConfigContract":
+                // TODO to sub-class tx type
+                return tx.get("TransactionType").toString().toLowerCase();
+            default :
+                // TODO CHECK
+                return "unknown";
+            }
+        }else {
+        	return "offereffect";
+        }
+	}
+	
+	public String parseAmount(Map tx,String type) {
+		try {
+			if(tx.get(type)!=null) {
+				if(tx.get(type) instanceof String) {
+					if(isNum(tx.get(type).toString())) {
+						BigDecimal bi1 = new BigDecimal(tx.get(type).toString());
+				    	BigDecimal bi2 = new BigDecimal("1000000");
+				    	BigDecimal bi3 = bi1.divide(bi2); 
+				    	Map map = new HashMap();
+				    	map.put("value", bi3);
+				    	map.put("currency", "SWT");
+				    	map.put("issuer", "");
+						return mapper.writeValueAsString(map);
+					}
+				}else if(tx.get(type).getClass().toString().equals("object")&& isValidAmount(tx)){
+					return mapper.writeValueAsString(tx);
+				}
+			}
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
+		return "";
+	}
+		
+	
+	public boolean isNum(String amount) {
+		Pattern pattern = Pattern.compile("^[0-9]*$");  
+		Matcher matcher = pattern.matcher(amount);  
+		return matcher.matches();  
+	}
+	
+	public boolean isValidAmount(Map tx) {
+		Map amount = (Map)tx.get("Amount");
+		if((amount.get("value")!=null&&Integer.valueOf(amount.get("value").toString())==0)||!isNum(amount.get("value").toString())) {
+			return false;
+		}
+		if(amount.get("currency")!=null||!isValidCurrency(amount)) {
+			return false;
+		}
+		if (amount.get("currency").toString().equals("SWT")&& amount.get("issuer")!=null) {
+		    return false;
+		}
+		 if (!amount.get("currency").toString().equals("SWT")) {
+			 //todo !baselib.isValidAddress(amount.issuer)
+			 return false;
+		 }
+		return true;
+	}
+	
+	public boolean isValidCurrency(Map amount) {
+		if (amount.get("currency")!=null || !amount.get("currency").getClass().toString().equals("string")
+		            || amount.get("currency").toString().equals("")) {
+		    return false;
+		}
+		Pattern pattern = Pattern.compile("^([a-zA-Z0-9]{3,6}|[A-F0-9]{40})$");  
+		Matcher matcher = pattern.matcher(amount.get("currency").toString());  
+		return matcher.matches(); 
+	}
+	
 	
 	/**
 	 * 获得市场挂单列表
