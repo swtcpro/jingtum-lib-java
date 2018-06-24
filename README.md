@@ -1,8 +1,8 @@
-#jingtum-lib-java
-##1、项目介绍
-    这是一个java语言开发的智能合约接口项目。
-##2、接口说明
-1）**创建钱包**
+#jingtum-lib-java  
+##1、项目介绍  
+    这是一个java语言开发的智能合约接口项目。  
+##2、接口说明  
+1）**创建钱包**  
    * 方法一：`Wallet.generate();`
    * 方法二：`Wallet.fromSecret(secret);`  
    
@@ -10,7 +10,7 @@
 
 参数 | 类型 | 说明
 :----:|:------:|:----:
-secret | String  | 井通钱包地址
+secret | String  | 井通钱包地址    
 2）**创建连接,返回Remote对象**  
   
 `Connection conn = ConnectionFactory.getCollection(server);`
