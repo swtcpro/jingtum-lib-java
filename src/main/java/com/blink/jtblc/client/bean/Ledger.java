@@ -1,7 +1,5 @@
 package com.blink.jtblc.client.bean;
 
-import java.util.List;
-
 /**
  * 账本详情
  */

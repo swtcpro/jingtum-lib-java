@@ -70,7 +70,6 @@ public class Remote {
 		params.put("command", command);
 		params.putAll(data);
 		logger.debug("WebSocket参数： " + JsonUtils.toJsonString(params));
-		System.out.println("WebSocket参数： " + JsonUtils.toJsonString(params));
 		return conn.submit(params);
 	}
 	
