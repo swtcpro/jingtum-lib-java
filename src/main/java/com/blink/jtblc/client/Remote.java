@@ -38,7 +38,9 @@ import com.blink.jtblc.connection.Connection;
 import com.blink.jtblc.exceptions.RemoteException;
 import com.blink.jtblc.utils.CheckUtils;
 import com.blink.jtblc.utils.JsonUtils;
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class Remote {
@@ -356,11 +358,11 @@ public class Remote {
 		switch(transtacion.getType()) {
         case "sent":
         	transtacion.setCounterparty(tx.get("Destination").toString());
-        	transtacion.setAmount(parseAmount(tx,"Amount"));
+        	transtacion.setAmount(parseAmount(tx.get("Amount")));
             break;
         case "received":
         	transtacion.setCounterparty(tx.get("Account").toString());
-        	transtacion.setAmount(parseAmount(tx,"Amount"));
+        	transtacion.setAmount(parseAmount(tx.get("Amount")));
             break;
         case "trusted":
         	transtacion.setCounterparty(tx.get("Account").toString());
@@ -371,14 +373,14 @@ public class Remote {
         	transtacion.setAmount(tx.get("LimitAmount").toString());
             break;
         case "convert":
-        	transtacion.setSpent(parseAmount(tx,"SendMax"));
-            transtacion.setAmount(parseAmount(tx,"Account"));
+        	transtacion.setSpent(parseAmount(tx.get("SendMax")));
+            transtacion.setAmount(parseAmount(tx.get("Account")));
             break;
         case "offernew":
         	//Transaction.flags.OfferCreate.Sell 是一个常量
         	transtacion.setOffertype((tx.get("Flags")!=null?"sell" : "buy"));
-        	transtacion.setGets(parseAmount(tx,"TakerGets"));
-        	transtacion.setPays(parseAmount(tx,"TakerPays"));
+        	transtacion.setGets(parseAmount(tx.get("TakerGets")));
+        	transtacion.setPays(parseAmount(tx.get("TakerPays")));
         	transtacion.setSeq(tx.get("Sequence").toString());
             break;
         case "offercancel":
@@ -388,13 +390,13 @@ public class Remote {
         	transtacion.setCounterparty(account.equals(tx.get("Target").toString())?tx.get("Account").toString():tx.get("Target").toString());
         	transtacion.setTransactionType(tx.get("RelationType").toString().equals("3")? "freeze":"authorize");
         	transtacion.setIsactive(account.equals(tx.get("Target").toString())? false : true);
-            transtacion.setAmount(parseAmount(tx,"LimitAmount"));
+            transtacion.setAmount(parseAmount(tx.get("LimitAmount")));
             break;
         case "relationdel":
         	transtacion.setCounterparty(account.equals(tx.get("Target").toString())?tx.get("Account").toString():tx.get("Target").toString());
         	transtacion.setTransactionType(tx.get("RelationType").toString().equals("3")? "unfreeze":"unknown");
         	transtacion.setIsactive(account.equals(tx.get("Target").toString())? false : true);
-            transtacion.setAmount(parseAmount(tx,"LimitAmount"));
+            transtacion.setAmount(parseAmount(tx.get("LimitAmount")));
             break;
         case "configcontract":
         	transtacion.setParams(formatArgs((List<Map>)tx.get("Args")));
@@ -437,7 +439,7 @@ public class Remote {
         		 if (((Map)node.get("fields")).get("Account").equals(account)) {
 	                if (node.get("diffType").equals("ModifiedNode") || 
 	                		(node.get("diffType").equals("DeletedNode")&& (((Map)node.get("fieldsPrev")).get("TakerGets")!=null && 
-	                				!isAmountZero(parseAmount(((Map)node.get("fieldsFinal")),"TakerGets"))))) {
+	                				!isAmountZero(parseAmount(((Map)node.get("fieldsFinal")).get("TakerGets")))))) {
 	                		
 	                 effect.put("effect", "offer_partially_funded");
                		 Map _map =new HashMap();
@@ -450,7 +452,7 @@ public class Remote {
             				e.printStackTrace();
             			}
                		 	if(node.get("diffType").equals("DeletedNode")) {
-	                        if(isAmountZero(parseAmount((Map)node.get("fields"),"TakerGets"))){
+	                        if(isAmountZero(parseAmount(((Map)node.get("fields")).get("TakerGets")))){
         						effect.put("remaining", false);
         					}else {
         						effect.put("remaining", true);
@@ -458,14 +460,21 @@ public class Remote {
                		 	}else {
                		 		effect.put("cancelled", true);
                		 	}
-               		 	effect.put("gets", parseAmount(fieldSet,"TakerGets"));
-               		 	effect.put("pays", parseAmount(fieldSet,"TakerPays"));
-               		    effect.put("paid", AmountSubtract(
-               		      mapper.readValue(parseAmount(((Map)node.get("fieldsPrev")),"TakerGets"), Map.class),
-               		      mapper.readValue(parseAmount(((Map)node.get("fields")),"TakerGets"),Map.class)));
-        			    effect.put("got", AmountSubtract(
-                     		      mapper.readValue(parseAmount(((Map)node.get("fieldsPrev")),"TakerPays"), Map.class),
-                     		      mapper.readValue(parseAmount(((Map)node.get("fields")),"TakerPays"),Map.class)));
+               		 	effect.put("gets", parseAmount(fieldSet.get("TakerGets")));
+               		 	effect.put("pays", parseAmount(fieldSet.get("TakerPays")));
+               		 	if(StringUtils.isNotBlank(parseAmount((((Map)node.get("fieldsPrev"))).get("TakerGets")))) {
+               		 	 effect.put("paid", AmountSubtract(
+                      		      parseAmount((((Map)node.get("fieldsPrev"))).get("TakerGets")),
+                      		      parseAmount((((Map)node.get("fields"))).get("TakerGets"))));
+               		 	}
+               		 	
+               		 if(StringUtils.isNotBlank(parseAmount((((Map)node.get("fieldsPrev"))).get("TakerGets")))) {
+               			effect.put("got", AmountSubtract(
+                   		      parseAmount((((Map)node.get("fieldsPrev"))).get("TakerPays")),
+                   		      parseAmount((((Map)node.get("fields"))).get("TakerPays"))));
+               		 	}
+               		   
+        			    
         			    
         			    effect.put("type", sell ? "sold" : "bought");
         			 
@@ -484,19 +493,19 @@ public class Remote {
 	                				e.printStackTrace();
 	                			}
 	                	       effect.put("paid", AmountSubtract(
-	                      		      mapper.readValue(parseAmount(((Map)node.get("fieldsPrev")),"TakerGets"), Map.class),
-	                      		      mapper.readValue(parseAmount(((Map)node.get("fields")),"TakerGets"),Map.class)));
+	                      		      parseAmount((((Map)node.get("fieldsPrev"))).get("TakerGets")),
+	                      		      parseAmount((((Map)node.get("fields"))).get("TakerGets"))));
 	                	       
 	                	       effect.put("got", AmountSubtract(
-	                      		      mapper.readValue(parseAmount(((Map)node.get("fieldsPrev")),"TakerPays"), Map.class),
-	                      		      mapper.readValue(parseAmount(((Map)node.get("fields")),"TakerPays"),Map.class)));
+	                      		      parseAmount((((Map)node.get("fieldsPrev"))).get("TakerPays")),
+	                      		      parseAmount((((Map)node.get("fields"))).get("TakerPays"))));
 	                	       
 	            			 effect.put("type", sell ? "sold" : "bought");
 	                     }
 	                     // 3. offer_created
 	                     if (effect.get("effect").equals("offer_created")) {
-	                    	 effect.put("gets", parseAmount(fieldSet,"TakerGets"));
-	                    	 effect.put("pays", parseAmount(fieldSet,"TakerPays"));
+	                    	 effect.put("gets", parseAmount(fieldSet.get("TakerGets")));
+	                    	 effect.put("pays", parseAmount(fieldSet.get("TakerPays")));
 	                    	 effect.put("type", sell ? "sell" : "buy");
 	                     }
 	                     // 4. offer_cancelled
@@ -505,11 +514,11 @@ public class Remote {
 	                    	 effect.put("hash", ((Map)node.get("fields")).get("PreviousTxnID"));
 	                         // collect data for cancel transaction type
 	                         if (transtacion.getType().equals("offercancel")) {
-		                    	 transtacion.setGets(parseAmount(fieldSet,"TakerGets"));
-		                    	 transtacion.setPays(parseAmount(fieldSet,"TakerPays"));
+		                    	 transtacion.setGets(parseAmount(fieldSet.get("TakerGets")));
+		                    	 transtacion.setPays(parseAmount(fieldSet.get("TakerPays")));
 	                         }
-                        	 effect.put("gets", parseAmount(fieldSet,"TakerGets"));
-	                    	 effect.put("pays", parseAmount(fieldSet,"TakerPays"));
+                        	 effect.put("gets", parseAmount(fieldSet.get("TakerGets")));
+	                    	 effect.put("pays", parseAmount(fieldSet.get("TakerPays")));
 	                         effect.put("type", sell ? "sell" : "buy");
 	                     }
 	                	 
@@ -532,11 +541,11 @@ public class Remote {
             			}
         			 effect.put("type", sell ? "bought" : "sold");
         			 effect.put("paid", AmountSubtract(
-                 		      mapper.readValue(parseAmount(((Map)node.get("fieldsPrev")),"TakerPays"), Map.class),
-                 		      mapper.readValue(parseAmount(((Map)node.get("fields")),"TakerPays"),Map.class)));
+                 		      parseAmount((((Map)node.get("fieldsPrev"))).get("TakerPays")),
+                 		      parseAmount((((Map)node.get("fields"))).get("TakerPays"))));
         			 effect.put("got", AmountSubtract(
-                		      mapper.readValue(parseAmount(((Map)node.get("fieldsPrev")),"TakerGets"), Map.class),
-                		      mapper.readValue(parseAmount(((Map)node.get("fields")),"TakerGets"),Map.class)));
+                		     parseAmount((((Map)node.get("fieldsPrev"))).get("TakerGets")),
+                		      parseAmount((((Map)node.get("fields"))).get("TakerGets"))));
                  }
                  // add price
         		if ((effect.get("gets")!=null && effect.get("pays")!=null) || (effect.get("got")!=null && effect.get("paid")!=null)) {
@@ -546,10 +555,12 @@ public class Remote {
                     Boolean bought=effect.get("effect").toString().equals("offer_bought")&&effect.get("type").toString().equals("bought");
                     Boolean partially_funded=effect.get("effect").toString().equals("offer_partially_funded")&&effect.get("type").toString().equals("bought");
                     effect.put("price", getPrice(effect, (created || funded || cancelled || bought ||  partially_funded ))) ;
+                    
+                    
                  }
         	}
         	if(transtacion.getType().equals("offereffect") && node.get("entryType").equals("AccountRoot")){
-                if(((Map)node.get("fields")).get("RegularKey").equals(account)){
+                if(((Map)node.get("fields")).get("RegularKey")!=null&&((Map)node.get("fields")).get("RegularKey").equals(account)){
                 	effect.put("effect", "set_regular_key");
                 	effect.put("type", "null");
                 	effect.put("account", ((Map)node.get("fields")).get("Account"));
@@ -557,7 +568,7 @@ public class Remote {
                 }
             }
             // add effect
-            if (effect!=null) {
+            if (effect!=null&&!effect.isEmpty()) {
                 if (node.get("diffType").equals("DeletedNode")&& effect.get("effect").equals("offer_bought")) {
                 	effect.put("deleted", true);
                 }
@@ -581,14 +592,34 @@ public class Remote {
 	    return Integer.valueOf((map.get("value").toString())) < 1e-12;
 	}
 
-	public String getPrice(Map effect ,boolean funded) {
-		Map g = (Map)(effect.get("got")!=null ? effect.get("got") : effect.get("pays"));
-		Map p = (Map)(effect.get("paid")!=null ? effect.get("paid") : effect.get("gets"));
-	    if(!funded){
-	        return AmountRatio(g, p);
-	    } else {
-	        return AmountRatio(p, g);
-	    }
+	public String getPrice(Map effect ,boolean funded) throws Exception{
+		try {
+			Map g = new HashMap();
+			Map p = new HashMap();
+			if(effect.get("got")!=null&&effect.get("got")!="") {
+				g=mapper.readValue(effect.get("got").toString(),Map.class);
+			}else if(effect.get("pays")!=null&&effect.get("pays")!="") {
+				g=mapper.readValue(effect.get("pays").toString(),Map.class);
+			}else {
+				return "";
+			}
+			
+			if(effect.get("paid")!=null&&effect.get("paid")!="") {
+				g=mapper.readValue(effect.get("paid").toString(),Map.class);
+			}else if(effect.get("gets")!=null&&effect.get("gets")!="") {
+				g=mapper.readValue(effect.get("gets").toString(),Map.class);
+			}else {
+				return "";
+			}
+		    if(!funded){
+		        return AmountRatio(g, p);
+		    } else {
+		        return AmountRatio(p, g);
+		    }
+		}catch(Exception e) {
+			throw new Exception("get Price error");
+		}
+		
 	}
 	public String AmountRatio(Map amount1,Map amount2 ) {
 		BigDecimal bi1 = new BigDecimal(amount1.get("value").toString());
@@ -597,8 +628,15 @@ public class Remote {
     	return bi3+"";
 	}
 
-	public Map AmountSubtract(Map amount1,Map amount2) {
-		return AmountAdd(amount1, AmountNegate(amount2));
+	public Map AmountSubtract(String amount1,String amount2) {
+		if(StringUtils.isNotBlank(amount1)&&StringUtils.isNotBlank(amount2)) {
+			try {
+				return AmountAdd(mapper.readValue(amount1, Map.class), AmountNegate(mapper.readValue(amount2, Map.class)));
+			} catch (Exception e) {
+				throw new RemoteException("to map error");
+			}
+		}
+		return null;
 	}
 	public Map AmountNegate(Map amount) {
 		 if (amount==null) return amount;
@@ -737,12 +775,11 @@ public class Remote {
         }
 	}
 	
-	public String parseAmount(Map tx,String type) {
+	public String parseAmount(Object tx) {
 		try {
-			if(tx.get(type)!=null) {
-				if(tx.get(type) instanceof String) {
-					if(isNum(tx.get(type).toString())) {
-						BigDecimal bi1 = new BigDecimal(tx.get(type).toString());
+				if(tx instanceof String) {
+					if(isNum(tx.toString())) {
+						BigDecimal bi1 = new BigDecimal(tx.toString());
 				    	BigDecimal bi2 = new BigDecimal("1000000");
 				    	BigDecimal bi3 = bi1.divide(bi2); 
 				    	Map map = new HashMap();
@@ -751,10 +788,9 @@ public class Remote {
 				    	map.put("issuer", "");
 						return mapper.writeValueAsString(map);
 					}
-				}else if(tx.get(type).getClass().toString().equals("object")&& isValidAmount(tx)){
+				}else if(tx instanceof Map && isValidAmount((Map)tx)){
 					return mapper.writeValueAsString(tx);
 				}
-			}
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}
@@ -763,23 +799,22 @@ public class Remote {
 		
 	
 	public boolean isNum(String amount) {
-		Pattern pattern = Pattern.compile("^[0-9]*$");  
+		Pattern pattern = Pattern.compile("^[-\\+]?[\\d]*$");  
 		Matcher matcher = pattern.matcher(amount);  
 		return matcher.matches();  
 	}
 	
-	public boolean isValidAmount(Map tx) {
-		Map amount = (Map)tx.get("Amount");
-		if((amount.get("value")!=null&&Integer.valueOf(amount.get("value").toString())==0)||!isNum(amount.get("value").toString())) {
+	public boolean isValidAmount(Map amount) {
+		if((amount.get("value")!=null&&(amount.get("value").toString()).equals("0"))||!isNum(amount.get("value").toString())) {
 			return false;
 		}
-		if(amount.get("currency")!=null||!isValidCurrency(amount)) {
+		if(amount.get("currency")==null||!isValidCurrency(amount)) {
 			return false;
 		}
 		if (amount.get("currency").toString().equals("SWT")&& amount.get("issuer")!=null) {
 		    return false;
 		}
-		 if (!amount.get("currency").toString().equals("SWT")) {
+		 if (amount.get("currency").toString().equals("SWT")) {
 			 //todo !baselib.isValidAddress(amount.issuer)
 			 return false;
 		 }
@@ -787,7 +822,7 @@ public class Remote {
 	}
 	
 	public boolean isValidCurrency(Map amount) {
-		if (amount.get("currency")!=null || !amount.get("currency").getClass().toString().equals("string")
+		if (amount.get("currency")==null || !(amount.get("currency")  instanceof String)
 		            || amount.get("currency").toString().equals("")) {
 		    return false;
 		}

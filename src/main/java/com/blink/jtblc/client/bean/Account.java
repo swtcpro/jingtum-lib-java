@@ -1,5 +1,7 @@
 package com.blink.jtblc.client.bean;
 
+import java.util.List;
+
 /**
  * 交易信息
  */
@@ -9,7 +11,7 @@ public class Account {
 	private String destination;// 交易对家地址
 	private String fee;// 交易费
 	private Long flags;// 交易标记
-	// private List<String> memos; 返回值中没有，所以注释
+	private List<String> memos; //返回值中没有，所以注释
 	private Integer sequence;// 自身账号的交易号
 	private String signingPubKey;// 签名公钥
 	private Integer timestamp;// 交易提交时间戳
@@ -149,4 +151,13 @@ public class Account {
 	public void setMeta(Meta meta) {
 		this.meta = meta;
 	}
+
+	public List<String> getMemos() {
+		return memos;
+	}
+
+	public void setMemos(List<String> memos) {
+		this.memos = memos;
+	}
+	
 }
