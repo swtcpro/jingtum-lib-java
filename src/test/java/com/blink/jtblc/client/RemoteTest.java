@@ -28,8 +28,6 @@ import com.blink.jtblc.utils.JsonUtils;
 public class RemoteTest {
 	protected static final Logger log = LoggerFactory.getLogger(RemoteTest.class);
 	// 井通节点websocket链接：
-	// ws://ts5.jingtum.com:5020
-	String server = "ws://101.200.176.238:5020";
 	// 子账号
 	String account_1 = "jK4kdiriyxErTfW8wMMjzP25oT2AKLWGfY";
 	String secret_1 = "shrh9UUHLfDfEiByzakXu6Qorf2T7";
@@ -37,6 +35,8 @@ public class RemoteTest {
 	String account_2 = "j47gDd3ethDU4UJMD2rosg9WrSXeh9bLd1";
 	String secret_2 = "shFsfC6b1GCfxHn4Y4b3TSALHo37i";
 	Integer limit_num = 100;
+	// ws://ts5.jingtum.com:5020
+	String server = "ws://101.200.176.238:5020";
 	Connection conn = ConnectionFactory.getCollection(server);
 	Remote remote = new Remote(conn);
 	
@@ -94,14 +94,14 @@ public class RemoteTest {
 	@Test
 	public void requestLedgerTest() {
 		String ledger_index = "521146";
-		String ledger_hash = "DB48A226AFFFDF02A782757DE55680905556EE4DBCFE3ACDA06D3B69481DF212";
+		String ledger_hash = "DB48A226AFFFDF02A782757DE55680905556EE4DBCFE3ACDA06D3B69481DF2121";
 		boolean transactions = true;
 		// ledger_index
 		Ledger bean = remote.requestLedger(ledger_hash, transactions);
 		System.out.println("requestLedgerTest-ledgerIndex:" + bean.getLedgerIndex());
 		System.out.println("4.6 requestLedgerTest:\n" + JsonUtils.toJsonString(bean));
-		// ledger_hash
-		bean = remote.requestLedger(ledger_hash, transactions);
+		ledger_index = "5211461";
+		bean = remote.requestLedger(ledger_index, transactions);
 		System.out.println("requestLedgerTest-ledgerIndex:" + bean.getLedgerIndex());
 		System.out.println("4.6 requestLedgerTest:\n" + JsonUtils.toJsonString(bean));
 	}

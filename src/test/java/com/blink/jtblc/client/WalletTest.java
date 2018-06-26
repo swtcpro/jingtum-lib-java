@@ -2,7 +2,7 @@ package com.blink.jtblc.client;
 
 import org.junit.Test;
 
-import com.blink.jtblc.client.Wallet;
+import com.blink.jtblc.utils.JsonUtils;
 
 public class WalletTest {
 	Wallet wallet = null;
@@ -40,6 +40,7 @@ public class WalletTest {
 		System.out.println("---------generate----------");
 		System.out.println("secret=" + wallet.getSecret());
 		System.out.println("address=" + wallet.getAddress());
+		System.out.println(JsonUtils.toJsonString(wallet));
 	}
 	
 	/**
@@ -51,11 +52,13 @@ public class WalletTest {
 		wallet = Wallet.fromSecret(VALID_SECRET);
 		System.out.println("secret=" + wallet.getSecret());
 		System.out.println("address=" + wallet.getAddress());
+		System.out.println(JsonUtils.toJsonString(wallet));
 		try {
 			System.out.println("---------fromSecret----------");
 			wallet = Wallet.fromSecret(INVALID_SECRET1);
 			System.out.println("secret=" + wallet.getSecret());
 			System.out.println("address=" + wallet.getAddress());
+			System.out.println(JsonUtils.toJsonString(wallet));
 		} catch (Exception e) {
 			System.out.println("INVALID_SECRET1  为 NULL时 ：" + e.getMessage());
 		}
@@ -64,6 +67,7 @@ public class WalletTest {
 			wallet = Wallet.fromSecret(INVALID_SECRET3);
 			System.out.println("secret=" + wallet.getSecret());
 			System.out.println("address=" + wallet.getAddress());
+			System.out.println(JsonUtils.toJsonString(wallet));
 		} catch (Exception e) {
 			System.out.println("INVALID_SECRET1  为 空时 ：" + e.getMessage());
 		}
@@ -72,6 +76,7 @@ public class WalletTest {
 			wallet = Wallet.fromSecret(INVALID_SECRET4);
 			System.out.println("secret=" + wallet.getSecret());
 			System.out.println("address=" + wallet.getAddress());
+			System.out.println(JsonUtils.toJsonString(wallet));
 		} catch (Exception e) {
 			System.out.println("INVALID_SECRET1  为 过短时 异常：" + e.getMessage());
 		}
@@ -80,6 +85,7 @@ public class WalletTest {
 			wallet = Wallet.fromSecret(INVALID_SECRET5);
 			System.out.println("secret=" + wallet.getSecret());
 			System.out.println("address=" + wallet.getAddress());
+			System.out.println(JsonUtils.toJsonString(wallet));
 		} catch (Exception e) {
 			// e.printStackTrace();
 			System.out.println("INVALID_SECRET5  为 过长时 异常：" + e.getMessage());
@@ -89,6 +95,7 @@ public class WalletTest {
 			wallet = Wallet.fromSecret(INVALID_SECRET6);
 			System.out.println("secret=" + wallet.getSecret());
 			System.out.println("address=" + wallet.getAddress());
+			System.out.println(JsonUtils.toJsonString(wallet));
 		} catch (Exception e) {
 			System.out.println("should fail when tail string 异常：" + e.getMessage());
 		}
@@ -97,6 +104,7 @@ public class WalletTest {
 			wallet = Wallet.fromSecret(INVALID_SECRET7);
 			System.out.println("secret=" + wallet.getSecret());
 			System.out.println("address=" + wallet.getAddress());
+			System.out.println(JsonUtils.toJsonString(wallet));
 		} catch (Exception e) {
 			System.out.println("should fail when not start with s 异常：" + e.getMessage());
 		}
@@ -105,6 +113,7 @@ public class WalletTest {
 			wallet = Wallet.fromSecret(INVALID_SECRET8);
 			System.out.println("secret=" + wallet.getSecret());
 			System.out.println("address=" + wallet.getAddress());
+			System.out.println(JsonUtils.toJsonString(wallet));
 		} catch (Exception e) {
 			System.out.println("should fail when double secret 异常：" + e.getMessage());
 		}
@@ -131,49 +140,49 @@ public class WalletTest {
 		}
 		try {
 			System.out.println("---------isValidSecret----------");
-			System.out.println("是否有效=" + Wallet.isValidSecret(INVALID_SECRET1));
+			System.out.println("是否有效=" + Wallet.isValidSecret(INVALID_SECRET2));
 		} catch (Exception e) {
 			// e.printStackTrace();
 			System.out.println("校验密钥  异常：should fail when undefined secret" + e.getMessage());
 		}
 		try {
 			System.out.println("---------isValidSecret----------");
-			System.out.println("是否有效=" + Wallet.isValidSecret(INVALID_SECRET1));
+			System.out.println("是否有效=" + Wallet.isValidSecret(INVALID_SECRET3));
 		} catch (Exception e) {
 			// e.printStackTrace();
 			System.out.println("校验密钥  异常：should fail when empty secret" + e.getMessage());
 		}
 		try {
 			System.out.println("---------isValidSecret----------");
-			System.out.println("是否有效=" + Wallet.isValidSecret(INVALID_SECRET1));
+			System.out.println("是否有效=" + Wallet.isValidSecret(INVALID_SECRET4));
 		} catch (Exception e) {
 			// e.printStackTrace();
 			System.out.println("校验密钥  异常：should fail when too short secret" + e.getMessage());
 		}
 		try {
 			System.out.println("---------isValidSecret----------");
-			System.out.println("是否有效=" + Wallet.isValidSecret(INVALID_SECRET1));
+			System.out.println("是否有效=" + Wallet.isValidSecret(INVALID_SECRET5));
 		} catch (Exception e) {
 			// e.printStackTrace();
 			System.out.println("校验密钥  异常：should fail when too long secret " + e.getMessage());
 		}
 		try {
 			System.out.println("---------isValidSecret----------");
-			System.out.println("是否有效=" + Wallet.isValidSecret(INVALID_SECRET1));
+			System.out.println("是否有效=" + Wallet.isValidSecret(INVALID_SECRET6));
 		} catch (Exception e) {
 			// e.printStackTrace();
 			System.out.println("校验密钥  异常：should fail when tail string " + e.getMessage());
 		}
 		try {
 			System.out.println("---------isValidSecret----------");
-			System.out.println("是否有效=" + Wallet.isValidSecret(INVALID_SECRET1));
+			System.out.println("是否有效=" + Wallet.isValidSecret(INVALID_SECRET7));
 		} catch (Exception e) {
 			// e.printStackTrace();
 			System.out.println("校验密钥  异常：should fail when not start with s " + e.getMessage());
 		}
 		try {
 			System.out.println("---------isValidSecret----------");
-			System.out.println("是否有效=" + Wallet.isValidSecret(INVALID_SECRET1));
+			System.out.println("是否有效=" + Wallet.isValidSecret(INVALID_SECRET8));
 		} catch (Exception e) {
 			// e.printStackTrace();
 			System.out.println("校验密钥  异常：should fail when double secret " + e.getMessage());
