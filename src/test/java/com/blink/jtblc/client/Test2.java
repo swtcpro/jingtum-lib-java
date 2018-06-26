@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.blink.jtblc.utils.JsonUtils;
-import com.blink.jtblc.wallet.TestClass;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class Test2 {

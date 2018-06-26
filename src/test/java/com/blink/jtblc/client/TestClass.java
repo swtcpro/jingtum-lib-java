@@ -1,4 +1,4 @@
-package com.blink.jtblc.wallet;
+package com.blink.jtblc.client;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
