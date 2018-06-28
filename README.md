@@ -200,4 +200,31 @@ secret | String  | 密钥
 account | String  | 挂单方账号
 sequence | Integer  | 取消的单子号
 memo | String  | 备注
-secret | String  | 密钥
+secret | String  | 密钥  
+
+19）**监听事件**  
+
+`String result = remote.transactions();`  
+`String result = remote.ledgerClosed();`  
+
+20）**指定账本**  
+
+`Request request = new Request();`   
+` Map map = request.selectLedger(ledger);`   
+` Params.putAll(map);`  
+
+   参数：
+
+参数 | 类型 | 说明
+:----:|:------:|:----:
+ledger | Object  | 账本高度或者账号hash
+
+21）**提交请求**  
+
+`Reqeust request = new Request(this,"subscribe");`  
+`Map params = new HashMap();`  
+`params.put("streams", new String[] {"ledger"});`  
+`request.submit(params);`  
+
+
+
