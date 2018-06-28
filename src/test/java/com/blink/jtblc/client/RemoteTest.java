@@ -282,7 +282,7 @@ public class RemoteTest {
 		tx.addMemo(memo);
 		tx.setSecret(secret_2);
 		TransactionInfo bean = tx.submit();
-		System.out.println("buildPaymentTxTest_new:" + bean.getEngineResultMessage());
+		System.out.println("4.14 buildPaymentTxTest_new:\n" + JsonUtils.toJsonString(bean));
 	}
 	
 	// 4.15 设置关系-new
@@ -301,7 +301,7 @@ public class RemoteTest {
 		tx.addMemo(memo);
 		tx.setSecret(secret_2);
 		TransactionInfo bean = tx.submit();
-		System.out.println("buildRelationTxTest_new:" + bean.getEngineResultMessage());
+		System.out.println("4.15 buildRelationTxTest_new:\n" + JsonUtils.toJsonString(bean));
 	}
 	
 	// 4.16 设置账号属性-new 
@@ -314,7 +314,7 @@ public class RemoteTest {
 		tx.addMemo(memo);
 		tx.setSecret(secret_2);
 		TransactionInfo bean = tx.submit();
-		System.out.println("buildRelationTxTest_new:" + bean.getEngineResultMessage());
+		System.out.println("4.16 buildAccountSetTxTest_new:\n" + JsonUtils.toJsonString(bean));
 	}
 	
 	// 4.17 挂单-new
@@ -335,11 +335,11 @@ public class RemoteTest {
 		tx.addMemo(memo);
 		tx.setSecret(secret_2);
 		TransactionInfo bean = tx.submit();
-		System.out.println("buildOfferCreateTxTest_new:" + bean.getTxJson().getSequence());
+		System.out.println("4.17 buildOfferCreateTxTest_new:\n" + JsonUtils.toJsonString(bean));
 	}
 	
 	// 4.18 取消挂单-new
-	// @Test
+	 @Test
 	public void buildOfferCancelTxTest_new() {
 		Integer sequence = 103;
 		// 可选
@@ -348,6 +348,6 @@ public class RemoteTest {
 		tx.addMemo(memo);
 		tx.setSecret(secret_2);
 		TransactionInfo bean = tx.submit();
-		System.out.println("buildOfferCancelTxTest_new:" + bean.getEngineResultMessage());
+		System.out.println("4.18 buildOfferCancelTxTest_new:\n" + JsonUtils.toJsonString(bean));
 	}
 }
