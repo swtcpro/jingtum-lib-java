@@ -40,7 +40,7 @@ public class RemoteTest {
 	Connection conn = ConnectionFactory.getCollection(server);
 	Remote remote = new Remote(conn);
 	
-	@Test
+	//@Test
 	public void testSl4j() {
 		log.debug("sl4j.debug...");
 		log.info("sl4j.info");
@@ -59,7 +59,7 @@ public class RemoteTest {
 	/**
 	 * 4.2建立连接后，查询节点信息及帐本信息。
 	 */
-	@Test
+	//@Test
 	public void requestLedgerInfo() {
 		// Remote remote = initConnection();
 		LedgerInfo res = remote.requestLedgerInfo();
@@ -69,13 +69,13 @@ public class RemoteTest {
 	/**
 	 * 4.3 关闭websocket链接
 	 */
-	@Test
+	//@Test
 	public void closeConnection() {
 		conn.close();
 	}
 	
 	// 4.4 请求底层服务器信息
-	@Test
+	//@Test
 	public void requestServerInfoTest() {
 		ServerInfo bean = remote.requestServerInfo();
 		System.out.println("state:" + bean.getServerState());
@@ -83,7 +83,7 @@ public class RemoteTest {
 	}
 	
 	// 4.5 获取最新账本信息
-	@Test
+	//@Test
 	public void requestLedgerClosedTest() throws Exception {
 		LedgerClosed bean = remote.requestLedgerClosed();
 		System.out.println("ledger_hash:" + bean.getLedgerHash());
@@ -91,13 +91,12 @@ public class RemoteTest {
 	}
 	
 	// 4.6 获取某一账本具体信息
-	@Test
+	//@Test
 	public void requestLedgerTest() {
 		String ledger_index = "521146";
 		String ledger_hash = "DB48A226AFFFDF02A782757DE55680905556EE4DBCFE3ACDA06D3B69481DF212";
 		boolean transactions = true;
-		// ledger_index
-		Ledger bean = remote.requestLedger(ledger_hash, transactions);
+		Ledger bean = remote.requestLedger(ledger_index, transactions);
 		System.out.println("requestLedgerTest-ledgerIndex:" + bean.getLedgerIndex());
 		System.out.println("4.6 requestLedgerTest:\n" + JsonUtils.toJsonString(bean));
 		// ledger_hash
@@ -107,7 +106,7 @@ public class RemoteTest {
 	}
 	
 	// 4.7 查询某一交易具体信息
-	@Test
+	//@Test
 	public void requestTxTest() {
 		String hash = "162D46BFD8A001D96F8E440B8A75E2EF5CD22538C1EDB039389AE589914E70A8";
 		Account bean = remote.requestTx(hash);
@@ -116,36 +115,36 @@ public class RemoteTest {
 	}
 	
 	// 4.8 请求账号信息
-	@Test
+	//@Test
 	public void requestAccountInfoTest() {
-		AccountInfo bean = remote.requestAccountInfo(account_1);
+		AccountInfo bean = remote.requestAccountInfo("jK4kdiriyxErTfW8wMMjzP25oT2AKLWGfY",521146);
 		System.out.println("账号金额：" + bean.getAccountData().getBalance());
 		System.out.println("4.8 requestAccountInfoTest:\n" + JsonUtils.toJsonString(bean));
-		bean = remote.requestAccountInfo(account_2);
-		System.out.println("账号金额：" + bean.getAccountData().getBalance());
-		System.out.println("4.8 requestAccountInfoTest:\n" + JsonUtils.toJsonString(bean));
+//		bean = remote.requestAccountInfo(account_2,"521146");
+//		System.out.println("账号金额：" + bean.getAccountData().getBalance());
+//		System.out.println("4.8 requestAccountInfoTest:\n" + JsonUtils.toJsonString(bean));
 	}
 	
 	// 4.9 获得账号可接收和发送的货币
-	@Test
+	//@Test
 	public void requestAccountTumsTest() {
-		AccountTums bean = remote.requestAccountTums(account_2);
+		AccountTums bean = remote.requestAccountTums(account_2,521146);
 		System.out.println("requestAccountTumsTest:" + bean.getLedgerIndex());
 		System.out.println("4.9 requestAccountTumsTest:\n" + JsonUtils.toJsonString(bean));
 	}
 	
 	// 4.10 获得账号关系
-	@Test
+	//@Test
 	public void requestAccountRelationsTest() {
 		String type = "trust";
 		AccountRelations bean = null;
 		// bean = remote.requestAccountRelations(account_1, type);
 		// System.out.println("4.10 requestAccountRelationsTest:\n" + JsonUtils.toJsonString(bean));
-		type = "authorize";
+		//type = "authorize";
 		// bean = remote.requestAccountRelations(account_1, type);
 		// System.out.println("4.10 requestAccountRelationsTest:\n" + JsonUtils.toJsonString(bean));
 		type = "freeze";
-		bean = remote.requestAccountRelations(account_1, type);
+		bean = remote.requestAccountRelations(account_1,521146, type);
 		System.out.println("4.10 requestAccountRelationsTest:\n" + JsonUtils.toJsonString(bean));
 		// 信任(trust)、授权(authorize)、冻结(freeze)。
 	}
@@ -153,31 +152,32 @@ public class RemoteTest {
 	// 4.11 获得账号挂单
 	@Test
 	public void requestAccountOffersTest() {
-		AccountOffers bean = remote.requestAccountOffers("jB7rxgh43ncbTX4WeMoeadiGMfmfqY2xLZ");
+		AccountOffers bean = remote.requestAccountOffers("jB7rxgh43ncbTX4WeMoeadiGMfmfqY2xLZ",521146);
 		System.out.println("4.11 requestAccountOffersTest:\n" + JsonUtils.toJsonString(bean));
 	}
 	
 	// 4.12 获得账号交易列表
-	@Test
+	//@Test
 	public void requestAccountTxTest() {
 		AccountTx bean = remote.requestAccountTx("jB7rxgh43ncbTX4WeMoeadiGMfmfqY2xLZ", limit_num);
 		System.out.println("4.12 requestAccountTxTest:\n" + JsonUtils.toJsonString(bean));
 	}
 	
 	// 4.13 获得市场挂单列表
-	@Test
+	//@Test
 	public void requestOrderBookTest() {
 		String getsCurrency = "SWT";
 		String getsIssuer = "";
 		String paysCurrency = "CNY";
 		String paysIssuer = "jBciDE8Q3uJjf111VeiUNM775AMKHEbBLS";
-		Amount taker_gets = new Amount();
-		taker_gets.setCurrency(getsCurrency);
-		taker_gets.setIssuer(getsIssuer);
-		Amount taker_pays = new Amount();
-		taker_pays.setCurrency(paysCurrency);
-		taker_pays.setIssuer(paysIssuer);
-		BookOffers bean = remote.requestOrderBook(taker_gets, taker_pays, limit_num);
+		Amount gets = new Amount();
+		gets.setCurrency(getsCurrency);
+		gets.setIssuer(getsIssuer);
+		Amount pays = new Amount();
+		pays.setCurrency(paysCurrency);
+		pays.setIssuer(paysIssuer);
+		Integer limit =1;
+		BookOffers bean = remote.requestOrderBook(gets, pays, limit);
 		System.out.println("4.13 requestOrderBookTest:\n" + JsonUtils.toJsonString(bean));
 	}
 	
@@ -257,5 +257,14 @@ public class RemoteTest {
 		OfferCancelInfo bean = remote.buildOfferCancelTx(account_2, sequence, memo, secret_2);
 		// 可选
 		System.out.println("buildOfferCancelTx:" + bean.getEngineResultMessage());
+	}
+	//@Test
+	public void ledger() {
+		System.out.println(remote.ledgerClosed());
+	}
+	
+	//@Test
+	public void transtation() {
+		System.out.println(remote.transactions());
 	}
 }

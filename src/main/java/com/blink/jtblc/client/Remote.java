@@ -175,8 +175,8 @@ public class Remote {
 	 * @param account 井通钱包地址
 	 * @return
 	 */
-	public AccountInfo requestAccountInfo(String account) {
-		String msg = requestAccount("account_info", account, "");
+	public AccountInfo requestAccountInfo(String account,Object ledger) {
+		String msg = requestAccount("account_info", account,ledger, "");
 		AccountInfo accountInfo = JsonUtils.toEntity(msg, AccountInfo.class);
 		return accountInfo;
 	}
@@ -187,8 +187,8 @@ public class Remote {
 	 * @param account 井通钱包地址
 	 * @return
 	 */
-	public AccountTums requestAccountTums(String account) {
-		String msg = requestAccount("account_currencies", account, "");
+	public AccountTums requestAccountTums(String account,Object ledger) {
+		String msg = requestAccount("account_currencies", account, ledger,"");
 		AccountTums accountTums = JsonUtils.toEntity(msg, AccountTums.class);
 		return accountTums;
 	}
@@ -200,7 +200,7 @@ public class Remote {
 	 * @param type 关系类型，固定的三个值：trust、authorize、freeze
 	 * @return
 	 */
-	public AccountRelations requestAccountRelations(String account, String type) {
+	public AccountRelations requestAccountRelations(String account,Object ledger, String type) {
 		String command = "";
 		if (!CheckUtils.isValidType("relation", type)) {
 			throw new RemoteException("invalid relation type");
@@ -214,7 +214,7 @@ public class Remote {
 				command = "account_relation";
 				break;
 		}
-		String msg = requestAccount(command, account, type);
+		String msg = requestAccount(command,account,ledger, type);
 		AccountRelations accountRelations = JsonUtils.toEntity(msg, AccountRelations.class);
 		return accountRelations;
 	}
@@ -225,8 +225,8 @@ public class Remote {
 	 * @param account 井通钱包地址
 	 * @return
 	 */
-	public AccountOffers requestAccountOffers(String account) {
-		String msg = requestAccount("account_offers", account, "");
+	public AccountOffers requestAccountOffers(String account,Object ledger) {
+		String msg = requestAccount("account_offers", account,ledger, "");
 		AccountOffers accountOffers = JsonUtils.toEntity(msg, AccountOffers.class);
 		return accountOffers;
 	}
@@ -240,7 +240,7 @@ public class Remote {
 	 * @param type
 	 * @return
 	 */
-	private String requestAccount(String command, String account, String type) {
+	private String requestAccount(String command, String account,Object ledger, String type) {
 		Map params = new HashMap();
 		// 校验,并将参数写入message对象
 		if (StringUtils.isNotEmpty(type)) {
@@ -263,10 +263,16 @@ public class Remote {
 		} else {
 			params.put("account", account);
 		}
-		params.put("ledger_index", "validated"); // 4.9 新增参数ledger_index值
+		
 		// params.put("message", message);
 		params.put("account", account);
 		params.put("command", command);
+		if(ledger!=null) {
+			Request request = new Request();
+			Map map = request.selectLedger(ledger);
+			params.putAll(map);
+		}
+		
 		String msg = this.submit(params);
 		return msg;
 	}
@@ -1276,6 +1282,33 @@ public class Remote {
 		String msg = this.conn.submit(params);
 		System.out.println(msg);
 		return msg;
+	}
+	
+	/**
+	 * 监听信息transactions
+	 * @return
+	 */
+	public String transactions() {
+		Request request = new Request(this,"subscribe");
+		Map params = new HashMap();
+		params.put("streams", new String[] {"transactions"});
+		return request.submit(params);
+	}
+	
+	/**
+	 * 监听信息ledger
+	 * @return
+	 */
+	public String ledgerClosed() {
+		Request request = new Request(this,"subscribe");
+		Map params = new HashMap();
+		params.put("streams", new String[] {"ledger"});
+		return request.submit(params);
+	}
+	
+	public void requestAccountInfo() {
+		Request request = new Request(this,"");
+		
 	}
 	
 	/************ setter and getter ************/
