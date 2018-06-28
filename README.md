@@ -135,8 +135,11 @@ pays | Amount  | 对家想要支付的货币信息,{value:'金额',currency:'货
 14）**提交支付**  
 
 `Transaction tx = remote.buildPaymentTx(account, to, amount);`
+
 `tx.addMemo(memo);`
+
 `tx.setSecret(secret);`
+
 `TransactionInfo bean = tx.submit();`
 
 
@@ -153,8 +156,11 @@ secret | String  | 密钥
 15）**关系设置**  
 
 `Transaction tx = remote.buildRelationTx(type, account, to, amount);`
+
 `tx.addMemo(memo);`
-`tx.setSecret(secret_2);`
+
+`tx.setSecret(secret);`
+
 `TransactionInfo bean = tx.submit();`
 
    参数：
@@ -171,8 +177,11 @@ secret | String  | 密钥
 16）**设置账号属性**  
 
 `Transaction tx = remote.buildAccountSetTx(type, account);`
+
 `tx.addMemo(memo);`
+
 `tx.setSecret(secret);`
+
 `TransactionInfo bean = tx.submit();`
 
    参数：
@@ -188,9 +197,13 @@ secret | String  | 密钥
 17）**挂单**  
 
 `Transaction tx = remote.buildOfferCreateTx(type, account, getsAmount, paysAmount);`
+
 `tx.addMemo(memo);`
+
 `tx.setSecret(secret);`
+
 `TransactionInfo bean = tx.submit();`
+
 
    参数：
 
@@ -205,8 +218,11 @@ secret | String  | 密钥
 18）**取消挂单**  
 
 `Transaction tx = remote.buildOfferCancelTx(account, sequence);`
+
 `tx.addMemo(memo);`
+
 `tx.setSecret(secret);`
+
 `TransactionInfo bean = tx.submit();`
 
    参数：
