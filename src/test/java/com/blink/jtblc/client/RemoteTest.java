@@ -318,7 +318,7 @@ public class RemoteTest {
 	}
 	
 	// 4.17 挂单-new
-	@Test
+	// @Test
 	public void buildOfferCreateTxTest_new() {
 		String type = "Sell";
 		Amount getsAmount = new Amount();
