@@ -3,8 +3,12 @@ package com.blink.jtblc.client;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.blink.jtblc.client.bean.Amount;
+import com.blink.jtblc.client.bean.TransactionInfo;
 import com.blink.jtblc.connection.Connection;
+import com.blink.jtblc.exceptions.RemoteException;
 import com.blink.jtblc.exceptions.TransactionException;
 import com.blink.jtblc.utils.JsonUtils;
 
@@ -270,5 +274,61 @@ public class Transaction {
         }catch (Exception e){
             throw new TransactionException(1004,"invalid amount to max");
         }
+    }
+    
+    private Boolean localSign = false;
+	private Connection conn = null;
+
+	public Boolean getLocalSign() {
+		return localSign;
+	}
+
+	public void setLocalSign(Boolean localSign) {
+		this.localSign = localSign;
+	}
+
+	public Connection getConn() {
+		return conn;
+	}
+
+	public void setConn(Connection conn) {
+		this.conn = conn;
+	}
+	
+	/**
+	 * 提交交易信息
+	 * @return
+	 */
+	public TransactionInfo submit(){
+		Map params = new HashMap();
+		String tx_json_transactionType = "";
+		String tx_json_blob = "WW";
+		Map tx_json = this.getTx_json();
+		if(localSign) {
+			//签名之后传给底层
+			tx_json_blob = sign(this.secret);
+	        params.put("tx_blob", tx_json_blob);
+		}else if(tx_json_transactionType.equals("Signer")) {
+			//直接将blob传给底层
+	        params.put("tx_blob", tx_json_blob);
+		}else {
+			//不签名交易传给底层
+			params.put("secret", this.getSecret());
+	        //params.put("tx_json", tx_json);
+		}
+		
+		if (StringUtils.isNotEmpty(memo)) {
+			if (memo.length() > 2048) {
+				throw new RemoteException("memo is too long");
+			} else {
+				// tx_json.put("MemoData", __stringToHex(utf8.encode(memo));
+			}
+		}
+		params.put("memo", this.memo);
+		params.put("command", this.command);
+		params.put("tx_json", tx_json);
+		String msg = conn.submit(params);
+		TransactionInfo bean = JsonUtils.toEntity(msg, TransactionInfo.class);
+		return bean;
     }
 }

@@ -44,7 +44,7 @@ public class TxJson {
 	// 对家得到的Object
 	private Amount takerGets;
 	// 对家支付的Object
-	private String takerpays;
+	private String takerPays;
 	
 	public String getAccount() {
 		return account;
@@ -148,10 +148,10 @@ public class TxJson {
 	public void setTakerGets(Amount takerGets) {
 		this.takerGets = takerGets;
 	}
-	public String getTakerpays() {
-		return takerpays;
+	public String getTakerPays() {
+		return takerPays;
 	}
-	public void setTakerpays(String takerpays) {
-		this.takerpays = takerpays;
+	public void setTakerPays(String takerPays) {
+		this.takerPays = takerPays;
 	}
 }
