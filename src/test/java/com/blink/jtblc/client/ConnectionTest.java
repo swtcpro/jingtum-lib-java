@@ -1,4 +1,4 @@
-package com.blink.jtblc.wallet;
+package com.blink.jtblc.client;
 import com.blink.jtblc.connection.Connection;
 import com.blink.jtblc.connection.ConnectionFactory;
 import org.junit.Test;
