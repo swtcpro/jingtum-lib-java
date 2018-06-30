@@ -11,6 +11,9 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.blink.jtblc.listener.Impl.LedgerCloseImpl;
+import com.blink.jtblc.listener.Impl.TransactionsImpl;
+import com.blink.jtblc.listener.RemoteInter;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -1270,10 +1273,10 @@ public class Remote {
 		OfferCancelInfo bean = JsonUtils.toEntity(msg, OfferCancelInfo.class);
 		return bean;
 	}
-	
+
 	/**
 	 * 提交信息
-	 * 
+	 *
 	 * @return
 	 */
 	public String submit(Map params) {
@@ -1283,48 +1286,362 @@ public class Remote {
 		System.out.println(msg);
 		return msg;
 	}
-	
+
 	/**
 	 * 监听信息transactions
 	 * @return
 	 */
+
 	public String transactions() {
+		RemoteInter romteInter = new TransactionsImpl();
 		Request request = new Request(this,"subscribe");
-		Map params = new HashMap();
-		params.put("streams", new String[] {"transactions"});
-		return request.submit(params);
+		return romteInter.submit(request);
 	}
-	
+
 	/**
 	 * 监听信息ledger
 	 * @return
 	 */
-	public String ledgerClosed() {
+	public String ledge() {
+		RemoteInter romteInter = new LedgerCloseImpl();
 		Request request = new Request(this,"subscribe");
-		Map params = new HashMap();
-		params.put("streams", new String[] {"ledger"});
-		return request.submit(params);
+		return romteInter.submit(request);
 	}
-	
-	public void requestAccountInfo() {
-		Request request = new Request(this,"");
-		
+	/**
+	 * 监听处理请求
+	 * @param type
+	 * @return
+	 */
+	public String handleRequst(String type) {
+		if(type.equals("transactions")) {
+			return this.transactions();
+		}else if(type.equals("ledger_closed")) {
+			return this.ledge();
+		}
+		return "";
 	}
-	
+	/**
+	 * 监听
+	 * @param type
+	 */
+	public String newListener(String type) {
+		if(conn==null)return "";
+		if(type.equals("removeListener"))return"";
+		if(type.equals("transactions")) {
+			return this.transactions();
+		}else if(type.equals("ledger_closed")) {
+			return this.ledge();
+		}
+		return "";
+	}
+
+
 	/************ setter and getter ************/
 	public String getServer() {
 		return server;
 	}
-	
+
 	public void setServer(String server) {
 		this.server = server;
 	}
-	
+
 	public Boolean getLocal_sign() {
 		return localSign;
 	}
-	
+
 	public void setLocal_sign(Boolean local_sign) {
 		this.localSign = local_sign;
 	}
+
+
+	/**********************返回transaction对象方法*************************/
+
+	/**
+	 * 获取交易对象
+	 *
+	 * @param account 发起账号
+	 * @param to 目标账号
+	 * @param amount 支付金额对象Amount
+	 * @param value
+	 * @param currency
+	 * @param issuer
+	 * @return Transaction
+	 */
+	public Transaction buildPaymentTx(String account, String to, Amount amount) {
+		Transaction tx = new Transaction();
+		tx.setAccount(account);
+		tx.setTo(to);
+		// 校验,并将参数写入tx_json对象
+		Map tx_json = new HashMap();
+		if (!CheckUtils.isValidAddress(account)) {
+			throw new RemoteException("invalid source address");
+		}
+		if (!CheckUtils.isValidAddress(to)) {
+			throw new RemoteException("invalid destination address");
+		}
+		tx_json.put("TransactionType", "Payment");
+		tx_json.put("Account", account);
+		tx_json.put("Amount", toAmount(amount));
+		tx_json.put("Destination", to);
+		tx.setCommand("submit");
+		tx.setTx_json(tx_json);
+		tx.setConn(conn);
+		tx.setLocalSign(localSign);
+		return tx;
+	}
+
+	/**
+	 * 设置关系
+	 *
+	 * @param type 关系种类
+	 * @param account 设置关系的源账号
+	 * @param target 目标账号
+	 * @param limit 关系金额 对象Amount
+	 * @return Transaction
+	 */
+	public Transaction buildRelationTx(String type_value, String account, String target, Amount limit) {
+		Transaction tx = new Transaction();
+		// 将参数写入tx对象,方便读取校验
+		tx.setAccount(account);
+		tx.setTo(target);
+		tx.setLimit(limit);
+		tx.setRelation_type(type_value);
+		tx.setCommand("submit");
+		tx.setConn(conn);
+		tx.setLocalSign(localSign);
+		if (!CheckUtils.isValidType("relation", type_value)) {
+			throw new RemoteException("invalid relation type");
+		}
+
+		switch (type_value) {
+			case "trust":
+				return buildTrustSet_tx(tx);
+			case "authorize":
+			case "freeze":
+			case "unfreeze":
+				return buildRelationSet_tx(tx);
+		}
+		throw new RemoteException("build relation set should not go here");
+	}
+
+	/**
+	 * 根据Transaction对象获取trust关系参数
+	 *
+	 * @param tx Transaction
+	 * @return Transaction
+	 */
+	private Transaction buildTrustSet_tx(Transaction tx) {
+		String src = tx.getAccount();
+		Amount limit = tx.getLimit();
+		String quality_out = "";
+		String quality_in = "";
+		// 校验,并将参数写入tx_json对象
+		Map tx_json = new HashMap();
+		if (!CheckUtils.isValidAddress(src)) {
+			throw new RemoteException("invalid source address");
+		}
+		if (!CheckUtils.isValidAmount(limit)) {
+			throw new RemoteException("invalid amount");
+		}
+		tx_json.put("TransactionType", "TrustSet");
+		tx_json.put("Account", src);
+		tx_json.put("LimitAmount", toAmount(limit));
+		if (StringUtils.isNotEmpty(quality_in)) {
+			tx_json.put("QualityIn", quality_in);
+		}
+		if (StringUtils.isNotEmpty(quality_out)) {
+			tx_json.put("QualityOut", quality_out);
+		}
+		tx.setTx_json(tx_json);
+		return tx;
+	}
+
+	/**
+	 * 根据Transaction对象获取非trust关系参数
+	 *
+	 * @param tx Transaction
+	 * @return Transaction
+	 */
+	private Transaction buildRelationSet_tx(Transaction tx) {
+		String src = tx.getAccount();
+		Amount limit = tx.getLimit();
+		String des = tx.getTo();
+		// 校验,并将参数写入tx_json对象
+		Map tx_json = new HashMap();
+		if (!CheckUtils.isValidAddress(src)) {
+			throw new RemoteException("invalid source address");
+		}
+		if (!CheckUtils.isValidAddress(des)) {
+			throw new RemoteException("invalid destination address");
+		}
+		if (!CheckUtils.isValidAmount(limit)) {
+			throw new RemoteException("invalid amount");
+		}
+		// 关系类型：0信任；1授权；3冻结/解冻；
+		String type = tx.getRelation_type();
+		tx_json.put("TransactionType", type.equals("unfreeze") ? "RelationDel" : "RelationSet");
+		tx_json.put("RelationType", type.equals("authorize") ? "1" : "3");
+		tx_json.put("Account", src);
+		tx_json.put("Target", des);
+		tx_json.put("LimitAmount", toAmount(limit));
+		tx.setTx_json(tx_json);
+		return tx;
+	}
+
+	/**
+	 * 设置账号属性
+	 *
+	 * @param type_value 属性种类
+	 * @param account 设置属性的源账号
+	 * @return Transaction
+	 */
+	public Transaction buildAccountSetTx(String type_value, String account) {
+		Transaction tx = new Transaction();
+		tx.setAccount(account);
+		tx.setProperty_type(type_value);
+		tx.setCommand("submit");
+		tx.setConn(conn);
+		tx.setLocalSign(localSign);
+		if (!CheckUtils.isValidType("accountSet", type_value)) {
+			throw new RemoteException("invalid account set type");
+		}
+		switch (type_value) {
+			case "property":
+				return buildAccountSet_tx(tx);
+			case "delegate":
+				return buildDelegateKeySet_tx(tx);
+			case "signer":
+				return buildSignerSet_tx(tx);
+		}
+		throw new RemoteException("build account set should not go here");
+	}
+
+	/**
+	 * 根据Transaction对象获取property关系参数
+	 *
+	 * @param tx Transaction
+	 * @return Transaction
+	 */
+	private Transaction buildAccountSet_tx(Transaction tx) {
+		Map params = new HashMap();
+		String src = tx.getAccount();
+		// 校验,并将参数写入tx_json对象
+		Map tx_json = new HashMap();
+		if (!CheckUtils.isValidAddress(src)) {
+			throw new RemoteException("invalid source address");
+		}
+		tx_json.put("Account", src);
+		tx_json.put("TransactionType", "AccountSet");
+		tx.setTx_json(tx_json);
+		return tx;
+	}
+
+	/**
+	 * 根据Transaction对象获取delegate关系参数
+	 *
+	 * @param tx Transaction
+	 * @return Transaction
+	 */
+	private Transaction buildDelegateKeySet_tx(Transaction tx) {
+		Map params = new HashMap();
+		String src = tx.getAccount();
+		String delegate_key = "";
+		// 校验,并将参数写入tx_json对象
+		Map tx_json = new HashMap();
+		if (!CheckUtils.isValidAddress(src)) {
+			throw new RemoteException("invalid source address");
+		}
+		if (!CheckUtils.isValidAddress(delegate_key)) {
+			throw new RemoteException("invalid regular key address");
+		}
+		tx_json.put("TransactionType", "SetRegularKey");
+		tx_json.put("Account", src);
+		tx_json.put("RegularKey", delegate_key);
+		tx.setTx_json(tx_json);
+		return tx;
+	}
+
+	/**
+	 * 根据Transaction对象获取signer关系参数
+	 *
+	 * @param tx Transaction
+	 * @return Transaction
+	 */
+	private Transaction buildSignerSet_tx(Transaction tx) {
+		Map params = new HashMap();
+		// 校验,并将参数写入tx_json对象
+		Map tx_json = new HashMap();
+		tx.setTx_json(tx_json);
+		return tx;
+	}
+
+	/**
+	 * 挂单
+	 *
+	 * @param type 挂单类型，固定的两个值：Buy、Sell
+	 * @param account 挂单方账号
+	 * @param getsAmount 对方得到的，即挂单方支付的
+	 * @param paysAmount 对方支付的，即挂单方获得的
+	 * @return Transaction
+	 */
+	public Transaction buildOfferCreateTx(String type, String account, Amount getsAmount, Amount paysAmount) {
+		Transaction tx = new Transaction();
+		tx.setCommand("submit");
+		tx.setConn(conn);
+		tx.setLocalSign(localSign);
+		// 校验,并将参数写入tx_json对象
+		Map tx_json = new HashMap();
+		if (!CheckUtils.isValidAddress(account)) {
+			throw new RemoteException("invalid source address");
+		}
+		if (!CheckUtils.isValidType("offer", type)) {
+			throw new RemoteException("invalid offer type");
+		}
+		if (!CheckUtils.isValidAmountValue(getsAmount.getValue())) {
+			throw new RemoteException("invalid to pays amount");
+		}
+		if (!CheckUtils.isValidAmount(getsAmount)) {
+			throw new RemoteException("invalid to pays amount object");
+		}
+		if (!CheckUtils.isValidAmountValue(paysAmount.getValue())) {
+			throw new RemoteException("invalid to gets amount");
+		}
+		if (!CheckUtils.isValidAmount(paysAmount)) {
+			throw new RemoteException("invalid to gets amount object");
+		}
+		tx_json.put("TransactionType", "OfferCreate");
+		tx_json.put("Account", account);
+		if (type.equals("Sell")) {
+			tx.setFlags(type);
+		}
+		tx_json.put("TakerPays", toAmount(paysAmount));
+		tx_json.put("TakerGets", toAmount(getsAmount));
+		tx.setTx_json(tx_json);
+		return tx;
+	}
+
+	/**
+	 * 取消挂单
+	 *
+	 * @param account 挂单方账号
+	 * @param sequence 取消的单子号
+	 * @return Transaction
+	 */
+	public Transaction buildOfferCancelTx(String account, Integer sequence) {
+		Transaction tx = new Transaction();
+		tx.setCommand("submit");
+		tx.setConn(conn);
+		tx.setLocalSign(localSign);
+		// 校验,并将参数写入tx_json对象
+		Map tx_json = new HashMap();
+		if (!CheckUtils.isValidAddress(account)) {
+			throw new RemoteException("invalid source address");
+		}
+		tx_json.put("TransactionType", "OfferCancel");
+		tx_json.put("Account", account);
+		tx_json.put("OfferSequence", sequence);
+		tx.setTx_json(tx_json);
+		return tx;
+	}
+
 }

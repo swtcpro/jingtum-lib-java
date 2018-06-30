@@ -14,8 +14,7 @@ public class Request {
 	ObjectMapper mapper = new ObjectMapper();
 	private Remote remote = null;
 	private String command ="";
-	private Map message = new HashMap(); 
-	
+
 	public Request(Remote remote,String command) {
 		this.remote = remote;
 		this.command = command;
@@ -36,6 +35,8 @@ public class Request {
 	 * @param ledger 账本高度或者账号hash
 	 */
 	public Map selectLedger(Object ledger) {
+		Map message = new HashMap();
+
 		if(ledger instanceof String) {
 			message.put("ledger_index", ledger.toString());
 		}else if(ledger instanceof Number) {

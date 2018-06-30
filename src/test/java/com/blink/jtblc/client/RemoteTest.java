@@ -1,26 +1,10 @@
 package com.blink.jtblc.client;
 
+import com.blink.jtblc.client.bean.*;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.blink.jtblc.client.bean.Account;
-import com.blink.jtblc.client.bean.AccountInfo;
-import com.blink.jtblc.client.bean.AccountOffers;
-import com.blink.jtblc.client.bean.AccountPropertyInfo;
-import com.blink.jtblc.client.bean.AccountRelations;
-import com.blink.jtblc.client.bean.AccountTums;
-import com.blink.jtblc.client.bean.AccountTx;
-import com.blink.jtblc.client.bean.Amount;
-import com.blink.jtblc.client.bean.BookOffers;
-import com.blink.jtblc.client.bean.Ledger;
-import com.blink.jtblc.client.bean.LedgerClosed;
-import com.blink.jtblc.client.bean.LedgerInfo;
-import com.blink.jtblc.client.bean.OfferCancelInfo;
-import com.blink.jtblc.client.bean.OfferCreateInfo;
-import com.blink.jtblc.client.bean.PaymentInfo;
-import com.blink.jtblc.client.bean.RelationInfo;
-import com.blink.jtblc.client.bean.ServerInfo;
 import com.blink.jtblc.connection.Connection;
 import com.blink.jtblc.connection.ConnectionFactory;
 import com.blink.jtblc.utils.JsonUtils;
@@ -258,13 +242,99 @@ public class RemoteTest {
 		// 可选
 		System.out.println("buildOfferCancelTx:" + bean.getEngineResultMessage());
 	}
-	//@Test
-	public void ledger() {
-		System.out.println(remote.ledgerClosed());
+	// 4.14-支付方法new
+	// @Test
+	public void buildPaymentTxTest_new() {
+		// 使用签名
+		// Remote remote = new Remote(conn,true);
+		// SWT支付
+		String value = "0.000001";
+		String currency = "SWT";
+		String issuer = "";
+		// 其他货币支付
+		// String value = "1";
+		// String currency = "CNY";
+		// String issuer = "jGa9J9TkqtBcUoHe2zqhVFFbgUVED6o9or";
+		Amount amount = new Amount();
+		amount.setCurrency(currency);
+		amount.setValue(value);
+		amount.setIssuer(issuer);
+		String memo = "支付";
+		Transaction tx = remote.buildPaymentTx(account_2, account_1, amount);
+		tx.addMemo(memo);
+		tx.setSecret(secret_2);
+		TransactionInfo bean = tx.submit();
+		System.out.println("4.14 buildPaymentTxTest_new:\n" + JsonUtils.toJsonString(bean));
 	}
-	
+
+	// 4.15 设置关系-new
+	// @Test
+	public void buildRelationTxTest_new() {
+		String type = "freeze";
+		String value = "0.000001";
+		String currency = "SWT";
+		String issuer = "";
+		Amount limit = new Amount();
+		limit.setValue(value);
+		limit.setCurrency(currency);
+		limit.setIssuer(issuer);
+		String memo = "4.15 设置关系";
+		Transaction tx = remote.buildRelationTx(type, account_2, account_1, limit);
+		tx.addMemo(memo);
+		tx.setSecret(secret_2);
+		TransactionInfo bean = tx.submit();
+		System.out.println("4.15 buildRelationTxTest_new:\n" + JsonUtils.toJsonString(bean));
+	}
+
+	// 4.16 设置账号属性-new
+	// @Test
+	public void buildAccountSetTxTest_new() {
+		String type = "property";
+		// 可选
+		String memo = "4.16 设置账号属性";
+		Transaction tx = remote.buildAccountSetTx(type, account_2);
+		tx.addMemo(memo);
+		tx.setSecret(secret_2);
+		TransactionInfo bean = tx.submit();
+		System.out.println("4.16 buildAccountSetTxTest_new:\n" + JsonUtils.toJsonString(bean));
+	}
+
+	// 4.17 挂单-new
+	// @Test
+	public void buildOfferCreateTxTest_new() {
+		String type = "Sell";
+		Amount getsAmount = new Amount();
+		getsAmount.setValue("0.000001");
+		getsAmount.setIssuer("");
+		getsAmount.setCurrency("SWT");
+		Amount paysAmount = new Amount();
+		paysAmount.setValue("0.01");
+		paysAmount.setIssuer("jBciDE8Q3uJjf111VeiUNM775AMKHEbBLS");
+		paysAmount.setCurrency("CNY");
+		// 可选
+		String memo = "4.17 挂单";
+		Transaction tx = remote.buildOfferCreateTx(type, account_2, getsAmount, paysAmount);
+		tx.addMemo(memo);
+		tx.setSecret(secret_2);
+		TransactionInfo bean = tx.submit();
+		System.out.println("4.17 buildOfferCreateTxTest_new:\n" + JsonUtils.toJsonString(bean));
+	}
+
+	// 4.18 取消挂单-new
 	//@Test
-	public void transtation() {
-		System.out.println(remote.transactions());
+	public void buildOfferCancelTxTest_new() {
+		Integer sequence = 103;
+		// 可选
+		String memo = "4.18 取消挂单";
+		Transaction tx = remote.buildOfferCancelTx(account_2, sequence);
+		tx.addMemo(memo);
+		tx.setSecret(secret_2);
+		TransactionInfo bean = tx.submit();
+		System.out.println("4.18 buildOfferCancelTxTest_new:\n" + JsonUtils.toJsonString(bean));
+	}
+	@Test
+	public void ledger() {
+		String result = remote.newListener("ledger_closed");
+		System.out.println(result);
 	}
 }

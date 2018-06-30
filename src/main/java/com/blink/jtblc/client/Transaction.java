@@ -4,58 +4,61 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.blink.jtblc.client.bean.Amount;
+import com.blink.jtblc.client.bean.TransactionInfo;
 import com.blink.jtblc.connection.Connection;
+import com.blink.jtblc.exceptions.RemoteException;
 import com.blink.jtblc.exceptions.TransactionException;
 import com.blink.jtblc.utils.JsonUtils;
+import org.apache.commons.lang3.StringUtils;
 
 //交易信息
 public class Transaction {
-	
+
 	//发起账号
 	private String account;
-	
+
 	//目标账号
 	private String to;
-	
+
 	//支付金额对象
 	private Amount amount;
-	
+
 	//关系金额对象
 	private Amount limit;
-	
+
 	//挂单方支付金额对象
 	private Amount taker_gets;
-	
+
 	//挂单方获得金额对象
 	private Amount taker_pays;
-	
+
 	//私钥
 	private String secret;
-	
+
 	//备注信息
 	private String memo;
-	
+
 	//交易签名
 	private String txnSignature;
-	
+
 	//关系种类 
 	private String relation_type;
-	
+
 	//属性种类
 	private String property_type;
-	
+
 	//挂单类型
 	private String flags;
-	
+
 	//取消的单子号
 	private Integer sequence;
-	
+
 	//command
 	private String command;
-	
+
 	//tx_json
 	private Map tx_json = new HashMap();
-	
+
 	public String getAccount() {
 		//tx_json.get("Account")
 		return account;
@@ -80,7 +83,7 @@ public class Transaction {
 	public void setAmount(Amount amount) {
 		this.amount = amount;
 	}
-	
+
 	public Amount getLimit() {
 		return limit;
 	}
@@ -128,7 +131,7 @@ public class Transaction {
 	public void setTxnSignature(String txnSignature) {
 		this.txnSignature = txnSignature;
 	}
-	
+
 	public String getRelation_type() {
 		return relation_type;
 	}
@@ -188,21 +191,21 @@ public class Transaction {
 		if(local_sign) {
 			//签名之后传给底层
 			tx_json_blob = sign(this.secret);
-	        params.put("tx_blob", tx_json_blob);
+			params.put("tx_blob", tx_json_blob);
 		}else if(tx_json_transactionType.equals("Signer")) {
 			//直接将blob传给底层
-	        params.put("tx_blob", tx_json_blob);
+			params.put("tx_blob", tx_json_blob);
 		}else {
 			//不签名交易传给底层
 			params.put("secret", this.getSecret());
-	        //params.put("tx_json", tx_json);
+			//params.put("tx_json", tx_json);
 		}
 		params.put("memo", this.memo);
 		params.put("command", this.command);
 		System.out.println("参数：" + JsonUtils.toJsonString(params));
 		String msg = conn.submit(params);
 		return msg;
-    }
+	}
 
 	/**
 	 * 添加备注信息
@@ -211,7 +214,7 @@ public class Transaction {
 	public void addMemo(String memo) {
 		this.memo = memo;
 	}
-	
+
 	/**
 	 * 签名
 	 * @param sercet
@@ -219,33 +222,33 @@ public class Transaction {
 	 */
 	public String sign(String secret) {
 		//1.获取账号信息,钱包信息--待完善
-        //String rs = remote.requestAccountTums(account);
+		//String rs = remote.requestAccountTums(account);
 		return "对交易签名";
 	}
-	
-	   /**
-     * 设置费用
-     * @param fee
-     */
-    public void setFee(String fee) {
-        try{
-            int feeJson = Integer.parseInt(fee);
-            if(feeJson<10){
-                this.tx_json.put("Fee","fee is too low");
-            }
-            this.tx_json.put("Fee",fee);
-        }catch (Exception e){
-            this.tx_json.put("Fee","invalid fee");
-        }
-    }
 
-    /**
-     * 获取交易类型
-     * @return
-     */
-    public String getTransactionType(){
-        return this.tx_json.get("TransactionType").toString();
-    }
+	/**
+	 * 设置费用
+	 * @param fee
+	 */
+	public void setFee(String fee) {
+		try{
+			int feeJson = Integer.parseInt(fee);
+			if(feeJson<10){
+				this.tx_json.put("Fee","fee is too low");
+			}
+			this.tx_json.put("Fee",fee);
+		}catch (Exception e){
+			this.tx_json.put("Fee","invalid fee");
+		}
+	}
+
+	/**
+	 * 获取交易类型
+	 * @return
+	 */
+	public String getTransactionType(){
+		return this.tx_json.get("TransactionType").toString();
+	}
 
 
     /*public void setPath(String key){
@@ -263,12 +266,68 @@ public class Transaction {
         }
     }*/
 
-    public String MaxAmount(Object amount){
-        try {
-            float aa = (float) (Float.parseFloat(amount.toString()) * 1.0001);
-            return String.valueOf(aa);
-        }catch (Exception e){
-            throw new TransactionException(1004,"invalid amount to max");
-        }
-    }
+	public String MaxAmount(Object amount){
+		try {
+			float aa = (float) (Float.parseFloat(amount.toString()) * 1.0001);
+			return String.valueOf(aa);
+		}catch (Exception e){
+			throw new TransactionException(1004,"invalid amount to max");
+		}
+	}
+
+	private Boolean localSign = false;
+	private Connection conn = null;
+
+	public Boolean getLocalSign() {
+		return localSign;
+	}
+
+	public void setLocalSign(Boolean localSign) {
+		this.localSign = localSign;
+	}
+
+	public Connection getConn() {
+		return conn;
+	}
+
+	public void setConn(Connection conn) {
+		this.conn = conn;
+	}
+
+	/**
+	 * 提交交易信息
+	 * @return
+	 */
+	public TransactionInfo submit(){
+		Map params = new HashMap();
+		String tx_json_transactionType = "";
+		String tx_json_blob = "WW";
+		Map tx_json = this.getTx_json();
+		if(localSign) {
+			//签名之后传给底层
+			tx_json_blob = sign(this.secret);
+			params.put("tx_blob", tx_json_blob);
+		}else if(tx_json_transactionType.equals("Signer")) {
+			//直接将blob传给底层
+			params.put("tx_blob", tx_json_blob);
+		}else {
+			//不签名交易传给底层
+			params.put("secret", this.getSecret());
+			//params.put("tx_json", tx_json);
+		}
+
+		if (StringUtils.isNotEmpty(memo)) {
+			if (memo.length() > 2048) {
+				throw new RemoteException("memo is too long");
+			} else {
+				// tx_json.put("MemoData", __stringToHex(utf8.encode(memo));
+			}
+		}
+		params.put("memo", this.memo);
+		params.put("command", this.command);
+		params.put("tx_json", tx_json);
+		String msg = conn.submit(params);
+		TransactionInfo bean = JsonUtils.toEntity(msg, TransactionInfo.class);
+		return bean;
+	}
 }
