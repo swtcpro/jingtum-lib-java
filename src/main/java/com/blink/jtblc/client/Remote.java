@@ -36,6 +36,9 @@ import com.blink.jtblc.client.bean.ServerInfo;
 import com.blink.jtblc.config.Config;
 import com.blink.jtblc.connection.Connection;
 import com.blink.jtblc.exceptions.RemoteException;
+import com.blink.jtblc.listener.RemoteInter;
+import com.blink.jtblc.listener.Impl.LedgerCloseImpl;
+import com.blink.jtblc.listener.Impl.TransactionsImpl;
 import com.blink.jtblc.utils.CheckUtils;
 import com.blink.jtblc.utils.JsonUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -173,8 +176,8 @@ public class Remote {
 	 * @param account 井通钱包地址
 	 * @return
 	 */
-	public AccountInfo requestAccountInfo(String account) {
-		String msg = requestAccount("account_info", account, "");
+	public AccountInfo requestAccountInfo(String account,Object ledger) {
+		String msg = requestAccount("account_info", account,ledger, "");
 		AccountInfo accountInfo = JsonUtils.toEntity(msg, AccountInfo.class);
 		return accountInfo;
 	}
@@ -185,8 +188,8 @@ public class Remote {
 	 * @param account 井通钱包地址
 	 * @return
 	 */
-	public AccountTums requestAccountTums(String account) {
-		String msg = requestAccount("account_currencies", account, "");
+	public AccountTums requestAccountTums(String account,Object ledger) {
+		String msg = requestAccount("account_currencies", account,ledger, "");
 		AccountTums accountTums = JsonUtils.toEntity(msg, AccountTums.class);
 		return accountTums;
 	}
@@ -198,7 +201,7 @@ public class Remote {
 	 * @param type 关系类型，固定的三个值：trust、authorize、freeze
 	 * @return
 	 */
-	public AccountRelations requestAccountRelations(String account, String type) {
+	public AccountRelations requestAccountRelations(String account,Object ledger, String type) {
 		String command = "";
 		if (!CheckUtils.isValidType("relation", type)) {
 			throw new RemoteException("invalid relation type");
@@ -212,7 +215,7 @@ public class Remote {
 				command = "account_relation";
 				break;
 		}
-		String msg = requestAccount(command, account, type);
+		String msg = requestAccount(command, account,ledger, type);
 		AccountRelations accountRelations = JsonUtils.toEntity(msg, AccountRelations.class);
 		return accountRelations;
 	}
@@ -223,8 +226,8 @@ public class Remote {
 	 * @param account 井通钱包地址
 	 * @return
 	 */
-	public AccountOffers requestAccountOffers(String account) {
-		String msg = requestAccount("account_offers", account, "");
+	public AccountOffers requestAccountOffers(String account,Object ledger) {
+		String msg = requestAccount("account_offers", account,ledger, "");
 		AccountOffers accountOffers = JsonUtils.toEntity(msg, AccountOffers.class);
 		return accountOffers;
 	}
@@ -238,7 +241,7 @@ public class Remote {
 	 * @param type
 	 * @return
 	 */
-	private String requestAccount(String command, String account, String type) {
+	private String requestAccount(String command, String account,Object ledger, String type) {
 		Map params = new HashMap();
 		// 校验,并将参数写入message对象
 		if (StringUtils.isNotEmpty(type)) {
@@ -261,10 +264,14 @@ public class Remote {
 		} else {
 			params.put("account", account);
 		}
-		params.put("ledger_index", "validated"); // 4.9 新增参数ledger_index值
 		// params.put("message", message);
 		params.put("account", account);
 		params.put("command", command);
+		if(ledger!=null) {
+			Request request = new Request();
+			Map map = request.selectLedger(ledger);
+			params.putAll(map);
+		}
 		String msg = this.submit(params);
 		return msg;
 	}
@@ -1276,6 +1283,56 @@ public class Remote {
 		return msg;
 	}
 	
+	
+	/**
+	 * 监听信息transactions
+	 * @return
+	 */
+	
+	public String transactions() {
+		RemoteInter romteInter = new TransactionsImpl();
+		Request request = new Request(this,"subscribe");
+		return romteInter.submit(request);
+	}
+	
+	/**
+	 * 监听信息ledger
+	 * @return
+	 */
+	public String ledge() {
+		RemoteInter romteInter = new LedgerCloseImpl();
+		Request request = new Request(this,"subscribe");
+		return romteInter.submit(request);
+	}
+	/**
+	 * 监听处理请求
+	 * @param type
+	 * @return
+	 */
+	public String handleRequst(String type) {
+		if(type.equals("transactions")) {
+			return this.transactions();
+		}else if(type.equals("ledger_closed")) {
+			return this.ledge();
+		}
+		return "";
+	}
+	/**
+	 * 监听
+	 * @param type
+	 */
+	public String newListener(String type) {
+		if(conn==null)return "";
+		if(type.equals("removeListener"))return"";
+		if(type.equals("transactions")) {
+			return this.transactions();
+		}else if(type.equals("ledger_closed")) {
+			return this.ledge();
+		}
+		return "";
+	}
+	
+	
 	/************ setter and getter ************/
 	public String getServer() {
 		return server;
@@ -1583,4 +1640,6 @@ public class Remote {
 		tx.setTx_json(tx_json);
 		return tx;
 	}
+	
+	
 }

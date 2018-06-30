@@ -51,7 +51,11 @@ public class WebSocket extends WebSocketClient {
 		try {
 			ObjectMapper mapper = new ObjectMapper();
 			Map map = mapper.readValue(message, Map.class);
-			results.put(map.get("id").toString(), message);
+			if(map.get("id")==null) {
+				results.put("listener", message);
+			}else {
+				results.put(map.get("id").toString(), message);
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

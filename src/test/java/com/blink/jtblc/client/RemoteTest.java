@@ -119,10 +119,10 @@ public class RemoteTest {
 	// 4.8 请求账号信息
 	// @Test
 	public void requestAccountInfoTest() {
-		AccountInfo bean = remote.requestAccountInfo(account_1);
+		AccountInfo bean = remote.requestAccountInfo(account_1,5211461);
 		System.out.println("账号金额：" + bean.getAccountData().getBalance());
 		System.out.println("4.8 requestAccountInfoTest:\n" + JsonUtils.toJsonString(bean));
-		bean = remote.requestAccountInfo(account_2);
+		bean = remote.requestAccountInfo(account_2,5211461);
 		System.out.println("账号金额：" + bean.getAccountData().getBalance());
 		System.out.println("4.8 requestAccountInfoTest:\n" + JsonUtils.toJsonString(bean));
 	}
@@ -130,7 +130,7 @@ public class RemoteTest {
 	// 4.9 获得账号可接收和发送的货币
 	// @Test
 	public void requestAccountTumsTest() {
-		AccountTums bean = remote.requestAccountTums(account_2);
+		AccountTums bean = remote.requestAccountTums(account_2,5211461);
 		System.out.println("requestAccountTumsTest:" + bean.getLedgerIndex());
 		System.out.println("4.9 requestAccountTumsTest:\n" + JsonUtils.toJsonString(bean));
 	}
@@ -146,7 +146,7 @@ public class RemoteTest {
 		// bean = remote.requestAccountRelations(account_1, type);
 		// System.out.println("4.10 requestAccountRelationsTest:\n" + JsonUtils.toJsonString(bean));
 		type = "freeze";
-		bean = remote.requestAccountRelations(account_1, type);
+		bean = remote.requestAccountRelations(account_1,5211461, type);
 		System.out.println("4.10 requestAccountRelationsTest:\n" + JsonUtils.toJsonString(bean));
 		// 信任(trust)、授权(authorize)、冻结(freeze)。
 	}
@@ -154,7 +154,7 @@ public class RemoteTest {
 	// 4.11 获得账号挂单
 	// @Test
 	public void requestAccountOffersTest() {
-		AccountOffers bean = remote.requestAccountOffers("jB7rxgh43ncbTX4WeMoeadiGMfmfqY2xLZ");
+		AccountOffers bean = remote.requestAccountOffers("jB7rxgh43ncbTX4WeMoeadiGMfmfqY2xLZ",5211461);
 		System.out.println("4.11 requestAccountOffersTest:\n" + JsonUtils.toJsonString(bean));
 	}
 	
@@ -339,7 +339,7 @@ public class RemoteTest {
 	}
 	
 	// 4.18 取消挂单-new
-	 @Test
+	 //@Test
 	public void buildOfferCancelTxTest_new() {
 		Integer sequence = 103;
 		// 可选
@@ -349,5 +349,10 @@ public class RemoteTest {
 		tx.setSecret(secret_2);
 		TransactionInfo bean = tx.submit();
 		System.out.println("4.18 buildOfferCancelTxTest_new:\n" + JsonUtils.toJsonString(bean));
+	}
+	 @Test
+	public void ledger() {
+			String result = remote.newListener("ledger_closed");
+			System.out.println(result);
 	}
 }
