@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class WebSocket extends WebSocketClient {
     final static Logger logger = LoggerFactory.getLogger(WebSocket.class);
     private volatile Map<String, String> results = new HashMap<String, String>();
+    private volatile String status = "";
 
     public WebSocket(URI serverURI) {
         super(serverURI, new Draft_6455());
@@ -24,6 +25,7 @@ public class WebSocket extends WebSocketClient {
 
     @Override
     public void onOpen(ServerHandshake handshakedata) {
+        status = "open";
         logger.info("已连接");
     }
 
@@ -72,5 +74,11 @@ public class WebSocket extends WebSocketClient {
         return requestId;
     }
 
+    public String getStatus() {
+        return status;
+    }
 
+    public void setStatus(String status) {
+        this.status = status;
+    }
 }
