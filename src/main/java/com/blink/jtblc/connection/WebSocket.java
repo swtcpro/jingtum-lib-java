@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.apache.commons.lang3.RandomUtils;
 import org.java_websocket.client.WebSocketClient;
+import org.java_websocket.drafts.Draft_6455;
 import org.java_websocket.handshake.ServerHandshake;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +19,7 @@ public class WebSocket extends WebSocketClient {
 	private volatile Map<String, String> results = new HashMap<String, String>();
 	
 	public WebSocket(URI serverURI) {
-		super(serverURI);
+		super(serverURI, new Draft_6455());
 	}
 	
 	public String getMessage(String sessionId) {
