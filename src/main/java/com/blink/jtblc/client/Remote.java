@@ -87,6 +87,8 @@ public class Remote {
 	public LedgerInfo requestLedgerInfo() {
 		Map<String, Object> params = new HashMap();
 		params.put("streams", new String[] { "ledger", "server" });
+		//订阅最新交易信息
+		//params.put("streams", new String[] { "transactions", "server" });
 		String res = sendMessage("subscribe", params);
 		return JsonUtils.toEntity(res, LedgerInfo.class);
 	}
