@@ -13,13 +13,11 @@ public class ConnectionFactory {
 		WebSocket webSocket = null;
 		try {
 			if (connection == null) {
-				URI uri = URI.create(url);
 				webSocket = new WebSocket(URI.create(url));
 				webSocket.connect();
 				int time = 0;
 				connection = new Connection(webSocket);
-				while ("open".equals(webSocket.getStatus())) {
-
+				while (!"open".equals(webSocket.getStatus())) {
 					Thread.sleep(100);
 					time += 100;
 					if (time > 10 * 1000) {
