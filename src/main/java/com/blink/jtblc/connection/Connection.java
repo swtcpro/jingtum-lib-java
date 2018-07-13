@@ -7,6 +7,7 @@ import java.util.concurrent.Future;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.blink.jtblc.utils.JsonUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class Connection {
@@ -15,6 +16,14 @@ public class Connection {
 	
 	public Connection(WebSocket webSocket) {
 		this.webSocket = webSocket;
+	}
+	
+	public static String sendMessage(String command, Map<String, Object> data) {
+		Map<String, Object> params = new HashMap();
+		params.put("command", command);
+		params.putAll(data);
+		logger.debug("WebSocket参数： " + JsonUtils.toJsonString(params));
+		return submit(params);
 	}
 	
 	/**

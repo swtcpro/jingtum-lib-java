@@ -152,7 +152,7 @@
 	<logger name="com.ibatis.common.jdbc.SimpleDataSource" level="DEBUG" />
 	<logger name="com.ibatis.common.jdbc.ScriptRunner" level="DEBUG" />
 	<logger name="com.ibatis.sqlmap.engine.impl.SqlMapClientDelegate" level="DEBUG" />
-	<logger name="com.blink.jtblc level=" DEBUG " />
+	<logger name="com.blink.jtblc" level=" DEBUG " />
 
 
 

@@ -7,7 +7,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.blink.jtblc.client.Wallet;
-import com.blink.jtblc.client.bean.Amount;
+import com.blink.jtblc.client.bean.AmountInfo;
 import com.blink.jtblc.config.Config;
 
 public class CheckUtils {
@@ -19,8 +19,7 @@ public class CheckUtils {
 	 */
 	public static boolean isValidAddress(String address) {
 		if (StringUtils.isNotEmpty(address)) {
-			Wallet wallet = new Wallet();
-			return wallet.isValidAddress(address);
+			return Wallet.isValidAddress(address);
 		}
 		return false;
 	}
@@ -34,7 +33,7 @@ public class CheckUtils {
 	 * @param amount
 	 * @return
 	 */
-	public static boolean isValidAmount(Amount amount) {
+	public static boolean isValidAmount(AmountInfo amount) {
 		if (StringUtils.isBlank(amount.getCurrency()) || !pattern.matcher(amount.getCurrency()).find()) {
 			return false;
 		}
@@ -46,6 +45,18 @@ public class CheckUtils {
 		}
 		return true;
 	}
+//	public static boolean isValidAmount(com.blink.jtblc.core.coretypes.Amount amount) {
+//		if (StringUtils.isBlank(amount.currency()) || !pattern.matcher(amount.getCurrency()).find()) {
+//			return false;
+//		}
+//		if (amount.getCurrency().equals(Config.CURRENCY) && StringUtils.isNotBlank(amount.getIssuer())) {
+//			return false;
+//		}
+//		if (!amount.getCurrency().equals(Config.CURRENCY) && !Wallet.isValidAddress(amount.getIssuer())) {
+//			return false;
+//		}
+//		return true;
+//	}
 	
 	/**
 	 * 校验金额对象中的金额是否有效

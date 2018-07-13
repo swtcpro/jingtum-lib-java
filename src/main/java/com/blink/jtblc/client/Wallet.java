@@ -53,6 +53,13 @@ public class Wallet {
 		return wallet;
 	}
 	
+	public String getPublicKey() {
+		if (this.keypairs == null) {
+			return null;
+		}
+		return this.keypairs.canonicalPubHex();
+	}
+	
 	/**
 	 * 使用钱包密钥对信息进行签名
 	 * 

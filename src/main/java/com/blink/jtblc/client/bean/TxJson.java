@@ -42,7 +42,7 @@ public class TxJson {
 	private Integer offerSequence;
 	
 	// 对家得到的Object
-	private Amount takerGets;
+	private AmountInfo takerGets;
 	// 对家支付的Object
 	private String takerpays;
 	
@@ -142,10 +142,10 @@ public class TxJson {
 	public void setOfferSequence(Integer offerSequence) {
 		this.offerSequence = offerSequence;
 	}
-	public Amount getTakerGets() {
+	public AmountInfo getTakerGets() {
 		return takerGets;
 	}
-	public void setTakerGets(Amount takerGets) {
+	public void setTakerGets(AmountInfo takerGets) {
 		this.takerGets = takerGets;
 	}
 	public String getTakerpays() {

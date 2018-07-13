@@ -11,9 +11,6 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.blink.jtblc.listener.Impl.LedgerCloseImpl;
-import com.blink.jtblc.listener.Impl.TransactionsImpl;
-import com.blink.jtblc.listener.RemoteInter;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +22,7 @@ import com.blink.jtblc.client.bean.AccountPropertyInfo;
 import com.blink.jtblc.client.bean.AccountRelations;
 import com.blink.jtblc.client.bean.AccountTums;
 import com.blink.jtblc.client.bean.AccountTx;
-import com.blink.jtblc.client.bean.Amount;
+import com.blink.jtblc.client.bean.AmountInfo;
 import com.blink.jtblc.client.bean.BookOffers;
 import com.blink.jtblc.client.bean.Ledger;
 import com.blink.jtblc.client.bean.LedgerClosed;
@@ -39,11 +36,12 @@ import com.blink.jtblc.client.bean.ServerInfo;
 import com.blink.jtblc.config.Config;
 import com.blink.jtblc.connection.Connection;
 import com.blink.jtblc.exceptions.RemoteException;
+import com.blink.jtblc.listener.RemoteInter;
+import com.blink.jtblc.listener.Impl.LedgerCloseImpl;
+import com.blink.jtblc.listener.Impl.TransactionsImpl;
 import com.blink.jtblc.utils.CheckUtils;
 import com.blink.jtblc.utils.JsonUtils;
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class Remote {
@@ -87,6 +85,8 @@ public class Remote {
 	public LedgerInfo requestLedgerInfo() {
 		Map<String, Object> params = new HashMap();
 		params.put("streams", new String[] { "ledger", "server" });
+		//订阅最新交易信息
+		//params.put("streams", new String[] { "transactions", "server" });
 		String res = sendMessage("subscribe", params);
 		return JsonUtils.toEntity(res, LedgerInfo.class);
 	}
@@ -180,6 +180,11 @@ public class Remote {
 	 */
 	public AccountInfo requestAccountInfo(String account,Object ledger) {
 		String msg = requestAccount("account_info", account,ledger, "");
+		AccountInfo accountInfo = JsonUtils.toEntity(msg, AccountInfo.class);
+		return accountInfo;
+	}
+	public AccountInfo requestAccountInfo(String account, Object ledger, String type) {
+		String msg = requestAccount("account_info", account, ledger, type);
 		AccountInfo accountInfo = JsonUtils.toEntity(msg, AccountInfo.class);
 		return accountInfo;
 	}
@@ -589,7 +594,9 @@ public class Remote {
 		return transtacion;
 	}
 	public Boolean isAmountZero(String amount) {
-		if (amount=="") return false;
+		if (amount=="") {
+			return false;
+		}
 	       Map map = new HashMap();
 		try {
 			map = mapper.readValue(amount, Map.class);
@@ -648,7 +655,9 @@ public class Remote {
 		return null;
 	}
 	public Map AmountNegate(Map amount) {
-		 if (amount==null) return amount;
+		 if (amount==null) {
+			return amount;
+		}
 		 Map map = new HashMap();
 		 map.put("value", (new BigInteger(amount.get("value").toString())).negate());
 	     map.put("currency",amount.get("currency"));
@@ -656,8 +665,12 @@ public class Remote {
 	     return map;
 	}
 	public Map AmountAdd(Map amount1,Map amount2) {
-		 if (amount1==null) return amount2;
-		    if (amount2==null) return amount1;
+		 if (amount1==null) {
+			return amount2;
+		}
+		    if (amount2==null) {
+				return amount1;
+			}
 		    if (amount1!=null && amount2!=null) {
 		    	Map map = new HashMap();
 				 map.put("value", (new BigInteger(amount1.get("value").toString())).and(new BigInteger(amount2.get("value").toString())));
@@ -702,10 +715,11 @@ public class Remote {
 	}
 	public List formatArgs(List<Map> args) {
 		 List list = new ArrayList();
-		    if(args!=null)
-		        for(int i = 0; i < args.size(); i++){
+		    if(args!=null) {
+				for(int i = 0; i < args.size(); i++){
 		            list.add(hexToString(((Map)args.get(i).get("Arg")).get("Parameter").toString()));
 		     }
+			}
 		 return list;
 	}
 	
@@ -851,7 +865,7 @@ public class Remote {
 	 * @param limit 限定返回多少条记录
 	 * @return
 	 */
-	public BookOffers requestOrderBook(Amount taker_gets, Amount taker_pays, Integer limit) {
+	public BookOffers requestOrderBook(AmountInfo taker_gets, AmountInfo taker_pays, Integer limit) {
 		Map params = new HashMap();
 		/*
 		 * Map gets = new HashMap();
@@ -913,7 +927,7 @@ public class Remote {
 	 * @param memo 备注
 	 * @return
 	 */
-	public PaymentInfo buildPaymentTx(String account, String to, Amount amount, String memo, String secret) {
+	public PaymentInfo buildPaymentTx(String account, String to, AmountInfo amount, String memo, String secret) {
 		Transaction tx = new Transaction();
 		tx.setAccount(account);
 		tx.setTo(to);
@@ -934,7 +948,7 @@ public class Remote {
 		 * amount.put("issuer", issuer);
 		 */
 		/*
-		 * Amount amount = new Amount();
+		 * AmountInfo amount = new Amount();
 		 * amount.setCurrency(currency);
 		 * amount.setValue(value);
 		 * amount.setIssuer(issuer);
@@ -969,13 +983,13 @@ public class Remote {
 	 * @param memo
 	 * @return
 	 */
-	public RelationInfo buildRelationTx(String type_value, String account, String target, Amount limit, String memo, String secret) {
+	public RelationInfo buildRelationTx(String type_value, String account, String target, AmountInfo limit, String memo, String secret) {
 		Transaction tx = new Transaction();
 		// 将参数写入tx对象,方便读取校验
 		tx.setAccount(account);
 		tx.setTo(target);
 		tx.setLimit(limit);
-		tx.setRelation_type(type_value);
+		tx.setRelationType(type_value);
 		tx.setCommand("submit");
 		tx.setSecret(secret);
 		tx.setMemo(memo);
@@ -1011,7 +1025,7 @@ public class Remote {
 	 */
 	private RelationInfo buildTrustSet(Transaction tx) {
 		String src = tx.getAccount();
-		Amount limit = tx.getLimit();
+		AmountInfo limit = tx.getLimit();
 		String quality_out = "";
 		String quality_in = "";
 		// 校验,并将参数写入tx_json对象
@@ -1046,7 +1060,7 @@ public class Remote {
 	 */
 	private RelationInfo buildRelationSet(Transaction tx) {
 		String src = tx.getAccount();
-		Amount limit = tx.getLimit();
+		AmountInfo limit = tx.getLimit();
 		String des = tx.getTo();
 		// 校验,并将参数写入tx_json对象
 		Map tx_json = new HashMap();
@@ -1060,7 +1074,7 @@ public class Remote {
 			throw new RemoteException("invalid amount");
 		}
 		// 关系类型：0信任；1授权；3冻结/解冻；
-		String type = tx.getRelation_type();
+		String type = tx.getRelationType();
 		tx_json.put("TransactionType", type.equals("unfreeze") ? "RelationDel" : "RelationSet");
 		tx_json.put("RelationType", type.equals("authorize") ? "1" : "3");
 		tx_json.put("Account", src);
@@ -1086,7 +1100,7 @@ public class Remote {
 	public AccountPropertyInfo buildAccountSetTx(String type_value, String account, String set_flag, String memo, String secret) {
 		Transaction tx = new Transaction();
 		tx.setAccount(account);
-		tx.setProperty_type(type_value);
+		tx.setPropertyType(type_value);
 		tx.setCommand("submit");
 		tx.setSecret(secret);
 		tx.setMemo(memo);
@@ -1182,7 +1196,7 @@ public class Remote {
 	 * @param memo
 	 * @return
 	 */
-	public OfferCreateInfo buildOfferCreateTx(String type, String account, Amount getsAmount, Amount paysAmount, String memo,
+	public OfferCreateInfo buildOfferCreateTx(String type, String account, AmountInfo getsAmount, AmountInfo paysAmount, String memo,
 	        String secret) {
 		Transaction tx = new Transaction();
 		tx.setCommand("submit");
@@ -1229,7 +1243,7 @@ public class Remote {
 	 * @param amount 金额对象
 	 * @return
 	 */
-	private Object toAmount(Amount amount) {
+	private Object toAmount(AmountInfo amount) {
 		String value = amount.getValue();
 		BigDecimal temp = new BigDecimal(value);
 		BigDecimal max_value = new BigDecimal("100000000000");
@@ -1325,8 +1339,12 @@ public class Remote {
 	 * @param type
 	 */
 	public String newListener(String type) {
-		if(conn==null)return "";
-		if(type.equals("removeListener"))return"";
+		if(conn==null) {
+			return "";
+		}
+		if(type.equals("removeListener")) {
+			return"";
+		}
 		if(type.equals("transactions")) {
 			return this.transactions();
 		}else if(type.equals("ledger_closed")) {
@@ -1367,7 +1385,7 @@ public class Remote {
 	 * @param issuer
 	 * @return Transaction
 	 */
-	public Transaction buildPaymentTx(String account, String to, Amount amount) {
+	public Transaction buildPaymentTx(String account, String to, AmountInfo amount) {
 		Transaction tx = new Transaction();
 		tx.setAccount(account);
 		tx.setTo(to);
@@ -1384,7 +1402,7 @@ public class Remote {
 		tx_json.put("Amount", toAmount(amount));
 		tx_json.put("Destination", to);
 		tx.setCommand("submit");
-		tx.setTx_json(tx_json);
+		tx.setTxJson(tx_json);
 		tx.setConn(conn);
 		tx.setLocalSign(localSign);
 		return tx;
@@ -1399,13 +1417,13 @@ public class Remote {
 	 * @param limit 关系金额 对象Amount
 	 * @return Transaction
 	 */
-	public Transaction buildRelationTx(String type_value, String account, String target, Amount limit) {
+	public Transaction buildRelationTx(String type_value, String account, String target, AmountInfo limit) {
 		Transaction tx = new Transaction();
 		// 将参数写入tx对象,方便读取校验
 		tx.setAccount(account);
 		tx.setTo(target);
 		tx.setLimit(limit);
-		tx.setRelation_type(type_value);
+		tx.setRelationType(type_value);
 		tx.setCommand("submit");
 		tx.setConn(conn);
 		tx.setLocalSign(localSign);
@@ -1432,7 +1450,7 @@ public class Remote {
 	 */
 	private Transaction buildTrustSet_tx(Transaction tx) {
 		String src = tx.getAccount();
-		Amount limit = tx.getLimit();
+		AmountInfo limit = tx.getLimit();
 		String quality_out = "";
 		String quality_in = "";
 		// 校验,并将参数写入tx_json对象
@@ -1452,7 +1470,7 @@ public class Remote {
 		if (StringUtils.isNotEmpty(quality_out)) {
 			tx_json.put("QualityOut", quality_out);
 		}
-		tx.setTx_json(tx_json);
+		tx.setTxJson(tx_json);
 		return tx;
 	}
 
@@ -1464,7 +1482,7 @@ public class Remote {
 	 */
 	private Transaction buildRelationSet_tx(Transaction tx) {
 		String src = tx.getAccount();
-		Amount limit = tx.getLimit();
+		AmountInfo limit = tx.getLimit();
 		String des = tx.getTo();
 		// 校验,并将参数写入tx_json对象
 		Map tx_json = new HashMap();
@@ -1478,13 +1496,13 @@ public class Remote {
 			throw new RemoteException("invalid amount");
 		}
 		// 关系类型：0信任；1授权；3冻结/解冻；
-		String type = tx.getRelation_type();
+		String type = tx.getRelationType();
 		tx_json.put("TransactionType", type.equals("unfreeze") ? "RelationDel" : "RelationSet");
 		tx_json.put("RelationType", type.equals("authorize") ? "1" : "3");
 		tx_json.put("Account", src);
 		tx_json.put("Target", des);
 		tx_json.put("LimitAmount", toAmount(limit));
-		tx.setTx_json(tx_json);
+		tx.setTxJson(tx_json);
 		return tx;
 	}
 
@@ -1498,7 +1516,7 @@ public class Remote {
 	public Transaction buildAccountSetTx(String type_value, String account) {
 		Transaction tx = new Transaction();
 		tx.setAccount(account);
-		tx.setProperty_type(type_value);
+		tx.setPropertyType(type_value);
 		tx.setCommand("submit");
 		tx.setConn(conn);
 		tx.setLocalSign(localSign);
@@ -1532,7 +1550,7 @@ public class Remote {
 		}
 		tx_json.put("Account", src);
 		tx_json.put("TransactionType", "AccountSet");
-		tx.setTx_json(tx_json);
+		tx.setTxJson(tx_json);
 		return tx;
 	}
 
@@ -1557,7 +1575,7 @@ public class Remote {
 		tx_json.put("TransactionType", "SetRegularKey");
 		tx_json.put("Account", src);
 		tx_json.put("RegularKey", delegate_key);
-		tx.setTx_json(tx_json);
+		tx.setTxJson(tx_json);
 		return tx;
 	}
 
@@ -1571,7 +1589,7 @@ public class Remote {
 		Map params = new HashMap();
 		// 校验,并将参数写入tx_json对象
 		Map tx_json = new HashMap();
-		tx.setTx_json(tx_json);
+		tx.setTxJson(tx_json);
 		return tx;
 	}
 
@@ -1584,7 +1602,7 @@ public class Remote {
 	 * @param paysAmount 对方支付的，即挂单方获得的
 	 * @return Transaction
 	 */
-	public Transaction buildOfferCreateTx(String type, String account, Amount getsAmount, Amount paysAmount) {
+	public Transaction buildOfferCreateTx(String type, String account, AmountInfo getsAmount, AmountInfo paysAmount) {
 		Transaction tx = new Transaction();
 		tx.setCommand("submit");
 		tx.setConn(conn);
@@ -1616,7 +1634,7 @@ public class Remote {
 		}
 		tx_json.put("TakerPays", toAmount(paysAmount));
 		tx_json.put("TakerGets", toAmount(getsAmount));
-		tx.setTx_json(tx_json);
+		tx.setTxJson(tx_json);
 		return tx;
 	}
 
@@ -1640,8 +1658,18 @@ public class Remote {
 		tx_json.put("TransactionType", "OfferCancel");
 		tx_json.put("Account", account);
 		tx_json.put("OfferSequence", sequence);
-		tx.setTx_json(tx_json);
+		tx.setTxJson(tx_json);
 		return tx;
 	}
+
+	public Boolean getLocalSign() {
+		return localSign;
+	}
+
+	public void setLocalSign(Boolean localSign) {
+		this.localSign = localSign;
+	}
+	
+	
 
 }

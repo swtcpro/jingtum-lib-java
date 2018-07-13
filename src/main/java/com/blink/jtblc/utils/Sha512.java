@@ -8,7 +8,7 @@ public class Sha512 {
 
 	public Sha512() {
 		try {
-			// messageDigest = MessageDigest.getInstance("SHA-512", "RBC");
+			// messageDigest = MessageDigest.getInstance("SHA-512", org.bouncycastle.jce.provider.BouncyCastleProvider.PROVIDER_NAME);
 			messageDigest = MessageDigest.getInstance("SHA-512");
 		} catch (NoSuchAlgorithmException e) {
 			throw new RuntimeException(e);

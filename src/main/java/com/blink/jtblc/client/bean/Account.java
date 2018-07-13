@@ -7,11 +7,11 @@ import java.util.List;
  */
 public class Account {
 	private String account;// 钱包地址
-	private String amount;// 交易金额
+	private AmountInfo amount;// 交易金额
 	private String destination;// 交易对家地址
 	private String fee;// 交易费
 	private Long flags;// 交易标记
-	private List<String> memos; //返回值中没有，所以注释
+	private List<Memo> memos; //备注
 	private Integer sequence;// 自身账号的交易号
 	private String signingPubKey;// 签名公钥
 	private Integer timestamp;// 交易提交时间戳
@@ -34,14 +34,6 @@ public class Account {
 	
 	public void setAccount(String account) {
 		this.account = account;
-	}
-	
-	public String getAmount() {
-		return amount;
-	}
-	
-	public void setAmount(String amount) {
-		this.amount = amount;
 	}
 	
 	public String getDestination() {
@@ -152,12 +144,19 @@ public class Account {
 		this.meta = meta;
 	}
 
-	public List<String> getMemos() {
+	public AmountInfo getAmount() {
+		return amount;
+	}
+
+	public void setAmount(AmountInfo amount) {
+		this.amount = amount;
+	}
+
+	public List<Memo> getMemos() {
 		return memos;
 	}
 
-	public void setMemos(List<String> memos) {
+	public void setMemos(List<Memo> memos) {
 		this.memos = memos;
 	}
-	
 }

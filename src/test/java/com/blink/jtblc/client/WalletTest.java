@@ -2,7 +2,7 @@ package com.blink.jtblc.client;
 
 import org.junit.Test;
 
-import com.blink.jtblc.client.Wallet;
+import com.blink.jtblc.utils.JsonUtils;
 
 public class WalletTest {
 	Wallet wallet = null;
@@ -40,6 +40,8 @@ public class WalletTest {
 		System.out.println("---------generate----------");
 		System.out.println("secret=" + wallet.getSecret());
 		System.out.println("address=" + wallet.getAddress());
+		System.out.println("publicKey=" + wallet.getPublicKey());
+		System.out.println(JsonUtils.toJsonString(wallet));
 	}
 	
 	/**
@@ -48,6 +50,8 @@ public class WalletTest {
 	@Test
 	public void fromSecret() {
 		System.out.println("---------fromSecret----------");
+		wallet = Wallet.fromSecret("sn37nYrQ6KPJvTFmaBYokS3FjXUWd");
+		System.out.println("publicKey=" + wallet.getPublicKey());
 		wallet = Wallet.fromSecret(VALID_SECRET);
 		System.out.println("secret=" + wallet.getSecret());
 		System.out.println("address=" + wallet.getAddress());
