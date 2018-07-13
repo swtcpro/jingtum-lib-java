@@ -144,6 +144,7 @@ public class Account {
 		this.meta = meta;
 	}
 
+
 	public AmountInfo getAmount() {
 		return amount;
 	}
