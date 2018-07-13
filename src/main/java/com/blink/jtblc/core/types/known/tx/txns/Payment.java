@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.blink.jtblc.client.Remote;
 import com.blink.jtblc.client.bean.AccountInfo;
+import com.blink.jtblc.client.bean.PaymentInfo;
 import com.blink.jtblc.core.coretypes.AccountID;
 import com.blink.jtblc.core.coretypes.Amount;
 import com.blink.jtblc.core.coretypes.PathSet;
@@ -14,6 +15,7 @@ import com.blink.jtblc.core.fields.Field;
 import com.blink.jtblc.core.serialized.enums.TransactionType;
 import com.blink.jtblc.core.types.known.tx.Transaction;
 import com.blink.jtblc.core.types.known.tx.signed.SignedTransaction;
+import com.blink.jtblc.utils.JsonUtils;
 
 public class Payment extends Transaction {
 	public Payment() {
@@ -75,7 +77,7 @@ public class Payment extends Transaction {
 		put(Field.Paths, val);
 	}
 	
-	public void submit(String secret) {
+	public PaymentInfo submit(String secret) {
 		Object obj=this.account();
 		AccountInfo ainfo = remote.requestAccountInfo(obj.toString(), null, "trust");
 		this.sequence(new UInt32(ainfo.getAccountData().getSequence()));
@@ -85,7 +87,9 @@ public class Payment extends Transaction {
 		Map<String, Object> params=new HashMap<>();
 		params.put("tx_blob", tx.tx_blob);
 		String reString=this.remote.sendMessage("submit", params);
-		System.out.println("----------------------");
+		System.out.println("-----------reString-----------");
 		System.out.println(reString);
+		PaymentInfo bean = JsonUtils.toEntity(reString, PaymentInfo.class);
+		return bean;
 	}
 }

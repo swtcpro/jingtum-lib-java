@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.blink.jtblc.client.bean.AccountInfo;
+import com.blink.jtblc.client.bean.PaymentInfo;
 import com.blink.jtblc.connection.Connection;
 import com.blink.jtblc.connection.ConnectionFactory;
 import com.blink.jtblc.core.coretypes.AccountID;
@@ -59,7 +60,7 @@ public class TransactionTest {
 			payment.sequence(new UInt32(ainfo.getAccountData().getSequence()));
 			payment.flags(new UInt32(0));
 			payment.addMemo("给jDUjqoDZLhzx4DCf6pvSivjkjgtRESY62c支付0.5swt.");
-			payment.submit(secret);
+			PaymentInfo info=payment.submit(secret);
 			SignedTransaction tx = payment.sign(secret);
 			System.out.println(tx.tx_blob);
 		} catch (Exception e) {
