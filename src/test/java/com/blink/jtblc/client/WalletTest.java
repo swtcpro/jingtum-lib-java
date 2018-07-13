@@ -49,6 +49,8 @@ public class WalletTest {
 	 */
 	@Test
 	public void fromSecret() {
+		wallet = Wallet.fromSecret("shxtc5jzR4aHNNJKTpY6FjSMRooeK");
+		System.out.println("publicKey=" + wallet.getPublicKey());
 		System.out.println("---------fromSecret----------");
 		wallet = Wallet.fromSecret("sn37nYrQ6KPJvTFmaBYokS3FjXUWd");
 		System.out.println("publicKey=" + wallet.getPublicKey());
