@@ -82,4 +82,12 @@ public class Connection {
 			webSocket.close();
 		}
 	}
+
+	/**
+	 *
+	 * @return
+	 */
+	public static String getState(){
+		return webSocket.getReadyState().name();
+	}
 }
