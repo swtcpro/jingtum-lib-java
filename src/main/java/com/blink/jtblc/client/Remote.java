@@ -11,28 +11,11 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.blink.jtblc.client.bean.*;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.blink.jtblc.client.bean.Account;
-import com.blink.jtblc.client.bean.AccountInfo;
-import com.blink.jtblc.client.bean.AccountOffers;
-import com.blink.jtblc.client.bean.AccountPropertyInfo;
-import com.blink.jtblc.client.bean.AccountRelations;
-import com.blink.jtblc.client.bean.AccountTums;
-import com.blink.jtblc.client.bean.AccountTx;
-import com.blink.jtblc.client.bean.AmountInfo;
-import com.blink.jtblc.client.bean.BookOffers;
-import com.blink.jtblc.client.bean.Ledger;
-import com.blink.jtblc.client.bean.LedgerClosed;
-import com.blink.jtblc.client.bean.LedgerInfo;
-import com.blink.jtblc.client.bean.OfferCancelInfo;
-import com.blink.jtblc.client.bean.OfferCreateInfo;
-import com.blink.jtblc.client.bean.OrderBook;
-import com.blink.jtblc.client.bean.PaymentInfo;
-import com.blink.jtblc.client.bean.RelationInfo;
-import com.blink.jtblc.client.bean.ServerInfo;
 import com.blink.jtblc.config.Config;
 import com.blink.jtblc.connection.Connection;
 import com.blink.jtblc.exceptions.RemoteException;
@@ -1295,9 +1278,7 @@ public class Remote {
 	 */
 	public String submit(Map params) {
 		params.remove("message");
-		System.out.println("参数：" + JsonUtils.toJsonString(params));
 		String msg = this.conn.submit(params);
-		System.out.println(msg);
 		return msg;
 	}
 
@@ -1306,39 +1287,36 @@ public class Remote {
 	 * @return
 	 */
 
-	public String transactions() {
+	public void transactions() {
 		RemoteInter romteInter = new TransactionsImpl();
 		Request request = new Request(this,"subscribe");
-		return romteInter.submit(request);
+		romteInter.submit(request);
 	}
 
 	/**
 	 * 监听信息ledger
 	 * @return
 	 */
-	public String ledge() {
+	public void ledge() {
 		RemoteInter romteInter = new LedgerCloseImpl();
 		Request request = new Request(this,"subscribe");
-		return romteInter.submit(request);
+		romteInter.submit(request);
 	}
-	/**
-	 * 监听处理请求
-	 * @param type
-	 * @return
-	 */
-	public String handleRequst(String type) {
-		if(type.equals("transactions")) {
-			return this.transactions();
-		}else if(type.equals("ledger_closed")) {
-			return this.ledge();
-		}
-		return "";
+
+
+	public static void onLedgerClosed(String message) {
+		System.out.println("ledger:"+message);
 	}
+
+	public static void onTransaction(String message) {
+		System.out.println("tx:"+message);
+	}
+
 	/**
 	 * 监听
 	 * @param type
 	 */
-	public String newListener(String type) {
+	public String newListener(String type) throws Exception{
 		if(conn==null) {
 			return "";
 		}
@@ -1346,9 +1324,9 @@ public class Remote {
 			return"";
 		}
 		if(type.equals("transactions")) {
-			return this.transactions();
+			this.transactions();
 		}else if(type.equals("ledger_closed")) {
-			return this.ledge();
+			this.ledge();
 		}
 		return "";
 	}
@@ -1662,6 +1640,8 @@ public class Remote {
 		return tx;
 	}
 
+
+
 	public Boolean getLocalSign() {
 		return localSign;
 	}
@@ -1670,6 +1650,9 @@ public class Remote {
 		this.localSign = localSign;
 	}
 	
-	
+	public String getStatus(){
+		return conn.getState();
+	}
+
 
 }
