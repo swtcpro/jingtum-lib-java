@@ -1406,6 +1406,7 @@ public class Remote {
 		tx.setCommand("submit");
 		tx.setTxJson(tx_json);
 		tx.setConn(conn);
+		tx.setRemote(this);
 		tx.setLocalSign(localSign);
 		return tx;
 	}
@@ -1428,6 +1429,7 @@ public class Remote {
 		tx.setRelationType(type_value);
 		tx.setCommand("submit");
 		tx.setConn(conn);
+		tx.setRemote(this);
 		tx.setLocalSign(localSign);
 		if (!CheckUtils.isValidType("relation", type_value)) {
 			throw new RemoteException("invalid relation type");

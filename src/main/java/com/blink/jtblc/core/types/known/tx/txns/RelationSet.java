@@ -7,14 +7,14 @@ import com.blink.jtblc.core.fields.Field;
 import com.blink.jtblc.core.serialized.enums.TransactionType;
 import com.blink.jtblc.core.types.known.tx.Transaction;
 
-public class TrustSet extends Transaction {
+public class RelationSet extends Transaction {
 	
-    public TrustSet() {
-        super(TransactionType.TrustSet);
+    public RelationSet() {
+        super(TransactionType.Payment);
     }
     
-    public TrustSet(Remote remote) {
-		super(TransactionType.TrustSet);
+    public RelationSet(Remote remote) {
+		super(TransactionType.Payment);
 		this.remote = remote;
 	}
     

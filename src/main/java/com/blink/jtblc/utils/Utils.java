@@ -1,9 +1,13 @@
 package com.blink.jtblc.utils;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
+
+import com.blink.jtblc.client.bean.AmountInfo;
 import com.blink.jtblc.encoding.common.B16;
 
 public class Utils {
@@ -43,5 +47,18 @@ public class Utils {
 			string.append((char) data);
 		}
 		return string.toString();
+	}
+	
+	public static AmountInfo parseAmount(Object amount) {
+		AmountInfo info = new AmountInfo();
+	    if (amount instanceof String && StringUtils.isNotEmpty((String)amount)) {
+	        String value = (new BigDecimal((String)amount)).divide(new BigDecimal(1000000.0)).toString();
+	        info.setValue(value);
+	    } else if (CheckUtils.isValidAmount((AmountInfo) amount)) {
+	        return (AmountInfo) amount;
+	    } else {
+	    	info = null;
+	    }
+	    return info;
 	}
 }

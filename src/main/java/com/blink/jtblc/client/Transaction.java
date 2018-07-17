@@ -7,9 +7,18 @@ import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.blink.jtblc.client.bean.AccountInfo;
 import com.blink.jtblc.client.bean.AmountInfo;
 import com.blink.jtblc.client.bean.TransactionInfo;
+import com.blink.jtblc.config.Config;
 import com.blink.jtblc.connection.Connection;
+import com.blink.jtblc.core.coretypes.AccountID;
+import com.blink.jtblc.core.coretypes.Amount;
+import com.blink.jtblc.core.coretypes.uint.UInt32;
+import com.blink.jtblc.core.types.known.tx.signed.SignedTransaction;
+import com.blink.jtblc.core.types.known.tx.txns.Payment;
+import com.blink.jtblc.core.types.known.tx.txns.RelationSet;
+import com.blink.jtblc.core.types.known.tx.txns.TrustSet;
 import com.blink.jtblc.exceptions.RemoteException;
 import com.blink.jtblc.exceptions.TransactionException;
 import com.blink.jtblc.utils.JsonUtils;
@@ -219,46 +228,64 @@ public class Transaction {
 	 * @return
 	 */
 	public String sign(String secret) {
-//		// 1.获取账号信息,钱包信息--待完善
-//		// String rs = remote.requestAccountTums(account);
-//		// var req = remote.requestAccountInfo({account: self.tx_json.Account, type: 'trust'});
-//		// public AccountInfo requestAccountInfo(String account, Object ledger, String type) {
-////		AccountInfo accountInfo = this.remote.requestAccountInfo(this.account, null, "trust");
-//		this.txJson.put("sequence", accountInfo.getAccountData().getSequence());
-//		this.txJson.put("fee", Double.parseDouble(txJson.get("fee").toString()) / 1000000);
-//		// payment
-//		if (txJson.get("Amount") != null && txJson.get("Amount") instanceof String) {// 基础货币
-//			txJson.put("Amount", Double.parseDouble(txJson.get("Amount").toString()) / 1000000);
-//		}
-//		// payment
-//		if (txJson.get("Memos") != null) {
-//			List<Map> memos = (List) txJson.get("Memos");
-//			Map memo = memos.get(0);
-//			Map memoIn = (Map) memo.get("Memo");
-//			String memoData = (String) memoIn.get("MemoData");
-//			memoData = Utils.hexToString(memoData);
-//			memoIn.put("MemoData", memoData);
-//		}
-//		if (txJson.get("SendMax") != null && txJson.get("SendMax") instanceof String) {
-//			txJson.put("SendMax", Double.parseDouble(txJson.get("SendMax").toString()) / 1000000);
-//		}
-//		// order
-//		if (txJson.get("TakerPays") != null && txJson.get("TakerPays") instanceof String) {
-//			txJson.put("TakerPays", Double.parseDouble(txJson.get("TakerPays").toString()) / 1000000);
-//		}
-//		if (txJson.get("TakerGets") != null && txJson.get("TakerGets") instanceof String) {
-//			txJson.put("TakerGets", Double.parseDouble(txJson.get("TakerGets").toString()) / 1000000);
-//		}
-//		Wallet wallet = new Wallet(this.secret);
-////		txJson.put("SigningPubKey", wallet.getPublicKey());
-////		Integer prefix = 0x53545800;
-////		txJson.hashCode()
-////		var hash = jser.from_json(self.tx_json).hash(prefix);
-////		self.tx_json.TxnSignature = wt.signTx(hash);
-////		self.tx_json.blob = jser.from_json(self.tx_json).to_hex();
-////		self._local_sign = true;
-////		callback(null, self.tx_json.blob);
-		return "对交易签名";
+		String tx_blob = "";
+		String type = (String) txJson.get("TransactionType");
+		AccountInfo ainfo = remote.requestAccountInfo(account, null, "trust");
+		SignedTransaction tx = null;
+		switch(type) {
+			case "Payment":
+				Payment payment = new Payment(remote);
+				payment.as(AccountID.Account, account);
+				payment.as(AccountID.Destination, to);
+				payment.as(Amount.Amount, txJson.get("Amount"));
+				if(fee != null) {
+					payment.as(Amount.Fee, String.valueOf(fee));
+				}else {
+					payment.as(Amount.Fee, String.valueOf(Config.FEE));
+				}
+				payment.sequence(new UInt32(ainfo.getAccountData().getSequence()));
+				payment.flags(new UInt32(0));
+				payment.addMemo(this.memo);
+				tx = payment.sign(secret);
+				tx_blob = tx.tx_blob;
+				break;
+			case "TrustSet":
+				TrustSet trustSet = new TrustSet(remote);
+				trustSet.as(AccountID.Account, account);
+				trustSet.as(Amount.LimitAmount, txJson.get("LimitAmount"));
+				if(fee != null) {
+					trustSet.as(Amount.Fee, String.valueOf(fee));
+				}else {
+					trustSet.as(Amount.Fee, String.valueOf(Config.FEE));
+				}
+				trustSet.sequence(new UInt32(ainfo.getAccountData().getSequence()));
+				trustSet.flags(new UInt32(0));
+				trustSet.addMemo(memo);
+				tx = trustSet.sign(secret);
+				tx_blob = tx.tx_blob;
+				break;
+			case "RelationSet":
+				RelationSet relationSet = new RelationSet(remote);
+				//relationSet.as(Amount.RelationType, txJson.get("RelationType"));
+				relationSet.as(AccountID.Account, account);
+				relationSet.as(AccountID.Target, txJson.get("Target"));
+				relationSet.as(Amount.LimitAmount, txJson.get("LimitAmount"));
+				if(fee != null) {
+					relationSet.as(Amount.Fee, String.valueOf(fee));
+				}else {
+					relationSet.as(Amount.Fee, String.valueOf(Config.FEE));
+				}
+				relationSet.sequence(new UInt32(ainfo.getAccountData().getSequence()));
+				relationSet.flags(new UInt32(0));
+				relationSet.addMemo(memo);
+				tx = relationSet.sign(secret);
+				tx_blob = tx.tx_blob;
+				break;
+			case "RelationDel":
+			default :
+				break;
+		}
+		return tx_blob;
 	}
 	
 	/**

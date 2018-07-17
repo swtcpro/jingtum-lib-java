@@ -118,7 +118,7 @@ public class RemoteTest {
 	}
 	
 	// 4.8 请求账号信息
-	@Test
+	// @Test
 	public void requestAccountInfoTest() {
 		AccountInfo bean = remote.requestAccountInfo("jK4kdiriyxErTfW8wMMjzP25oT2AKLWGfY", 521146, null);
 		System.out.println("账号金额：" + bean.getAccountData().getBalance());
@@ -153,21 +153,21 @@ public class RemoteTest {
 	}
 	
 	// 4.11 获得账号挂单
-	@Test
+	// @Test
 	public void requestAccountOffersTest() {
 		AccountOffers bean = remote.requestAccountOffers("jB7rxgh43ncbTX4WeMoeadiGMfmfqY2xLZ", 521146);
 		System.out.println("4.11 requestAccountOffersTest:\n" + JsonUtils.toJsonString(bean));
 	}
 	
 	// 4.12 获得账号交易列表
-	@Test
+	// @Test
 	public void requestAccountTxTest() {
 		AccountTx bean = remote.requestAccountTx("jB7rxgh43ncbTX4WeMoeadiGMfmfqY2xLZ", limit_num);
 		System.out.println("4.12 requestAccountTxTest:\n" + JsonUtils.toJsonString(bean));
 	}
 	
 	// 4.13 获得市场挂单列表
-	@Test
+	// @Test
 	public void requestOrderBookTest() {
 		try {
 			String getsCurrency = "SWT";
@@ -189,8 +189,8 @@ public class RemoteTest {
 	}
 	
 	// 4.14 支付
-	@Test
-	public void buildPaymentTxTest() {
+	//@Test
+	/*public void buildPaymentTxTest() {
 		// SWT支付
 		String currency = "SWT";
 		BigDecimal val = new BigDecimal(0.5);
@@ -208,7 +208,7 @@ public class RemoteTest {
 		// bean.setSecret(secret_2);
 		// bean.setMemo(memo);
 		// System.out.println("支付：" + bean.getEngineResultMessage());
-	}
+	}*/
 	//
 	// // 4.15 设置关系
 	// // @Test
@@ -255,7 +255,7 @@ public class RemoteTest {
 	// System.out.println("buildOfferCreateTx:" + bean.getEngineResultMessage());
 	// }
 	//
-	// // 4.18 取消挂单
+	// 4.18 取消挂单
 	// // @Test
 	// public void buildOfferCancelTxTest() {
 	// Integer sequence = 22;
@@ -266,49 +266,52 @@ public class RemoteTest {
 	// System.out.println("buildOfferCancelTx:" + bean.getEngineResultMessage());
 	// }
 	//
-	// // 4.14-支付方法new
-	// // @Test
-	// public void buildPaymentTxTest_new() {
-	// // 使用签名
-	// // Remote remote = new Remote(conn,true);
-	// // SWT支付
-	// String value = "0.000001";
-	// String currency = "SWT";
-	// String issuer = "";
-	// // 其他货币支付
-	// // String value = "1";
-	// // String currency = "CNY";
-	// // String issuer = "jGa9J9TkqtBcUoHe2zqhVFFbgUVED6o9or";
-	// Amount amount = new Amount();
-	// amount.setCurrency(currency);
-	// amount.setValue(value);
-	// amount.setIssuer(issuer);
-	// String memo = "支付";
-	//// Transaction tx = remote.buildPaymentTx(account_2, account_1, amount);
-	//// tx.addMemo(memo);
-	//// tx.setSecret(secret_2);
-	//// TransactionInfo bean = tx.submit();
-	//// System.out.println("4.14 buildPaymentTxTest_new:\n" + JsonUtils.toJsonString(bean));
-	// }
+	// 4.14-支付方法new
+	//@Test
+	public void buildPaymentTxTest_new() {
+		//使用签名
+		Remote remote = new Remote(conn,true);
+		//SWT支付
+		String value = "0.000001";
+		String currency = "SWT";
+		String issuer = "";
+		/*其他货币支付
+		String value = "1";
+		String currency = "CNY";
+		String issuer = "jGa9J9TkqtBcUoHe2zqhVFFbgUVED6o9or";*/
+		AmountInfo amount = new AmountInfo();
+		amount.setCurrency(currency);
+		amount.setValue(value);
+		amount.setIssuer(issuer);
+		String memo = "支付0.000001SWT";
+		Transaction tx = remote.buildPaymentTx(account_2, account_1, amount);
+		tx.addMemo(memo);
+		tx.setSecret(secret_2);
+		tx.setFee(20);
+		TransactionInfo bean = tx.submit();
+		System.out.println("4.14 buildPaymentTxTest_new:\n" + JsonUtils.toJsonString(bean));
+	}
 	//
-	// // 4.15 设置关系-new
-	// // @Test
-	// public void buildRelationTxTest_new() {
-	// String type = "freeze";
-	// String value = "0.000001";
-	// String currency = "SWT";
-	// String issuer = "";
-	// Amount limit = new Amount();
-	// limit.setValue(value);
-	// limit.setCurrency(currency);
-	// limit.setIssuer(issuer);
-	// String memo = "4.15 设置关系";
-	// Transaction tx = remote.buildRelationTx(type, account_2, account_1, limit);
-	// tx.addMemo(memo);
-	// tx.setSecret(secret_2);
-	// TransactionInfo bean = tx.submit();
-	// System.out.println("4.15 buildRelationTxTest_new:\n" + JsonUtils.toJsonString(bean));
-	// }
+	// 4.15 设置关系-new
+	@Test
+	public void buildRelationTxTest_new() {
+		Remote remote = new Remote(conn,true);
+		String type = "trust";
+		String value = "0.000001";
+		String currency = "SWT";
+		String issuer = "";
+		AmountInfo limit = new AmountInfo();
+		limit.setValue(value);
+		limit.setCurrency(currency);
+		limit.setIssuer(issuer);
+		String memo = "4.15 设置关系";
+		Transaction tx = remote.buildRelationTx(type, account_2, account_1, limit);
+		tx.addMemo(memo);
+		tx.setSecret(secret_2);
+		tx.setFee(20);
+		TransactionInfo bean = tx.submit();
+		System.out.println("4.15 buildRelationTxTest_new:\n" + JsonUtils.toJsonString(bean));
+	}
 	//
 	// // 4.16 设置账号属性-new
 	// // @Test
@@ -361,7 +364,7 @@ public class RemoteTest {
 	 *  监听信息
 	 * @throws Exception
 	 */
-	@Test
+	// @Test
 	public void ledger() throws Exception{
 		remote.on("ledger_closed");
 		remote.on("transactions");
