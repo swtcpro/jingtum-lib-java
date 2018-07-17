@@ -204,8 +204,8 @@ secret | String  | 密钥
 
 19）**监听事件**  
 
-`String result = remote.transactions();`  
-`String result = remote.ledgerClosed();`  
+`String result = remote.on("ledger_closed");`  
+`String result = remote.on("transactions");`  
 
 20）**指定账本**  
 

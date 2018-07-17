@@ -8,6 +8,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadFactory;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -34,14 +37,34 @@ public class Remote {
 	// 签名默认为false,false需要传入密钥
 	private Boolean localSign = false;
 	private Connection conn = null;
-	
+
+	protected ScheduledExecutorService service;
+	// All code that use the Client api, must be run on this thread
+
+
+	protected Thread clientThread;
+
 	public Remote(Connection conn) {
 		this.conn = conn;
+		this.initClientThread();
+		this.initClientThread();
 	}
 	
 	public Remote(Connection conn, Boolean localSign) {
 		this.conn = conn;
 		this.localSign = localSign;
+		this.initClientThread();
+
+	}
+
+	public void initClientThread(){
+		service = new ScheduledThreadPoolExecutor(1, new ThreadFactory() {
+			@Override
+			public Thread newThread(Runnable r) {
+				clientThread = new Thread(r);
+				return clientThread;
+			}
+		});
 	}
 	
 	/**
@@ -1316,7 +1339,7 @@ public class Remote {
 	 * 监听
 	 * @param type
 	 */
-	public String newListener(String type) throws Exception{
+	public String on(String type) throws Exception{
 		if(conn==null) {
 			return "";
 		}

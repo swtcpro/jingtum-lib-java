@@ -356,10 +356,15 @@ public class RemoteTest {
 		TransactionInfo bean = tx.submit();
 		System.out.println("4.18 buildOfferCancelTxTest_new:\n" + JsonUtils.toJsonString(bean));
 	}
-	
+
+	/**
+	 *  监听信息
+	 * @throws Exception
+	 */
 	@Test
-	public void ledger() {
-		String result = remote.newListener("ledger_closed");
-		System.out.println(result);
+	public void ledger() throws Exception{
+		remote.on("ledger_closed");
+		remote.on("transactions");
+		Thread.sleep(12000);
 	}
 }
