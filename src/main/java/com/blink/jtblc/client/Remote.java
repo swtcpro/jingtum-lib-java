@@ -891,7 +891,8 @@ public class Remote {
 		params.put("taker_gets", taker_gets);
 		params.put("taker_pays", taker_pays);
 		params.put("command", "book_offers");
-		params.put("taker", "jjjjjjjjjjjjjjjjjjjjBZbvri");
+		//params.put("taker", "jjjjjjjjjjjjjjjjjjjjBZbvri");
+		params.put("taker", Config.ACCOUNT_ONE);
 		params.put("limit", limit);
 		String msg = this.submit(params);
 		return JsonUtils.toEntity(msg, OrderBook.class);
