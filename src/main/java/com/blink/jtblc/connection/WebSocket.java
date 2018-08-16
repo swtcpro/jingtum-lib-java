@@ -9,8 +9,10 @@ import com.blink.jtblc.listener.Impl.LedgerCloseImpl;
 import com.blink.jtblc.listener.Impl.TransactionsImpl;
 import com.blink.jtblc.utils.JsonUtils;
 import org.apache.commons.lang3.RandomUtils;
+import org.java_websocket.WebSocket.READYSTATE;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.drafts.Draft_6455;
+import org.java_websocket.framing.CloseFrame;
 import org.java_websocket.handshake.ServerHandshake;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -127,12 +129,23 @@ public class WebSocket extends WebSocketClient {
 
     @Override
     public void onClose(int code, String reason, boolean remote) {
-        logger.info("已离线");
+    	 if(code == CloseFrame.NORMAL) {
+         	logger.info("已离线，主动关闭连接");
+         }else {
+         	logger.error("已离线，被动关闭连接，重新连接");
+         	this.reconnect();
+ 			logger.error("重新连接websocket，重连结果【" + this.getReadyState() + "】");
+         }
     }
 
     @Override
     public void onError(Exception ex) {
-        logger.error(ex.getMessage(), ex);
+    	 logger.error(ex.getMessage(), ex);
+         //连接断开导致异常时，直接重新连接
+         if(this.getReadyState() != READYSTATE.OPEN) {
+ 			this.reconnect();
+ 			logger.error("重新连接websocket，重连结果【" + this.getReadyState() + "】");
+ 		}
     }
 
     public String getMessage(String sessionId) {
