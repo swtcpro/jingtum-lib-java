@@ -223,7 +223,8 @@ public class Currency extends Hash160 {
 		currencyBytes[14] = (byte) currencyCode.codePointAt(2);*/
 		
 		//start
-		int offset = 12;
+		int base_currency_length = 3;
+		int offset = 12 - (currencyCode.length() - base_currency_length);
 		for(int i = 0; i < currencyCode.length(); i++) {
 			currencyBytes[offset] = (byte) currencyCode.codePointAt(i);
 			offset++;
@@ -239,17 +240,21 @@ public class Currency extends Hash160 {
 		
 		//start
 		int size = 0;
+		int offset = 0;
 		for(int j = 0; j < bytes.length; j++) {
 			if(bytes[j] != 0) {
 				size++;
+				if (offset == 0) {
+					offset = j;
+				}
 			}
 		}
 		for (i = 0; i < 20; i++) {
-			zeroInNonCurrencyBytes = zeroInNonCurrencyBytes && ((12 <= i && i <= (12 + size)) || // currency bytes (0 or any other)
+			zeroInNonCurrencyBytes = zeroInNonCurrencyBytes && ((offset <= i && i <= (offset + size)) || // currency bytes (0 or any other)
 			        bytes[i] == 0); // non currency bytes (0)
 		}
 		if (zeroInNonCurrencyBytes) {
-			return isoCodeFromBytesAndOffset(bytes, 12);
+			return isoCodeFromBytesAndOffset(bytes, offset);
 		} else {
 			throw new IllegalStateException("Currency is invalid");
 		}
