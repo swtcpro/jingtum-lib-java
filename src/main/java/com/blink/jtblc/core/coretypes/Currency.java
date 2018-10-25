@@ -146,10 +146,16 @@ public class Currency extends Hash160 {
 			} else if (value.equals("SWT")) {
 				return SWT;//SWT
 			} else {
-				if (!(value.length() == 3)) {
+				/*if (!(value.length() == 3)) {
 					// if (!value.matches("[A-Z0-9]{3}")) {
 					throw new RuntimeException("Currency code must be 3 characters");
+				}*/
+				
+				//start
+				if ((value.length() >= 9)) {
+					throw new RuntimeException("Currency code must be less than 9 characters");
 				}
+				//end
 				return newInstance(encodeCurrency(value));
 			}
 		}
@@ -212,17 +218,34 @@ public class Currency extends Hash160 {
 	 */
 	public static byte[] encodeCurrency(String currencyCode) {
 		byte[] currencyBytes = new byte[20];
-		currencyBytes[12] = (byte) currencyCode.codePointAt(0);
+		/*currencyBytes[12] = (byte) currencyCode.codePointAt(0);
 		currencyBytes[13] = (byte) currencyCode.codePointAt(1);
-		currencyBytes[14] = (byte) currencyCode.codePointAt(2);
+		currencyBytes[14] = (byte) currencyCode.codePointAt(2);*/
+		
+		//start
+		int offset = 12;
+		for(int i = 0; i < currencyCode.length(); i++) {
+			currencyBytes[offset] = (byte) currencyCode.codePointAt(i);
+			offset++;
+		}
+		//end
+		
 		return currencyBytes;
 	}
 	
 	public static String getCurrencyCodeFromTLCBytes(byte[] bytes) {
 		int i;
 		boolean zeroInNonCurrencyBytes = true;
+		
+		//start
+		int size = 0;
+		for(int j = 0; j < bytes.length; j++) {
+			if(bytes[j] != 0) {
+				size++;
+			}
+		}
 		for (i = 0; i < 20; i++) {
-			zeroInNonCurrencyBytes = zeroInNonCurrencyBytes && ((i == 12 || i == 13 || i == 14) || // currency bytes (0 or any other)
+			zeroInNonCurrencyBytes = zeroInNonCurrencyBytes && ((12 <= i && i <= (12 + size)) || // currency bytes (0 or any other)
 			        bytes[i] == 0); // non currency bytes (0)
 		}
 		if (zeroInNonCurrencyBytes) {
@@ -230,6 +253,17 @@ public class Currency extends Hash160 {
 		} else {
 			throw new IllegalStateException("Currency is invalid");
 		}
+		//end
+		
+		/*for (i = 0; i < 20; i++) {
+			zeroInNonCurrencyBytes = zeroInNonCurrencyBytes && ((i == 12 || i == 13 || i == 14) || // currency bytes (0 or any other)
+			        bytes[i] == 0); // non currency bytes (0)
+		}
+		if (zeroInNonCurrencyBytes) {
+			return isoCodeFromBytesAndOffset(bytes, 12);
+		} else {
+			throw new IllegalStateException("Currency is invalid");
+		}*/
 	}
 	
 	private static char charFrom(byte[] bytes, int i) {
@@ -237,9 +271,19 @@ public class Currency extends Hash160 {
 	}
 	
 	private static String isoCodeFromBytesAndOffset(byte[] bytes, int offset) {
-		char a = charFrom(bytes, offset);
+		//start
+		StringBuffer str = new StringBuffer();
+		for(int j=0;j<bytes.length;j++) {
+			if(bytes[j] != 0) {
+				str.append(charFrom(bytes, j));
+			}
+		}
+		return str.toString();
+		//end
+		
+		/*char a = charFrom(bytes, offset);
 		char b = charFrom(bytes, offset + 1);
 		char c = charFrom(bytes, offset + 2);
-		return "" + a + b + c;
+		return "" + a + b + c;*/
 	}
 }
