@@ -222,14 +222,12 @@ public class Currency extends Hash160 {
 		currencyBytes[13] = (byte) currencyCode.codePointAt(1);
 		currencyBytes[14] = (byte) currencyCode.codePointAt(2);*/
 		
-		//start
-		int base_currency_length = 3;
-		int offset = 12 - (currencyCode.length() - base_currency_length);
-		for(int i = 0; i < currencyCode.length(); i++) {
-			currencyBytes[offset] = (byte) currencyCode.codePointAt(i);
-			offset++;
+		int max_offset = 14;
+		int len = currencyCode.length() - 1;
+		for (int i = len; i >= 0; i--) {
+			currencyBytes[max_offset - i] = (byte) (currencyCode.codePointAt(len - i) & 0xff);
 		}
-		//end
+		// end
 		
 		return currencyBytes;
 	}
