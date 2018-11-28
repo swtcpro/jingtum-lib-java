@@ -265,7 +265,7 @@ public class STObject implements SerializedType, Iterable<Field> {
 			throw new RuntimeException("Couldn't put `" + value + "` into field `" + f + "`\n" + e.toString());
 		}
 		fields.put(f, st);
-		//System.out.println(JsonUtils.toJsonString(fields));
+		////System.out.println(JsonUtils.toJsonString(fields));
 		
 	}
 	
@@ -388,13 +388,13 @@ public class STObject implements SerializedType, Iterable<Field> {
 				if (field == Field.ObjectEndMarker) {
 					break;
 				}
-				System.out.println(field);
+				//System.out.println(field);
 				tr = Translators.forField(field);
 				sizeHint = field.isVLEncoded() ? parser.readVLLength() : null;
 				st = tr.fromParser(parser, sizeHint);
-				System.out.println(st.toString());
-				System.out.println(st.toHex());
-				System.out.println(field+" = "+st);
+				//System.out.println(st.toString());
+				//System.out.println(st.toHex());
+				//System.out.println(field+" = "+st);
 				if (st == null) {
 					throw new IllegalStateException("Parsed " + field + " as null");
 				}

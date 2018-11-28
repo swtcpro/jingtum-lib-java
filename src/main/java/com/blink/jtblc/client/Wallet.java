@@ -31,8 +31,8 @@ public class Wallet {
 		byte[] bytes = keypairs.pub160Hash();
 		String address = Config.getB58IdentiferCodecs().encodeAddress(bytes);
 		// var address = Keypairs.deriveAddress(keypair.publicKey);
-		// System.out.println("secret=" + secret);
-		// System.out.println("address=" + address);
+		// //System.out.println("secret=" + secret);
+		// //System.out.println("address=" + address);
 		Wallet wallet = new Wallet();
 		wallet.setKeypairs(keypairs);
 		wallet.setSecret(secret);

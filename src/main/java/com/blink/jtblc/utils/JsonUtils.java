@@ -144,7 +144,7 @@ public class JsonUtils {
 			String attrKey = NameUtils.getCamelName(key);
 			PropertyDescriptor prop = props.get(attrKey.toUpperCase());
 			if (val != null && prop != null) {
-				// System.out.println(key + "\t" + val + "\t" + attrKey);
+				// //System.out.println(key + "\t" + val + "\t" + attrKey);
 				if (val instanceof Map) {
 					transferMap(prop, obj, attrKey, val);
 				} else if (val instanceof List) {
@@ -181,7 +181,7 @@ public class JsonUtils {
 	        throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchFieldException, SecurityException,
 	        ClassNotFoundException, InstantiationException, IntrospectionException {
 		// Map->entity 一般对应一个实体
-		// System.out.println("attrKey=" + attrKey + "\t" + obj.toString());
+		// //System.out.println("attrKey=" + attrKey + "\t" + obj.toString());
 		Field mapField = obj.getClass().getDeclaredField(attrKey);
 		Object chdObj = mapField.getType().newInstance();
 		BeanInfo beanInfo = Introspector.getBeanInfo(mapField.getType(), Object.class);
@@ -216,7 +216,6 @@ public class JsonUtils {
 		Type[] listActualTypeArguments = listGenericType.getActualTypeArguments();// List 只有一个参数
 		if (listActualTypeArguments != null && listActualTypeArguments.length > 0) {
 			List chdList = new ArrayList<>();
-			prop.getWriteMethod().invoke(obj, chdList);
 			Type actualType = listActualTypeArguments[0];
 			if (actualType.getTypeName().contains("java.lang.") || actualType.getTypeName().contains("java.util.")) {
 				chdList = (List) val;
@@ -232,6 +231,7 @@ public class JsonUtils {
 					chdList.add(item);
 				}
 			}
+			prop.getWriteMethod().invoke(obj, chdList);
 		}
 	}
 	

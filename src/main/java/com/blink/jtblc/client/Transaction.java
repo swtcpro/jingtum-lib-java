@@ -392,7 +392,7 @@ public class Transaction {
 		}
 		params.put("memo", this.memo);
 		params.put("command", this.command);
-		System.out.println("参数：" + JsonUtils.toJsonString(params));
+		//System.out.println("参数：" + JsonUtils.toJsonString(params));
 		String msg = conn.submit(params);
 		return msg;
 	}

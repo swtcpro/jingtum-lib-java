@@ -77,16 +77,16 @@ public class NameUtils {
 	}
 	
 	public static void main(String[] args) {
-		System.out.println(NameUtils.getCamelName("aa_bb_cc"));
-		System.out.println(NameUtils.getCamelName("aaBb_cc"));
-		System.out.println(NameUtils.getCamelName("AaBbCc"));
-		System.out.println(NameUtils.isUpper('A'));
-		System.out.println(NameUtils.isUpper('a'));
-		System.out.println(NameUtils.isLower('A'));
-		System.out.println(NameUtils.isLower('a'));
-		System.out.println(NameUtils.toUpper('A'));
-		System.out.println(NameUtils.toUpper('a'));
-		System.out.println(NameUtils.toLower('A'));
-		System.out.println(NameUtils.toLower('a'));
+		//System.out.println(NameUtils.getCamelName("aa_bb_cc"));
+		//System.out.println(NameUtils.getCamelName("aaBb_cc"));
+		//System.out.println(NameUtils.getCamelName("AaBbCc"));
+		//System.out.println(NameUtils.isUpper('A'));
+		//System.out.println(NameUtils.isUpper('a'));
+		//System.out.println(NameUtils.isLower('A'));
+		//System.out.println(NameUtils.isLower('a'));
+		//System.out.println(NameUtils.toUpper('A'));
+		//System.out.println(NameUtils.toUpper('a'));
+		//System.out.println(NameUtils.toLower('A'));
+		//System.out.println(NameUtils.toLower('a'));
 	}
 }

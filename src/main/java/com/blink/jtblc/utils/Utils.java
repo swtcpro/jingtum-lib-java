@@ -13,7 +13,7 @@ import com.blink.jtblc.encoding.common.B16;
 public class Utils {
 	public static void main(String[] args) {
 		String aaString = Utils.hexToString("11");
-		System.out.println(aaString);
+		//System.out.println(aaString);
 	}
 	
 	public static String bigHex(BigInteger bn) {

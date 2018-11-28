@@ -71,8 +71,8 @@ public class JsCoding {
 	
 	public static void main(String[] args) {
 		String stest = "黄修群1234 abcd[]()<+>,.~//";
-		System.out.println(stest);
-		System.out.println(escape("Visit W3School!"));
-		System.out.println(unescape("Visit%20W3School%21"));
+		//System.out.println(stest);
+		//System.out.println(escape("Visit W3School!"));
+		//System.out.println(unescape("Visit%20W3School%21"));
 	}
 }

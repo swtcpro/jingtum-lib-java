@@ -73,8 +73,8 @@ public class SignedTransaction {
        
         txn.checkFormat();
         signingData = txn.signingData();
-        System.out.println("------------");
-        System.out.println(JsonUtils.toJsonString(txn));
+        //System.out.println("------------");
+        //System.out.println(JsonUtils.toJsonString(txn));
         if (previousSigningData != null && Arrays.equals(signingData, previousSigningData)) {
             return;
         }

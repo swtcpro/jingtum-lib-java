@@ -1329,11 +1329,11 @@ public class Remote {
 
 
 	public static void onLedgerClosed(String message) {
-		System.out.println("ledger:"+message);
+		//System.out.println("ledger:"+message);
 	}
 
 	public static void onTransaction(String message) {
-		System.out.println("tx:"+message);
+		//System.out.println("tx:"+message);
 	}
 
 	/**

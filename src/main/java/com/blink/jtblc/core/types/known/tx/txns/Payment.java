@@ -83,12 +83,12 @@ public class Payment extends Transaction {
 		this.sequence(new UInt32(ainfo.getAccountData().getSequence()));
 		
 		SignedTransaction tx = sign(secret);
-		System.out.println(tx.tx_blob);
+		//System.out.println(tx.tx_blob);
 		Map<String, Object> params=new HashMap<>();
 		params.put("tx_blob", tx.tx_blob);
 		String reString=this.remote.sendMessage("submit", params);
-		System.out.println("-----------reString-----------");
-		System.out.println(reString);
+		//System.out.println("-----------reString-----------");
+		//System.out.println(reString);
 		PaymentInfo bean = JsonUtils.toEntity(reString, PaymentInfo.class);
 		return bean;
 	}
