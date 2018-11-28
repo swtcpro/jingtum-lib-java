@@ -12,11 +12,13 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 	<dependencies>
+		<!-- https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk15on -->
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
 			<artifactId>bcprov-jdk15on</artifactId>
-			<version>1.59</version>
+			<version>1.60</version>
 		</dependency>
+
 		<!-- https://mvnrepository.com/artifact/bouncycastle/bcprov-jdk15 -->
 		<!-- <dependency> -->
 		<!-- <groupId>bouncycastle</groupId> -->
