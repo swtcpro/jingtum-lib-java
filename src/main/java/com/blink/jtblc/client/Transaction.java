@@ -7,6 +7,8 @@ import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.blink.jtblc.client.bean.AccountInfo;
 import com.blink.jtblc.client.bean.AmountInfo;
 import com.blink.jtblc.client.bean.TransactionInfo;
@@ -22,6 +24,7 @@ import com.blink.jtblc.core.types.known.tx.txns.TrustSet;
 import com.blink.jtblc.exceptions.RemoteException;
 import com.blink.jtblc.exceptions.TransactionException;
 import com.blink.jtblc.utils.JsonUtils;
+import com.blink.jtblc.utils.Utils;
 
 // 交易信息
 public class Transaction {
@@ -218,7 +221,14 @@ public class Transaction {
 	 * @param memo
 	 */
 	public void addMemo(String memo) {
-		this.memo = memo;
+		JSONArray memosArray = new JSONArray();
+		JSONObject memoObj = new JSONObject();
+		JSONObject memoData = new JSONObject();
+		memoData.put("MemoData", Utils.strToHexStr(memo));
+		memoObj.put("Memo", memoData);
+		memosArray.add(memoObj);
+		this.setMemo(memo);
+		txJson.put("Memos", memosArray);
 	}
 	
 	/**
