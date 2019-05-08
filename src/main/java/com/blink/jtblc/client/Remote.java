@@ -3,9 +3,11 @@ package com.blink.jtblc.client;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
@@ -14,11 +16,29 @@ import java.util.concurrent.ThreadFactory;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.blink.jtblc.client.bean.*;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.alibaba.fastjson.JSONObject;
+import com.blink.jtblc.client.bean.Account;
+import com.blink.jtblc.client.bean.AccountInfo;
+import com.blink.jtblc.client.bean.AccountOffers;
+import com.blink.jtblc.client.bean.AccountPropertyInfo;
+import com.blink.jtblc.client.bean.AccountRelations;
+import com.blink.jtblc.client.bean.AccountTums;
+import com.blink.jtblc.client.bean.AccountTx;
+import com.blink.jtblc.client.bean.AmountInfo;
+import com.blink.jtblc.client.bean.BookOffers;
+import com.blink.jtblc.client.bean.Ledger;
+import com.blink.jtblc.client.bean.LedgerClosed;
+import com.blink.jtblc.client.bean.LedgerInfo;
+import com.blink.jtblc.client.bean.OfferCancelInfo;
+import com.blink.jtblc.client.bean.OfferCreateInfo;
+import com.blink.jtblc.client.bean.OrderBook;
+import com.blink.jtblc.client.bean.PaymentInfo;
+import com.blink.jtblc.client.bean.RelationInfo;
+import com.blink.jtblc.client.bean.ServerInfo;
 import com.blink.jtblc.config.Config;
 import com.blink.jtblc.connection.Connection;
 import com.blink.jtblc.exceptions.RemoteException;
@@ -168,6 +188,21 @@ public class Remote {
 		Map map = JsonUtils.toObject(msg, Map.class);
 		Account account = new Account();
 		if (map.get("status").equals("success")) {
+			JSONObject msgJson = JSONObject.parseObject(msg);
+			JSONObject resultJson = JSONObject.parseObject(msgJson.getString("result"));
+			String type = resultJson.get("Amount").getClass().toString();
+			if(!type.equals(JSONObject.class.toString())){
+				JSONObject amountJson = new JSONObject();
+				amountJson.put("currency", Config.CURRENCY);
+				BigDecimal temp = new BigDecimal(resultJson.get("Amount").toString());
+				BigDecimal exchange_rate = new BigDecimal("1000000.0");
+				BigDecimal rs = temp.divide(exchange_rate);
+				amountJson.put("value", rs.toString());
+				amountJson.put("issuer", "");
+				resultJson.put("Amount", amountJson);
+				msgJson.put("result", resultJson);
+				msg = msgJson.toJSONString();
+			}
 			account = JsonUtils.toEntity(msg, Account.class);
 		} else if (map.get("status").equals("error")) {
 			msg = "接口调用出错";
@@ -934,7 +969,7 @@ public class Remote {
 	 * @param memo 备注
 	 * @return
 	 */
-	public PaymentInfo buildPaymentTx(String account, String to, AmountInfo amount, String memo, String secret) {
+	public PaymentInfo buildPaymentTx(String account, String to, AmountInfo amount, List<String> memos, String secret) {
 		Transaction tx = new Transaction();
 		tx.setAccount(account);
 		tx.setTo(to);
@@ -962,8 +997,8 @@ public class Remote {
 		 */
 		tx_json.put("Amount", toAmount(amount));
 		tx_json.put("Destination", to);
-		if (StringUtils.isNotEmpty(memo)) {
-			if (memo.length() > 2048) {
+		if (memos!=null) {
+			if (memos.toString().length() > 2048) {
 				throw new RemoteException("memo is too long");
 			} else {
 				// tx_json.put("MemoData", __stringToHex(utf8.encode(memo));
@@ -971,7 +1006,7 @@ public class Remote {
 		}
 		tx.setSecret(secret);
 		tx.setCommand("submit");
-		tx.addMemo(memo);
+		tx.addMemo(memos);
 		Map params = new HashMap();
 		params.put("tx_json", tx_json);
 		String msg = tx.submit(this.conn, this.localSign, params);

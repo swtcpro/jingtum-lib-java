@@ -1,7 +1,11 @@
 package com.blink.jtblc.client;
 
+import java.util.List;
+
 import com.blink.jtblc.client.bean.AmountInfo;
 import com.blink.jtblc.client.bean.TransactionInfo;
+import com.blink.jtblc.connection.Connection;
+import com.blink.jtblc.connection.ConnectionFactory;
 import com.blink.jtblc.utils.JsonUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -39,13 +43,14 @@ public class MsgConver {
 	 * @param fromSecret 发起账号私钥
 	 * @return
 	 */
-	public TransactionInfo buildPaymentTx(String from, String to, AmountInfo amount, String fromSecret, String memo) {
+	public TransactionInfo buildPaymentTx(String from, String to, AmountInfo amount, String fromSecret, List<String> memos) {
 		from = "jwZd5nvNTgTUM8UR7FVDFoe3Vb8emvzRdn";
 		to = "jQGW9F6vLYX2dQMHv2eZTMRUkEHAEGJSgz";
-		memo = "{\r\n"
+		String memo = "{\r\n"
 		        + "		 \"vc_hetmc\" : \"测试合同名称\",\"vc_chengzkhmc\" : \"承租客户名称\",\"vc_biz\" : \"人民币\",\"dec_hetje\" : \"2000000\",\"dec_shengyje\" : \"100000\",\"dt_qizrq\" :\r\n"
 		        + "		 \"2018-11-16\",\"vc_hetzt\" : \"已启动\", \"type\" : \"type1\", \"dt_tijsj\" : \"2018-11-30 08:56:01\"\r\n"
 		        + "		 }";
+		memos.add(memo);
 		fromSecret = "sniR2LfrUAfjpkMz3moYWGp9kDAyG";
 		// #区块链服务器地址
 		// #货币种类，三到六个字母或20字节的自定义货币
@@ -63,8 +68,11 @@ public class MsgConver {
 			amount.setIssuer("");
 		}
 		// String memo = "支付0.000001SWT";
-		Transaction tx = this.remote.buildPaymentTx(from, to, amount);
-		tx.addMemo(memo);
+		String server = "ws://101.200.176.238:5020";
+		Connection conn = ConnectionFactory.getCollection(server);
+		Remote remote = new Remote(conn);
+		Transaction tx = remote.buildPaymentTx(from, to, amount);
+		tx.addMemo(memos);
 		tx.setSecret(fromSecret);
 		tx.setFee(20);
 		TransactionInfo bean = tx.submit();

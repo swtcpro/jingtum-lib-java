@@ -1,6 +1,7 @@
 package com.blink.jtblc.client;
 
-import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -22,10 +23,6 @@ import com.blink.jtblc.client.bean.ServerInfo;
 import com.blink.jtblc.client.bean.TransactionInfo;
 import com.blink.jtblc.connection.Connection;
 import com.blink.jtblc.connection.ConnectionFactory;
-import com.blink.jtblc.core.coretypes.Amount;
-import com.blink.jtblc.core.coretypes.uint.UInt32;
-import com.blink.jtblc.core.types.known.tx.signed.SignedTransaction;
-import com.blink.jtblc.core.types.known.tx.txns.Payment;
 import com.blink.jtblc.utils.JsonUtils;
 
 public class RemoteTest {
@@ -284,8 +281,10 @@ public class RemoteTest {
 		amount.setValue(value);
 		amount.setIssuer(issuer);
 		String memo = "支付0.000001SWT";
+		List<String> memos = new ArrayList<String>();
+		memos.add(memo);
 		Transaction tx = remote.buildPaymentTx(account_2, account_1, amount);
-		tx.addMemo(memo);
+		tx.addMemo(memos);
 		tx.setSecret(secret_2);
 		tx.setFee(20);
 		TransactionInfo bean = tx.submit();
@@ -305,8 +304,10 @@ public class RemoteTest {
 		limit.setCurrency(currency);
 		limit.setIssuer(issuer);
 		String memo = "4.15 设置关系";
+		List<String> memos = new ArrayList<String>();
+		memos.add(memo);
 		Transaction tx = remote.buildRelationTx(type, account_2, account_1, limit);
-		tx.addMemo(memo);
+		tx.addMemo(memos);
 		tx.setSecret(secret_2);
 		tx.setFee(20);
 		TransactionInfo bean = tx.submit();
@@ -354,7 +355,9 @@ public class RemoteTest {
 		// 可选
 		String memo = "4.18 取消挂单";
 		Transaction tx = remote.buildOfferCancelTx(account_2, sequence);
-		tx.addMemo(memo);
+		List<String> memos = new ArrayList<String>();
+		memos.add(memo);
+		tx.addMemo(memos);
 		tx.setSecret(secret_2);
 		TransactionInfo bean = tx.submit();
 		System.out.println("4.18 buildOfferCancelTxTest_new:\n" + JsonUtils.toJsonString(bean));

@@ -220,14 +220,17 @@ public class Transaction {
 	 * 
 	 * @param memo
 	 */
-	public void addMemo(String memo) {
+	public void addMemo(List<String> memos) {
 		JSONArray memosArray = new JSONArray();
-		JSONObject memoObj = new JSONObject();
-		JSONObject memoData = new JSONObject();
-		memoData.put("MemoData", Utils.strToHexStr(memo));
-		memoObj.put("Memo", memoData);
-		memosArray.add(memoObj);
-		this.setMemo(memo);
+		if(memos!=null){
+			for(String memo : memos){
+				JSONObject memoObj = new JSONObject();
+				JSONObject memoData = new JSONObject();
+				memoData.put("MemoData", Utils.strToHexStr(memo));
+				memoObj.put("Memo", memoData);
+				memosArray.add(memoObj);
+			}
+		}
 		txJson.put("Memos", memosArray);
 	}
 	

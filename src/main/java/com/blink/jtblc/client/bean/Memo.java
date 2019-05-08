@@ -1,5 +1,7 @@
 package com.blink.jtblc.client.bean;
 
+import com.blink.jtblc.utils.Utils;
+
 public class Memo {
 	private String memoData;
 	private String memoType;
@@ -7,7 +9,7 @@ public class Memo {
 		return memoData;
 	}
 	public void setMemoData(String memoData) {
-		this.memoData = memoData;
+		this.memoData = Utils.hexStrToStr(memoData);;
 	}
 	public String getMemoType() {
 		return memoType;
