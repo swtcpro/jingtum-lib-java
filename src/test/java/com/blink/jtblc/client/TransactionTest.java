@@ -23,13 +23,13 @@ public class TransactionTest {
 	protected static final Logger log = LoggerFactory.getLogger(RemoteTest.class);
 	// 井通节点websocket链接：
 	// ws://ts5.jingtum.com:5020
-	String server = "ws://101.200.176.238:5020";
+	String server = "ws://ts5.jingtum.com:5020";
 	// 子账号
-	String account_1 = "jK4kdiriyxErTfW8wMMjzP25oT2AKLWGfY";
-	String secret_1 = "shrh9UUHLfDfEiByzakXu6Qorf2T7";
+	String account_1 = "j3UcBBbes7HFgmTLmGkEQQShM2jdHbdGAe";
+	String secret_1 = "ssWiEpky7Bgj5GFrexxpKexYkeuUv";
 	// 主账号
-	String account_2 = "j47gDd3ethDU4UJMD2rosg9WrSXeh9bLd1";
-	String secret_2 = "shFsfC6b1GCfxHn4Y4b3TSALHo37i";
+	String account_2 = "jNn89aY84G23onFXupUd7bkMode6aKYMt8";
+	String secret_2 = "spvFsSWaD1BmNk7h3Zvo98YRi1NxX";
 	Integer limit_num = 100;
 	Connection conn = ConnectionFactory.getCollection(server);
 	Remote remote = new Remote(conn);
