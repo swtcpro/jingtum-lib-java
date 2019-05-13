@@ -1,6 +1,7 @@
 package com.blink.jtblc.core.types.known.tx;
 
 import java.io.UnsupportedEncodingException;
+import java.util.List;
 
 import org.bouncycastle.util.encoders.Hex;
 import org.json.JSONArray;
@@ -26,6 +27,7 @@ import com.blink.jtblc.core.types.known.tx.signed.SignedTransaction;
 import com.blink.jtblc.crypto.ecdsa.IKeyPair;
 import com.blink.jtblc.utils.HashUtils;
 import com.blink.jtblc.utils.JsonUtils;
+import com.blink.jtblc.utils.Utils;
 
 public class Transaction extends STObject {
 	public static final boolean CANONICAL_FLAG_DEPLOYED = true;
@@ -182,7 +184,27 @@ public class Transaction extends STObject {
 		put(Field.Memos, val);
 	}
 	
-	public void addMemo(String memo) {
+	
+	/**
+	 * 添加备注信息
+	 * 
+	 * @param memo
+	 */
+	public void addMemo(List<String> memos) {
+		JSONArray memosArray = new JSONArray();
+		if(memos!=null){
+			for(String memo : memos){
+				JSONObject memoObj = new JSONObject();
+				JSONObject memoData = new JSONObject();
+				memoData.put("MemoData", Utils.strToHexStr(memo));
+				memoObj.put("Memo", memoData);
+				memosArray.put(memoObj);
+			}
+		}
+		put(STArray.Memos, STArray.translate.fromJSONArray(memosArray));
+	}
+	
+	/*public void addMemo(String memo) {
 		JSONArray memos = new JSONArray();
 		JSONObject memoObj = new JSONObject();
 		JSONObject memoData = new JSONObject();
@@ -201,7 +223,7 @@ public class Transaction extends STObject {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-	}
+	}*/
 	
 	// addMemo = function(memo) {
 	// if (typeof memo !== 'string') {

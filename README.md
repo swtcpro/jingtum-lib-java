@@ -134,7 +134,10 @@ pays | Amount  | 对家想要支付的货币信息,{value:'金额',currency:'货
 
 14）**提交支付**  
 
-`PaymentInfo bean = remote.buildPaymentTx(account, to, amount, memo, secret);`
+`Transaction tx = remote.buildPaymentTx(account, to, amount);`
+`tx.addMemo(memos);`
+`tx.setSecret(secret);`
+`TransactionInfo bean = tx.submit();`
 
    参数：
 
@@ -143,7 +146,7 @@ pays | Amount  | 对家想要支付的货币信息,{value:'金额',currency:'货
 account | String  | 发起账号
 to | String  | 目标账号
 amount | Amount  | 支付金额对象{value:'金额',currency:'货币种类',issuer:'货币'}
-memo | String  | 备注
+memo | List<String>  | 备注
 secret | String  | 密钥
 
 15）**关系设置**  

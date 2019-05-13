@@ -1,6 +1,8 @@
 package com.blink.jtblc.client;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.Test;
@@ -59,7 +61,9 @@ public class TransactionTest {
 			payment.as(Amount.Fee, "10000");
 			payment.sequence(new UInt32(ainfo.getAccountData().getSequence()));
 			payment.flags(new UInt32(0));
-			payment.addMemo("给jDUjqoDZLhzx4DCf6pvSivjkjgtRESY62c支付0.5swt.");
+			List<String> memos = new ArrayList<String>();
+			memos.add("给jDUjqoDZLhzx4DCf6pvSivjkjgtRESY62c支付0.5swt.");
+			payment.addMemo(memos);
 			PaymentInfo info = payment.submit(secret);
 			SignedTransaction tx = payment.sign(secret);
 			System.out.println(tx.tx_blob);

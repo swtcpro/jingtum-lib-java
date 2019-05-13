@@ -46,7 +46,6 @@ public class Transaction {
 	// 私钥
 	private String secret;
 	// 备注信息
-	private String memo;
 	private List<String> memos = new ArrayList();
 	// 交易签名
 	private String txnSignature;
@@ -150,14 +149,6 @@ public class Transaction {
 		this.secret = secret;
 	}
 	
-	public String getMemo() {
-		return memo;
-	}
-	
-	public void setMemo(String memo) {
-		this.memo = memo;
-	}
-	
 	public String getTxnSignature() {
 		return txnSignature;
 	}
@@ -232,6 +223,7 @@ public class Transaction {
 			}
 		}
 		txJson.put("Memos", memosArray);
+		this.memos = memos;
 	}
 	
 	/**
@@ -258,7 +250,7 @@ public class Transaction {
 				}
 				payment.sequence(new UInt32(ainfo.getAccountData().getSequence()));
 				payment.flags(new UInt32(0));
-				payment.addMemo(this.memo);
+				payment.addMemo(this.memos);
 				tx = payment.sign(secret);
 				tx_blob = tx.tx_blob;
 				break;
@@ -273,7 +265,7 @@ public class Transaction {
 				}
 				trustSet.sequence(new UInt32(ainfo.getAccountData().getSequence()));
 				trustSet.flags(new UInt32(0));
-				trustSet.addMemo(memo);
+				trustSet.addMemo(memos);
 				tx = trustSet.sign(secret);
 				tx_blob = tx.tx_blob;
 				break;
@@ -290,7 +282,7 @@ public class Transaction {
 				}
 				relationSet.sequence(new UInt32(ainfo.getAccountData().getSequence()));
 				relationSet.flags(new UInt32(0));
-				relationSet.addMemo(memo);
+				relationSet.addMemo(memos);
 				tx = relationSet.sign(secret);
 				tx_blob = tx.tx_blob;
 				break;
@@ -403,7 +395,6 @@ public class Transaction {
 			params.put("secret", this.getSecret());
 			// params.put("tx_json", tx_json);
 		}
-		params.put("memo", this.memo);
 		params.put("command", this.command);
 		//System.out.println("参数：" + JsonUtils.toJsonString(params));
 		String msg = conn.submit(params);
@@ -429,14 +420,6 @@ public class Transaction {
 			params.put("secret", this.getSecret());
 			params.put("tx_json", txJson);
 		}
-		if (StringUtils.isNotEmpty(memo)) {
-			if (memo.length() > 2048) {
-				throw new RemoteException("memo is too long");
-			} else {
-				// tx_json.put("MemoData", __stringToHex(utf8.encode(memo));
-			}
-		}
-		params.put("memo", this.memo);
 		params.put("command", this.command);
 		params.put("tx_json", txJson);
 		String msg = conn.submit(params);

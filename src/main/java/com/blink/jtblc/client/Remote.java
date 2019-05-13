@@ -3,11 +3,9 @@ package com.blink.jtblc.client;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.math.RoundingMode;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
@@ -1025,7 +1023,7 @@ public class Remote {
 	 * @param memo
 	 * @return
 	 */
-	public RelationInfo buildRelationTx(String type_value, String account, String target, AmountInfo limit, String memo, String secret) {
+	public RelationInfo buildRelationTx(String type_value, String account, String target, AmountInfo limit, List<String> memos, String secret) {
 		Transaction tx = new Transaction();
 		// 将参数写入tx对象,方便读取校验
 		tx.setAccount(account);
@@ -1034,14 +1032,14 @@ public class Remote {
 		tx.setRelationType(type_value);
 		tx.setCommand("submit");
 		tx.setSecret(secret);
-		tx.setMemo(memo);
+		tx.addMemo(memos);
 		// 校验,并将参数写入tx_json对象
 		Map tx_json = new HashMap();
 		if (!CheckUtils.isValidType("relation", type_value)) {
 			throw new RemoteException("invalid relation type");
 		}
-		if (StringUtils.isNotEmpty(memo)) {
-			if (memo.length() > 2048) {
+		if (memos!=null) {
+			if (memos.toString().length() > 2048) {
 				throw new RemoteException("memo is too long");
 			} else {
 				// tx_json.put("MemoData", __stringToHex(utf8.encode(memo));
@@ -1139,13 +1137,13 @@ public class Remote {
 	 * @param memo
 	 * @return
 	 */
-	public AccountPropertyInfo buildAccountSetTx(String type_value, String account, String set_flag, String memo, String secret) {
+	public AccountPropertyInfo buildAccountSetTx(String type_value, String account, String set_flag, List<String> memos, String secret) {
 		Transaction tx = new Transaction();
 		tx.setAccount(account);
 		tx.setPropertyType(type_value);
 		tx.setCommand("submit");
 		tx.setSecret(secret);
-		tx.setMemo(memo);
+		tx.addMemo(memos);
 		// 校验,并将参数写入tx_json对象
 		Map tx_json = new HashMap();
 		if (!CheckUtils.isValidType("accountSet", type_value)) {
@@ -1238,12 +1236,12 @@ public class Remote {
 	 * @param memo
 	 * @return
 	 */
-	public OfferCreateInfo buildOfferCreateTx(String type, String account, AmountInfo getsAmount, AmountInfo paysAmount, String memo,
+	public OfferCreateInfo buildOfferCreateTx(String type, String account, AmountInfo getsAmount, AmountInfo paysAmount, List<String> memos,
 	        String secret) {
 		Transaction tx = new Transaction();
 		tx.setCommand("submit");
 		tx.setSecret(secret);
-		tx.setMemo(memo);
+		tx.addMemo(memos);
 		// 校验,并将参数写入tx_json对象
 		Map tx_json = new HashMap();
 		if (!CheckUtils.isValidAddress(account)) {
@@ -1310,11 +1308,11 @@ public class Remote {
 	 * @param memo
 	 * @return
 	 */
-	public OfferCancelInfo buildOfferCancelTx(String account, Integer sequence, String memo, String secret) {
+	public OfferCancelInfo buildOfferCancelTx(String account, Integer sequence, List<String> memos, String secret) {
 		Transaction tx = new Transaction();
 		tx.setCommand("submit");
 		tx.setSecret(secret);
-		tx.setMemo(memo);
+		tx.addMemo(memos);
 		// 校验,并将参数写入tx_json对象
 		Map tx_json = new HashMap();
 		if (!CheckUtils.isValidAddress(account)) {
