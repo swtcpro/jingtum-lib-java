@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import com.alibaba.fastjson.JSONObject;
 import com.blink.jtblc.client.bean.Account;
+import com.blink.jtblc.client.bean.AccountData;
 import com.blink.jtblc.client.bean.AccountInfo;
 import com.blink.jtblc.client.bean.AccountOffers;
 import com.blink.jtblc.client.bean.AccountPropertyInfo;
@@ -220,11 +221,27 @@ public class Remote {
 	public AccountInfo requestAccountInfo(String account,Object ledger) {
 		String msg = requestAccount("account_info", account,ledger, "");
 		AccountInfo accountInfo = JsonUtils.toEntity(msg, AccountInfo.class);
+		if(accountInfo!=null){
+			AccountData accountData = accountInfo.getAccountData();
+			BigDecimal temp = new BigDecimal(accountData.getBalance());
+			BigDecimal exchange_rate = new BigDecimal("1000000.0");
+			BigDecimal rs = temp.divide(exchange_rate);
+			accountData.setBalance(rs.toString());
+			accountInfo.setAccountData(accountData);
+		}
 		return accountInfo;
 	}
 	public AccountInfo requestAccountInfo(String account, Object ledger, String type) {
 		String msg = requestAccount("account_info", account, ledger, type);
 		AccountInfo accountInfo = JsonUtils.toEntity(msg, AccountInfo.class);
+		if(accountInfo!=null){
+			AccountData accountData = accountInfo.getAccountData();
+			BigDecimal temp = new BigDecimal(accountData.getBalance());
+			BigDecimal exchange_rate = new BigDecimal("1000000.0");
+			BigDecimal rs = temp.divide(exchange_rate);
+			accountData.setBalance(rs.toString());
+			accountInfo.setAccountData(accountData);
+		}
 		return accountInfo;
 	}
 	
