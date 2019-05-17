@@ -159,7 +159,7 @@ public class RemoteTest {
 	// 4.12 获得账号交易列表
 	// @Test
 	public void requestAccountTxTest() {
-		AccountTx bean = remote.requestAccountTx("jB7rxgh43ncbTX4WeMoeadiGMfmfqY2xLZ", limit_num);
+		AccountTx bean = remote.requestAccountTx("jB7rxgh43ncbTX4WeMoeadiGMfmfqY2xLZ", limit_num,null);
 		System.out.println("4.12 requestAccountTxTest:\n" + JsonUtils.toJsonString(bean));
 	}
 	

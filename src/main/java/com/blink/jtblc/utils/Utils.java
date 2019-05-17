@@ -100,4 +100,22 @@ public class Utils {
 	    }
 	    return new String(bytes);
 	}
+	
+	/**
+	 * 处理swtc金额除以1000000.0
+	 * @param amount
+	 * @return
+	 */
+	public static String  amountFormatDivide(String amount){
+		if(!"0".equals(amount)){
+			BigDecimal temp = new BigDecimal(amount);
+			BigDecimal exchange_rate = new BigDecimal("1000000.0");
+			BigDecimal rs = temp.divide(exchange_rate);
+			return String.valueOf(rs.intValue());
+		}else{
+			return "0";
+		}
+	}
+	
+	
 }

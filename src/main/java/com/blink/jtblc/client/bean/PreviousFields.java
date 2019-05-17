@@ -1,13 +1,15 @@
 package com.blink.jtblc.client.bean;
 
 public class PreviousFields {
-    private String balance;
+	private AmountInfo balance;
+	private String sequence;
 
-    public String getBalance() {
-        return balance;
-    }
+	public AmountInfo getBalance() {
+		return balance;
+	}
 
-    public void setBalance(String balance) {
-        this.balance = balance;
-    }
+	public void setBalance(AmountInfo balance) {
+		this.balance = balance;
+	}
+
 }

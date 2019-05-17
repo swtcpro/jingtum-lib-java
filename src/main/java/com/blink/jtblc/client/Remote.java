@@ -1,9 +1,7 @@
 package com.blink.jtblc.client;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -18,6 +16,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.blink.jtblc.client.bean.Account;
 import com.blink.jtblc.client.bean.AccountData;
@@ -32,12 +31,15 @@ import com.blink.jtblc.client.bean.BookOffers;
 import com.blink.jtblc.client.bean.Ledger;
 import com.blink.jtblc.client.bean.LedgerClosed;
 import com.blink.jtblc.client.bean.LedgerInfo;
+import com.blink.jtblc.client.bean.Marker;
+import com.blink.jtblc.client.bean.Memo;
 import com.blink.jtblc.client.bean.OfferCancelInfo;
 import com.blink.jtblc.client.bean.OfferCreateInfo;
 import com.blink.jtblc.client.bean.OrderBook;
 import com.blink.jtblc.client.bean.PaymentInfo;
 import com.blink.jtblc.client.bean.RelationInfo;
 import com.blink.jtblc.client.bean.ServerInfo;
+import com.blink.jtblc.client.bean.Transactions;
 import com.blink.jtblc.config.Config;
 import com.blink.jtblc.connection.Connection;
 import com.blink.jtblc.exceptions.RemoteException;
@@ -46,7 +48,7 @@ import com.blink.jtblc.listener.Impl.LedgerCloseImpl;
 import com.blink.jtblc.listener.Impl.TransactionsImpl;
 import com.blink.jtblc.utils.CheckUtils;
 import com.blink.jtblc.utils.JsonUtils;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.blink.jtblc.utils.Utils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class Remote {
@@ -189,18 +191,20 @@ public class Remote {
 		if (map.get("status").equals("success")) {
 			JSONObject msgJson = JSONObject.parseObject(msg);
 			JSONObject resultJson = JSONObject.parseObject(msgJson.getString("result"));
-			String type = resultJson.get("Amount").getClass().toString();
-			if(!type.equals(JSONObject.class.toString())){
-				JSONObject amountJson = new JSONObject();
-				amountJson.put("currency", Config.CURRENCY);
-				BigDecimal temp = new BigDecimal(resultJson.get("Amount").toString());
-				BigDecimal exchange_rate = new BigDecimal("1000000.0");
-				BigDecimal rs = temp.divide(exchange_rate);
-				amountJson.put("value", rs.toString());
-				amountJson.put("issuer", "");
-				resultJson.put("Amount", amountJson);
-				msgJson.put("result", resultJson);
-				msg = msgJson.toJSONString();
+			if(StringUtils.isNotBlank(resultJson.getString("Amount"))){
+				String type = resultJson.get("Amount").getClass().toString();
+				if(!type.equals(JSONObject.class.toString())){
+					JSONObject amountJson = new JSONObject();
+					amountJson.put("currency", Config.CURRENCY);
+					BigDecimal temp = new BigDecimal(resultJson.get("Amount").toString());
+					BigDecimal exchange_rate = new BigDecimal("1000000.0");
+					BigDecimal rs = temp.divide(exchange_rate);
+					amountJson.put("value", rs.toString());
+					amountJson.put("issuer", "");
+					resultJson.put("Amount", amountJson);
+					msgJson.put("result", resultJson);
+					msg = msgJson.toJSONString();
+				}
 			}
 			account = JsonUtils.toEntity(msg, Account.class);
 		} else if (map.get("status").equals("error")) {
@@ -236,10 +240,7 @@ public class Remote {
 		AccountInfo accountInfo = JsonUtils.toEntity(msg, AccountInfo.class);
 		if(accountInfo!=null){
 			AccountData accountData = accountInfo.getAccountData();
-			BigDecimal temp = new BigDecimal(accountData.getBalance());
-			BigDecimal exchange_rate = new BigDecimal("1000000.0");
-			BigDecimal rs = temp.divide(exchange_rate);
-			accountData.setBalance(rs.toString());
+			accountData.setBalance(Utils.amountFormatDivide(accountData.getBalance()));
 			accountInfo.setAccountData(accountData);
 		}
 		return accountInfo;
@@ -348,7 +349,7 @@ public class Remote {
 	 * @param limit 限定返回多少条记录，默认200
 	 * @return
 	 */
-	public AccountTx requestAccountTx(String account, Integer limit) {
+	public AccountTx requestAccountTx(String account, Integer limit,Marker marker) {
 		if (limit == null || limit == 0) {
 			limit = 200;
 		}
@@ -367,25 +368,33 @@ public class Remote {
 		// 新增参数start
 		params.put("ledger_index_min", 0);
 		params.put("ledger_index_max", -1);
+		if(marker!=null){
+			params.put("marker", JSONObject.toJSON(marker));
+		}
 		// 新增参数end
+		System.out.println(params.toString());
 		String msg = this.submit(params);
 		AccountTx accountTx = new AccountTx();
-		Map map = JsonUtils.toObject(msg, Map.class);
-		if (map.get("status").equals("success")) {
-			Map result = (Map) map.get("result");
+		JSONObject json = JSONObject.parseObject(msg);
+		if (json.get("status").equals("success")) {
+			JSONObject result = JSONObject.parseObject(json.get("result").toString());
 			accountTx.setAccount(result.get("account").toString());
 			accountTx.setLedgerIndexMax(result.get("ledger_index_max").toString());
 			accountTx.setLedgerIndexMin(result.get("ledger_index_min").toString());
-			List<Map> list = (List<Map>) result.get("transactions");
-			List<com.blink.jtblc.client.bean.Transaction> txs = new ArrayList<>();
-			for (Map txMap : list) {
-				com.blink.jtblc.client.bean.Transaction tx = new com.blink.jtblc.client.bean.Transaction();
-				try {
-					tx = processTx(txMap,account);
-				} catch (Exception e) {
-					throw new RemoteException("exchange error");
-				}
-				txs.add(tx);
+			if(result.get("limit")!=null){
+				accountTx.setLimit(result.getInteger("limit"));
+			}
+			if(result.get("marker")!=null){
+				Marker markerResult = new Marker();
+				markerResult.setLedger(JSONObject.parseObject(result.get("marker").toString()).getInteger("ledger"));
+				markerResult.setSeq(JSONObject.parseObject(result.get("marker").toString()).getInteger("seq"));
+				accountTx.setMarker(markerResult);
+			}
+			JSONArray list = JSONArray.parseArray(result.get("transactions").toString());
+			List<Transactions> txs = new ArrayList<>();
+			for (Object txObject : list) {
+				Transactions transactions = processTx((JSONObject)txObject,account);
+				txs.add(transactions);
 			}
 			accountTx.setTransactions(txs);
 		}
@@ -393,18 +402,18 @@ public class Remote {
 		return accountTx;
 	}
 	
-	public com.blink.jtblc.client.bean.Transaction processTx(Map txMap,String account) throws Exception{
-		com.blink.jtblc.client.bean.Transaction transtacion = new com.blink.jtblc.client.bean.Transaction();
-		Map tx = new HashMap();
-		Map meta = new HashMap();
-		if(txMap.get("tx")!=null) {
-			tx = (Map)txMap.get("tx");
-		}else if(txMap.get("transaction")!=null) {
-			tx = (Map)txMap.get("transaction");
+	public Transactions processTx(JSONObject txJsonObject,String account){
+		Transactions transtacion = new Transactions();
+		JSONObject tx = new JSONObject();
+		JSONObject meta = new JSONObject();
+		if(txJsonObject.get("tx")!=null) {
+			tx = (JSONObject)txJsonObject.get("tx");
+		}else if((JSONObject)txJsonObject.get("transaction")!=null) {
+			tx = (JSONObject)txJsonObject.get("transaction");
 		}else {
-			tx = txMap;
+			tx = (JSONObject)txJsonObject;
 		}
-		meta = (Map)txMap.get("meta");
+		meta = (JSONObject)txJsonObject.get("meta");
 		String hex = "0x386D4380";
 		Integer x = Integer.parseInt(hex.substring(2),16);
 		if(tx.get("date")!=null) {
@@ -416,14 +425,13 @@ public class Remote {
 			transtacion.setHash(tx.get("hash").toString());
 		}
 		transtacion.setType(txnType(tx,account));
-		transtacion.setFee((Integer.valueOf((tx.get("Fee").toString()))/1000000.0)+"");
+		transtacion.setFee(Utils.amountFormatDivide(tx.get("Fee").toString()));
 		
 		if(meta.get("TransactionResult")!=null) {
 			transtacion.setResult(meta.get("TransactionResult").toString());
 		}else {
 			transtacion.setResult("failed");
 		}
-		transtacion.setMemos(new HashMap());
 		
 		switch(transtacion.getType()) {
         case "sent":
@@ -436,11 +444,11 @@ public class Remote {
             break;
         case "trusted":
         	transtacion.setCounterparty(tx.get("Account").toString());
-            transtacion.setAmount(this.reverseAmount((Map)tx.get("LimitAmount"),tx.get("Account").toString()));
+            transtacion.setAmount(reverseAmount(JSONObject.parseObject(tx.get("LimitAmount").toString()),tx.get("Account").toString()));
             break;
         case "trusting":
-        	transtacion.setCounterparty(((Map)tx.get("LimitAmount")).get("issuer").toString());
-        	transtacion.setAmount(tx.get("LimitAmount").toString());
+        	transtacion.setCounterparty(JSONObject.parseObject(tx.get("LimitAmount").toString()).get("issuer").toString());
+        	transtacion.setAmount(parseAmount(tx.get("LimitAmount")));
             break;
         case "convert":
         	transtacion.setSpent(parseAmount(tx.get("SendMax")));
@@ -451,25 +459,25 @@ public class Remote {
         	transtacion.setOffertype((tx.get("Flags")!=null?"sell" : "buy"));
         	transtacion.setGets(parseAmount(tx.get("TakerGets")));
         	transtacion.setPays(parseAmount(tx.get("TakerPays")));
-        	transtacion.setSeq(tx.get("Sequence").toString());
+        	transtacion.setSeq(Integer.valueOf(tx.get("Sequence").toString()));
             break;
         case "offercancel":
-        	transtacion.setOfferseq(tx.get("Sequence").toString());
+        	transtacion.setOfferseq(Integer.valueOf(tx.get("Sequence").toString()));
             break;
         case "relationset":
         	transtacion.setCounterparty(account.equals(tx.get("Target").toString())?tx.get("Account").toString():tx.get("Target").toString());
-        	transtacion.setTransactionType(tx.get("RelationType").toString().equals("3")? "freeze":"authorize");
+        	transtacion.setRelationtype(tx.get("RelationType").toString().equals("3")? "freeze":"authorize");
         	transtacion.setIsactive(account.equals(tx.get("Target").toString())? false : true);
             transtacion.setAmount(parseAmount(tx.get("LimitAmount")));
             break;
         case "relationdel":
         	transtacion.setCounterparty(account.equals(tx.get("Target").toString())?tx.get("Account").toString():tx.get("Target").toString());
-        	transtacion.setTransactionType(tx.get("RelationType").toString().equals("3")? "unfreeze":"unknown");
+        	transtacion.setRelationtype(tx.get("RelationType").toString().equals("3")? "unfreeze":"unknown");
         	transtacion.setIsactive(account.equals(tx.get("Target").toString())? false : true);
             transtacion.setAmount(parseAmount(tx.get("LimitAmount")));
             break;
         case "configcontract":
-        	transtacion.setParams(formatArgs((List<Map>)tx.get("Args")));
+        	transtacion.setParams(formatArgs(JSONArray.parseArray(tx.get("Args").toString())));
             if(tx.get("Method").equals("0")){
             	transtacion.setMethod("deploy");
             	transtacion.setPayload(tx.get("Payload").toString());
@@ -483,46 +491,51 @@ public class Remote {
             // TODO parse other type
             break;
 		}  
-        if(tx.get("Memos")!=null&&tx.get("Memos").getClass().isArray()&&((List)tx.get("Memos")).size()>0) {
-        	List menos=((List)tx.get("Memos"));
-        	for(int i=0;i<menos.size();i++) {
-        		Map<String,String> meno=(Map)((Map)menos.get(i)).get("Memo");
-	        		for (Map.Entry<String,String> entry : meno.entrySet()) { 
-        		     String str  = URLEncoder.encode(new String(entry.getValue().getBytes("UTF-8")), "UTF-8"); 
-        			  entry.setValue(str);
-        		}
-        		transtacion.setMemos(meno);
-        	}
-        }
-        transtacion.setEffects(new ArrayList());
+		transtacion.setMemos(new ArrayList<Memo>());
+		if(tx.get("Memos")!=null&&tx.get("Memos") instanceof JSONArray &&((List)tx.get("Memos")).size()>0){
+			List menos = (List)tx.get("Memos");
+			List<Memo> memosList = new ArrayList<Memo>();
+			for(int i=0;i<menos.size();i++){
+				JSONObject jsonMemo = JSONObject.parseObject(menos.get(i).toString()).getJSONObject("Memo");
+				Memo memo = new Memo();
+				if(jsonMemo.get("MemoData")!=null){
+					memo.setMemoData(jsonMemo.get("MemoData").toString());
+				}
+				if(jsonMemo.get("MemoType")!=null){
+					memo.setMemoType(jsonMemo.get("MemoType").toString());
+				}
+				memosList.add(memo);
+			}
+			transtacion.setMemos(memosList);
+		}
+		
+        transtacion.setEffects(new JSONArray());
         if (meta==null || !meta.get("TransactionResult").toString().equals("tesSUCCESS")) {
             return transtacion;
         }
-        List<Map> maps = (List<Map>)meta.get("AffectedNodes");
-        for(int i=0;i<maps.size();i++) {
-        	Map map = maps.get(i);
-        	Map node = processAffectNode(map);
-        	Map effect =new HashMap();
+        JSONArray array = JSONArray.parseArray(meta.get("AffectedNodes").toString());
+        for(int i=0;i<array.size();i++) {
+        	JSONObject object = (JSONObject)array.get(i);
+        	JSONObject node = processAffectNode(object);
+        	JSONObject effect =new JSONObject();
         	if (node.get("entryType").equals("Offer")) {
-        		 Map fieldSet = (Map)node.get("fields");
-        		 boolean sell = ((Map)node.get("fields")).get("Flags")!=null?true:false;
-        		 if (((Map)node.get("fields")).get("Account").equals(account)) {
-	                if (node.get("diffType").equals("ModifiedNode") || 
-	                		(node.get("diffType").equals("DeletedNode")&& (((Map)node.get("fieldsPrev")).get("TakerGets")!=null && 
-	                				!isAmountZero(parseAmount(((Map)node.get("fieldsFinal")).get("TakerGets")))))) {
+        		JSONObject fields = node.getJSONObject("fields");
+        		JSONObject fieldsPrev = node.getJSONObject("fieldsPrev");
+        		JSONObject fieldsFinal = node.getJSONObject("fieldsFinal");
+        		 boolean sell = fields.get("Flags")!=null?true:false;
+        		 if (fields.get("Account").equals(account)) {
+	                if ("ModifiedNode".equals(node.get("diffType")) || 
+	                		("DeletedNode".equals(node.get("diffType"))&&fieldsPrev!=null&&fieldsFinal!=null&&(fieldsPrev.get("TakerGets")!=null && 
+	                				!isAmountZero(parseAmount(fieldsFinal.get("TakerGets")))))) {
 	                		
 	                 effect.put("effect", "offer_partially_funded");
-               		 Map _map =new HashMap();
-               		_map.put("account", tx.get("Account"));
-               		_map.put("seq", tx.get("Sequence"));
-               		_map.put("hash",tx.get("hash"));
-            	       try {
-            	    	   effect.put("counterparty", mapper.writeValueAsString(map));
-            			} catch (JsonProcessingException e) {
-            				e.printStackTrace();
-            			}
+               		 JSONObject _json =new JSONObject();
+               		_json.put("account", tx.get("Account"));
+               		_json.put("seq", tx.get("Sequence"));
+               		_json.put("hash",tx.get("hash"));
+               		effect.put("counterparty", _json);
                		 	if(node.get("diffType").equals("DeletedNode")) {
-	                        if(isAmountZero(parseAmount(((Map)node.get("fields")).get("TakerGets")))){
+	                        if(isAmountZero(parseAmount(fields.get("TakerGets")))){
         						effect.put("remaining", false);
         					}else {
         						effect.put("remaining", true);
@@ -530,92 +543,82 @@ public class Remote {
                		 	}else {
                		 		effect.put("cancelled", true);
                		 	}
-               		 	effect.put("gets", parseAmount(fieldSet.get("TakerGets")));
-               		 	effect.put("pays", parseAmount(fieldSet.get("TakerPays")));
-               		 	if(StringUtils.isNotBlank(parseAmount((((Map)node.get("fieldsPrev"))).get("TakerGets")))) {
-               		 	 effect.put("paid", AmountSubtract(
-                      		      parseAmount((((Map)node.get("fieldsPrev"))).get("TakerGets")),
-                      		      parseAmount((((Map)node.get("fields"))).get("TakerGets"))));
+               		 	effect.put("gets", parseAmount(fields.get("TakerGets")));
+               		 	effect.put("pays", parseAmount(fields.get("TakerPays")));
+               		 	if(parseAmount(fieldsPrev.get("TakerGets"))!=null) {
+               		 	 effect.put("paid", amountSubtract(
+                      		      parseAmount(fieldsPrev.get("TakerGets")),
+                      		      parseAmount(fields.get("TakerGets"))));
                		 	}
                		 	
-               		 if(StringUtils.isNotBlank(parseAmount((((Map)node.get("fieldsPrev"))).get("TakerGets")))) {
-               			effect.put("got", AmountSubtract(
-                   		      parseAmount((((Map)node.get("fieldsPrev"))).get("TakerPays")),
-                   		      parseAmount((((Map)node.get("fields"))).get("TakerPays"))));
-               		 	}
-               		   
+						if (parseAmount(fieldsPrev.get("TakerGets")) != null) {
+							effect.put("got", amountSubtract(parseAmount(fieldsPrev.get("TakerPays")),
+									parseAmount(fields.get("TakerPays"))));
+						}
         			    
         			    
         			    effect.put("type", sell ? "sold" : "bought");
         			 
 	                }else {
-	                     effect.put("effect", node.get("diffType").equals("CreatedNode") ? "offer_created" : ((Map)node.get("fieldsPrev")).get("TakerPays")!=null ? "offer_funded" : "offer_cancelled");
+	                     effect.put("effect", "CreatedNode".equals(node.get("diffType"))? "offer_created" : fieldsPrev!=null&&fieldsPrev.get("TakerPays")!=null ? "offer_funded" : "offer_cancelled");
 	                	 
 	                	 if (effect.get("effect").equals("offer_funded")) {
-	                		 fieldSet = (Map)node.get("fieldsPrev");
-	                		 Map _map =new HashMap();
-	                		 _map.put("account",tx.get("Account"));
-	                		 _map.put("seq",tx.get("Sequence"));
-	                		 _map.put("hash",tx.get("hash"));
-	                	       try {
-	                	    	   effect.put("counterparty", mapper.writeValueAsString(_map));
-	                			} catch (JsonProcessingException e) {
-	                				e.printStackTrace();
-	                			}
-	                	       effect.put("paid", AmountSubtract(
-	                      		      parseAmount((((Map)node.get("fieldsPrev"))).get("TakerGets")),
-	                      		      parseAmount((((Map)node.get("fields"))).get("TakerGets"))));
+	                		 fields = fieldsPrev;
+	                		 JSONObject _object =new JSONObject();
+	                		 _object.put("account",tx.get("Account"));
+	                		 _object.put("seq",tx.get("Sequence"));
+	                		 _object.put("hash",tx.get("hash"));
+	                		 effect.put("counterparty", _object);
+	                	       effect.put("paid", amountSubtract(
+	                      		      parseAmount(JSONObject.parseObject(node.get("fieldsPrev").toString()).get("TakerGets")),
+	                      		      parseAmount(JSONObject.parseObject(node.get("fields").toString()).get("TakerGets"))));
 	                	       
-	                	       effect.put("got", AmountSubtract(
-	                      		      parseAmount((((Map)node.get("fieldsPrev"))).get("TakerPays")),
-	                      		      parseAmount((((Map)node.get("fields"))).get("TakerPays"))));
+	                	       effect.put("got", amountSubtract(
+	                      		      parseAmount(JSONObject.parseObject(node.get("fieldsPrev").toString()).get("TakerPays")),
+	                      		      parseAmount(JSONObject.parseObject(node.get("fields").toString()).get("TakerPays"))));
 	                	       
 	            			 effect.put("type", sell ? "sold" : "bought");
 	                     }
 	                     // 3. offer_created
 	                     if (effect.get("effect").equals("offer_created")) {
-	                    	 effect.put("gets", parseAmount(fieldSet.get("TakerGets")));
-	                    	 effect.put("pays", parseAmount(fieldSet.get("TakerPays")));
+	                    	 effect.put("gets", parseAmount(fields.get("TakerGets")));
+	                    	 effect.put("pays", parseAmount(fields.get("TakerPays")));
 	                    	 effect.put("type", sell ? "sell" : "buy");
 	                     }
 	                     // 4. offer_cancelled
 	                     if (effect.get("effect").equals("offer_cancelled")) {
 	                    	
-	                    	 effect.put("hash", ((Map)node.get("fields")).get("PreviousTxnID"));
+	                    	 effect.put("hash", fields.get("PreviousTxnID"));
 	                         // collect data for cancel transaction type
 	                         if (transtacion.getType().equals("offercancel")) {
-		                    	 transtacion.setGets(parseAmount(fieldSet.get("TakerGets")));
-		                    	 transtacion.setPays(parseAmount(fieldSet.get("TakerPays")));
+		                    	 transtacion.setGets(parseAmount(fields.get("TakerGets")));
+		                    	 transtacion.setPays(parseAmount(fields.get("TakerPays")));
 	                         }
-                        	 effect.put("gets", parseAmount(fieldSet.get("TakerGets")));
-	                    	 effect.put("pays", parseAmount(fieldSet.get("TakerPays")));
+                        	 effect.put("gets", parseAmount(fields.get("TakerGets")));
+	                    	 effect.put("pays", parseAmount(fields.get("TakerPays")));
 	                         effect.put("type", sell ? "sell" : "buy");
 	                     }
 	                	 
 	                }
-	                effect.put("seq", ((Map)node.get("fields")).get("Sequence"));
-        		 }else if (tx.get("Account").equals(account) && node.get("fieldsPrev")!=null) {
+	                effect.put("seq", JSONObject.parseObject(node.get("fields").toString()).get("Sequence"));
+        		 }else if (tx.get("Account").equals(account) && fieldsPrev!=null) {
         			 effect.put("effect", "offer_bought");
-        			 Map _map =new HashMap();
-        			 _map.put("account",((Map)node.get("fields")).get("Account"));
-        			 _map.put("seq", ((Map)node.get("fields")).get("Sequence"));
+        			 JSONObject _object =new JSONObject();
+        			 _object.put("account",JSONObject.parseObject(node.get("fields").toString()).get("Account"));
+        			 _object.put("seq", JSONObject.parseObject(node.get("fields").toString()).get("Sequence"));
             		 if(node.get("PreviousTxnID")!=null) {
-            			 _map.put("hash",node.get("PreviousTxnID"));
+            			 _object.put("hash",JSONObject.parseObject(node.get("fields").toString()).get("PreviousTxnID"));
             		 }else {
-            			 _map.put("hash",((Map)node.get("fields")).get("PreviousTxnID"));
+            			 _object.put("hash",JSONObject.parseObject(node.get("fields").toString()).get("PreviousTxnID"));
             		 }
-            	       try {
-            	    	   effect.put("counterparty", mapper.writeValueAsString(_map));
-            			} catch (JsonProcessingException e) {
-            				e.printStackTrace();
-            			}
+            		 effect.put("counterparty", _object);
         			 effect.put("type", sell ? "bought" : "sold");
-        			 effect.put("paid", AmountSubtract(
-                 		      parseAmount((((Map)node.get("fieldsPrev"))).get("TakerPays")),
-                 		      parseAmount((((Map)node.get("fields"))).get("TakerPays"))));
-        			 effect.put("got", AmountSubtract(
-                		     parseAmount((((Map)node.get("fieldsPrev"))).get("TakerGets")),
-                		      parseAmount((((Map)node.get("fields"))).get("TakerGets"))));
+        			 effect.put("paid", amountSubtract(
+                 		      parseAmount(fieldsPrev.get("TakerPays")),
+                 		      parseAmount(JSONObject.parseObject(node.get("fields").toString()).get("TakerPays"))));
+        			 effect.put("got", amountSubtract(
+                		     parseAmount(fieldsPrev.get("TakerGets")),
+                		      parseAmount(JSONObject.parseObject(node.get("fields").toString()).get("TakerGets"))));
                  }
                  // add price
         		if ((effect.get("gets")!=null && effect.get("pays")!=null) || (effect.get("got")!=null && effect.get("paid")!=null)) {
@@ -630,10 +633,11 @@ public class Remote {
                  }
         	}
         	if(transtacion.getType().equals("offereffect") && node.get("entryType").equals("AccountRoot")){
-                if(((Map)node.get("fields")).get("RegularKey")!=null&&((Map)node.get("fields")).get("RegularKey").equals(account)){
+        		JSONObject fields = node.getJSONObject("fields");
+                if(fields.get("RegularKey")!=null&&fields.get("RegularKey").equals(account)){
                 	effect.put("effect", "set_regular_key");
                 	effect.put("type", "null");
-                	effect.put("account", ((Map)node.get("fields")).get("Account"));
+                	effect.put("account", fields.get("Account"));
                 	effect.put("regularkey", account);
                 }
             }
@@ -649,68 +653,60 @@ public class Remote {
 
 		return transtacion;
 	}
-	public Boolean isAmountZero(String amount) {
-		if (amount=="") {
+	public Boolean isAmountZero(AmountInfo amount) {
+		if (StringUtils.isBlank(amount.getValue())) {
 			return false;
 		}
-	       Map map = new HashMap();
-		try {
-			map = mapper.readValue(amount, Map.class);
-		} catch (IOException e) {
-			e.printStackTrace();
+	    return Integer.valueOf(amount.getValue()) < 1e-12;
+	}
+
+	public String getPrice(JSONObject effect, boolean funded) {
+		AmountInfo g = new AmountInfo();
+		AmountInfo p = new AmountInfo();
+		if (effect.get("got") != null && effect.get("got") != "") {
+			g = parseAmount(effect.get("got"));
+		} else if (effect.get("pays") != null && effect.get("pays") != "") {
+			g = parseAmount(effect.get("pays"));
+		} else {
+			return "";
 		}
 
-
-	    return Integer.valueOf((map.get("value").toString())) < 1e-12;
-	}
-
-	public String getPrice(Map effect ,boolean funded) throws Exception{
-		try {
-			Map g = new HashMap();
-			Map p = new HashMap();
-			if(effect.get("got")!=null&&effect.get("got")!="") {
-				g=mapper.readValue(effect.get("got").toString(),Map.class);
-			}else if(effect.get("pays")!=null&&effect.get("pays")!="") {
-				g=mapper.readValue(effect.get("pays").toString(),Map.class);
-			}else {
-				return "";
-			}
-			
-			if(effect.get("paid")!=null&&effect.get("paid")!="") {
-				g=mapper.readValue(effect.get("paid").toString(),Map.class);
-			}else if(effect.get("gets")!=null&&effect.get("gets")!="") {
-				g=mapper.readValue(effect.get("gets").toString(),Map.class);
-			}else {
-				return "";
-			}
-		    if(!funded){
-		        return AmountRatio(g, p);
-		    } else {
-		        return AmountRatio(p, g);
-		    }
-		}catch(Exception e) {
-			throw new Exception("get Price error");
+		if (effect.get("paid") != null && effect.get("paid") != "") {
+			p = parseAmount(effect.get("paid"));
+		} else if (effect.get("gets") != null && effect.get("gets") != "") {
+			p = parseAmount(effect.get("gets"));
+		} else {
+			return "";
 		}
-		
+		if (!funded) {
+			return amountRatio(g, p);
+		} else {
+			return amountRatio(p, g);
+		}
+
 	}
-	public String AmountRatio(Map amount1,Map amount2 ) {
-		BigDecimal bi1 = new BigDecimal(amount1.get("value").toString());
-    	BigDecimal bi2 = new BigDecimal(amount2.get("value").toString());
-    	BigDecimal bi3 = bi1.divide(bi2);
-    	return bi3+"";
+	public String amountRatio(AmountInfo amount1,AmountInfo amount2 ) {
+		if(amount1!=null&&amount2!=null&&"0".equals(amount1.getValue())&&"0".equals(amount2.getValue())){
+			BigDecimal bi1 = new BigDecimal(amount1.getValue());
+	    	BigDecimal bi2 = new BigDecimal(amount2.getValue());
+	    	BigDecimal bi3 = bi1.divide(bi2,6,BigDecimal.ROUND_HALF_UP);
+	    	return String.valueOf(bi3.toString());
+		}else{
+			return "";
+		}
 	}
 
-	public Map AmountSubtract(String amount1,String amount2) {
-		if(StringUtils.isNotBlank(amount1)&&StringUtils.isNotBlank(amount2)) {
+	public AmountInfo amountSubtract(AmountInfo amount1,AmountInfo amount2) {
+		if(amount1!=null&&amount2!=null) {
 			try {
-				return AmountAdd(mapper.readValue(amount1, Map.class), AmountNegate(mapper.readValue(amount2, Map.class)));
+				return amountAdd(amount1, amount2);
 			} catch (Exception e) {
 				throw new RemoteException("to map error");
 			}
 		}
 		return null;
 	}
-	public Map AmountNegate(Map amount) {
+	public Map amountNegate(Map amount) {
 		 if (amount==null) {
 			return amount;
 		}
@@ -720,109 +716,102 @@ public class Remote {
 	     map.put("issuer", amount.get("issuer"));
 	     return map;
 	}
-	public Map AmountAdd(Map amount1,Map amount2) {
-		 if (amount1==null) {
+
+	public AmountInfo amountAdd(AmountInfo amount1, AmountInfo amount2) {
+		if (amount1 == null) {
 			return amount2;
 		}
-		    if (amount2==null) {
-				return amount1;
-			}
-		    if (amount1!=null && amount2!=null) {
-		    	Map map = new HashMap();
-				 map.put("value", (new BigInteger(amount1.get("value").toString())).and(new BigInteger(amount2.get("value").toString())));
-			     map.put("currency",amount1.get("currency"));
-			     map.put("issuer", amount1.get("issuer"));
-			     return map;
-		    }
-		    return null;
+		if (amount2 == null) {
+			return amount1;
+		}
+		if (amount1 != null && amount2 != null) {
+			BigDecimal amountBg1 = new BigDecimal(amount1.getValue());
+			BigDecimal amountBg2 = new BigDecimal(amount2.getValue());
+			amount1.setValue(String.valueOf(amountBg1.add(amountBg2).intValue()));
+			return amount1;
+		}
+		return null;
 	}
-	public Map processAffectNode(Map map) {
-		Map result = new HashMap();
+	public JSONObject processAffectNode(JSONObject object) {
+		JSONObject result = new JSONObject();
 		String[] arrays =new String[]{"CreatedNode", "ModifiedNode", "DeletedNode"};
 		 for(int i=0;i<arrays.length;i++) {
-			 if(map.get(arrays[i])!=null) {
+			 if(object.get(arrays[i])!=null) {
 				 result.put("diffType", arrays[i]);
 			 }
 		 }
 	    if(result.get("diffType")==null) {
 	    	return null;
 	    }
-	    map = (Map)map.get(result.get("diffType"));
-	    result.put("entryType",map.get("LedgerEntryType"));
-	    result.put("ledgerIndex",map.get("LedgerIndex"));
-	    Map _map =new HashMap();
-	    if(map.get("PreviousFields")!=null) {
-	    	result.put("fieldsPrev", map.get("PreviousFields"));
-	    	_map.putAll((Map)map.get("PreviousFields"));
+	    object = object.getJSONObject(result.get("diffType").toString());
+	    result.put("entryType",object.get("LedgerEntryType"));
+	    result.put("ledgerIndex",object.get("LedgerIndex"));
+	    JSONObject _object =new JSONObject();
+	    if(object.get("PreviousFields")!=null) {
+	    	result.put("fieldsPrev", object.get("PreviousFields"));
+	    	_object.putAll(object.getJSONObject("PreviousFields"));
 	    }
-	    if(map.get("NewFields")!=null){
-	    	 result.put("fieldsNew",map.get("NewFields"));
-	    	 _map.putAll((Map)map.get("NewFields"));
+	    if(object.get("NewFields")!=null){
+	    	 result.put("fieldsNew",object.get("NewFields"));
+	    	 _object.putAll(object.getJSONObject("NewFields"));
 	    }
-	    if(map.get("FinalFields")!=null){
-	    	 result.put("fieldsFinal",map.get("FinalFields"));
-	    	 _map.putAll((Map)map.get("FinalFields"));
+	    if(object.get("FinalFields")!=null){
+	    	result.put("fieldsFinal",object.get("FinalFields"));
+	    	_object.putAll(object.getJSONObject("FinalFields"));
 	    }
-	    if(map.get("PreviousTxnID")!=null){
-	    	 result.put("PreviousTxnID",map.get("PreviousTxnID"));
+	    if(object.get("PreviousTxnID")!=null){
+	    	 result.put("PreviousTxnID",object.get("PreviousTxnID"));
 	    }
-	    result.put("fields", _map);
+	    result.put("fields", _object);
 	    return result;
 	}
-	public List formatArgs(List<Map> args) {
-		 List list = new ArrayList();
-		    if(args!=null) {
-				for(int i = 0; i < args.size(); i++){
-		            list.add(hexToString(((Map)args.get(i).get("Arg")).get("Parameter").toString()));
-		     }
+
+	public List formatArgs(JSONArray args) {
+		List list = new ArrayList();
+		if (args != null) {
+			for (int i = 0; i < args.size(); i++) {
+				JSONObject jo = (JSONObject)args.get(i);
+				list.add(hexToString(JSONObject.parseObject(jo.get("Arg").toString()).get("Parameter").toString()));
 			}
-		 return list;
-	}
-	
-	public String hexToString(String str) {
-		 List<String> list = new ArrayList<String>();
-		 int i=0;
-		    if (str.length() % 2==0) {
-		        list.add(unicode2String(String.valueOf(Integer.parseInt(str.substring(0, 1), 16))));
-		        i = 1;
-		    }
-
-		    for (; i<str.length(); i+=2) {
-		        list.add(unicode2String(String.valueOf(Integer.parseInt(str.substring(i, i+2), 16))));
-		    }
-		    return String.join("",list);
-	}
-	public static String unicode2String(String unicode) {
-		 
-	    StringBuffer string = new StringBuffer();
-	 
-	    String[] hex = unicode.split("\\\\u");
-	 
-	    for (int i = 1; i < hex.length; i++) {
-	 
-	        // 转换出每一个代码点
-	        int data = Integer.parseInt(hex[i], 16);
-	 
-	        // 追加成string
-	        string.append((char) data);
-	    }
-	 
-	    return string.toString();
-	}
-	
-
-	public String reverseAmount(Map limitAmount,String account) {
-		Map map = new HashMap();
-		map.put("value", limitAmount.get("value"));
-    	map.put("currency",limitAmount.get("currency"));
-    	map.put("issuer", account);
-        try {
-			return mapper.writeValueAsString(map);
-		} catch (JsonProcessingException e) {
-			e.printStackTrace();
 		}
-        return "";
+		return list;
 	}
+
+	public String hexToString(String str) {
+		List<String> list = new ArrayList<String>();
+		int i = 0;
+		if (str.length() % 2 == 0) {
+			list.add(unicode2String(String.valueOf(Integer.parseInt(str.substring(0, 1), 16))));
+			i = 1;
+		}
+		for (; i < str.length(); i += 2) {
+			list.add(unicode2String(String.valueOf(Integer.parseInt(str.substring(i, i + 2), 16))));
+		}
+		return String.join("", list);
+	}
+
+	public static String unicode2String(String unicode) {
+
+		StringBuffer string = new StringBuffer();
+		String[] hex = unicode.split("\\\\u");
+		for (int i = 1; i < hex.length; i++) {
+			// 转换出每一个代码点
+			int data = Integer.parseInt(hex[i], 16);
+			// 追加成string
+			string.append((char) data);
+		}
+		return string.toString();
+	}
+	
+
+	public AmountInfo reverseAmount(JSONObject limitAmount,String account) {
+		AmountInfo amount = new AmountInfo();
+		amount.setCurrency(limitAmount.get("currency").toString());
+		amount.setValue(limitAmount.get("value").toString());
+		amount.setIssuer(account);
+        return amount;
+	}
+	
 	public String txnType(Map tx,String account) {
 		if((tx.get("Account")!=null&&tx.get("Account").toString().equals(account))||(tx.get("Target")!=null&&tx.get("Target").toString().equals(account))||
 				(tx.get("Destination")!=null&&tx.get("Destination").toString().equals(account))||(tx.get("LimitAmount")!=null&&((Map)tx.get("LimitAmount")).get("issuer").toString().equals(account))) {
@@ -854,26 +843,25 @@ public class Remote {
         }
 	}
 	
-	public String parseAmount(Object tx) {
-		try {
-				if(tx instanceof String) {
-					if(isNum(tx.toString())) {
-						BigDecimal bi1 = new BigDecimal(tx.toString());
-				    	BigDecimal bi2 = new BigDecimal("1000000");
-				    	BigDecimal bi3 = bi1.divide(bi2); 
-				    	Map map = new HashMap();
-				    	map.put("value", bi3);
-				    	map.put("currency", "SWT");
-				    	map.put("issuer", "");
-						return mapper.writeValueAsString(map);
-					}
-				}else if(tx instanceof Map && isValidAmount((Map)tx)){
-					return mapper.writeValueAsString(tx);
-				}
-		} catch (JsonProcessingException e) {
-			e.printStackTrace();
+	public AmountInfo parseAmount(Object tx) {
+		if(tx!=null){
+			AmountInfo amount = new AmountInfo();
+			if(tx instanceof String) {
+				amount.setCurrency(Config.CURRENCY);
+				amount.setValue(Utils.amountFormatDivide(tx.toString()));
+				amount.setIssuer("");
+			}else if(tx instanceof AmountInfo){
+				return (AmountInfo)tx;
+			}else if(tx instanceof Object){
+				JSONObject jsonObject = (JSONObject)tx;
+				amount.setCurrency(jsonObject.get("currency").toString());
+				amount.setValue(jsonObject.get("value").toString());
+				amount.setIssuer(jsonObject.get("issuer").toString());
+			}
+			return amount;
+		}else{
+			return null;
 		}
-		return "";
 	}
 		
 	
