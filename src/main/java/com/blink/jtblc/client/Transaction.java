@@ -1,11 +1,10 @@
 package com.blink.jtblc.client;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.commons.lang3.StringUtils;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -16,8 +15,12 @@ import com.blink.jtblc.config.Config;
 import com.blink.jtblc.connection.Connection;
 import com.blink.jtblc.core.coretypes.AccountID;
 import com.blink.jtblc.core.coretypes.Amount;
+import com.blink.jtblc.core.coretypes.Currency;
 import com.blink.jtblc.core.coretypes.uint.UInt32;
+import com.blink.jtblc.core.runtime.Value;
 import com.blink.jtblc.core.types.known.tx.signed.SignedTransaction;
+import com.blink.jtblc.core.types.known.tx.txns.OfferCancel;
+import com.blink.jtblc.core.types.known.tx.txns.OfferCreate;
 import com.blink.jtblc.core.types.known.tx.txns.Payment;
 import com.blink.jtblc.core.types.known.tx.txns.RelationSet;
 import com.blink.jtblc.core.types.known.tx.txns.TrustSet;
@@ -239,10 +242,17 @@ public class Transaction {
 		SignedTransaction tx = null;
 		switch(type) {
 			case "Payment":
-				Payment payment = new Payment(remote);
+				Payment payment = new Payment();
 				payment.as(AccountID.Account, account);
 				payment.as(AccountID.Destination, to);
-				payment.as(Amount.Amount, txJson.get("Amount"));
+				if(Value.typeOf(txJson.get("Amount"))==Value.STRING){
+					payment.as(Amount.Amount, txJson.get("Amount"));
+				}else{
+					AmountInfo amountInfo = (AmountInfo)txJson.get("Amount");
+					BigDecimal temp = new BigDecimal(amountInfo.getValue());
+					Amount amount = new Amount(temp, Currency.fromString(amountInfo.getCurrency()), AccountID.fromAddress(amountInfo.getIssuer()));
+					payment.as(Amount.Amount, amount);
+				}
 				if(fee != null) {
 					payment.as(Amount.Fee, String.valueOf(fee));
 				}else {
@@ -252,6 +262,51 @@ public class Transaction {
 				payment.flags(new UInt32(0));
 				payment.addMemo(this.memos);
 				tx = payment.sign(secret);
+				tx_blob = tx.tx_blob;
+				break;
+			case "OfferCreate":
+				OfferCreate offerCreate = new OfferCreate();
+				offerCreate.as(AccountID.Account, account);
+				if(Value.typeOf(txJson.get("TakerPays"))==Value.STRING){
+					offerCreate.as(Amount.TakerPays, txJson.get("TakerPays"));
+				}else{
+					AmountInfo amountInfo = (AmountInfo)txJson.get("TakerPays");
+					BigDecimal temp = new BigDecimal(amountInfo.getValue());
+					Amount amount = new Amount(temp, Currency.fromString(amountInfo.getCurrency()), AccountID.fromAddress(amountInfo.getIssuer()));
+					offerCreate.as(Amount.TakerPays, amount);
+				}
+				if(Value.typeOf(txJson.get("TakerGets"))==Value.STRING){
+					offerCreate.as(Amount.TakerGets, txJson.get("TakerGets"));
+				}else{
+					AmountInfo amountInfo = (AmountInfo)txJson.get("TakerGets");
+					BigDecimal temp = new BigDecimal(amountInfo.getValue());
+					Amount amount = new Amount(temp, Currency.fromString(amountInfo.getCurrency()), AccountID.fromAddress(amountInfo.getIssuer()));
+					offerCreate.as(Amount.TakerGets, amount);
+				}
+				
+				if (fee != null) {
+					offerCreate.as(Amount.Fee, String.valueOf(fee));
+				} else {
+					offerCreate.as(Amount.Fee, String.valueOf(Config.FEE));
+				}
+				offerCreate.sequence(new UInt32(ainfo.getAccountData().getSequence()));
+				offerCreate.flags(new UInt32(0));
+				offerCreate.addMemo(this.memos);
+				tx = offerCreate.sign(secret);
+				tx_blob = tx.tx_blob;
+				break;
+			case "OfferCancel":
+				OfferCancel offerCancel = new OfferCancel();
+				offerCancel.as(AccountID.Account, account);
+				offerCancel.sequence(new UInt32(ainfo.getAccountData().getSequence()));
+				offerCancel.offerSequence(new UInt32(Integer.valueOf(txJson.get("OfferSequence").toString())));
+				if (fee != null) {
+					offerCancel.as(Amount.Fee, String.valueOf(fee));
+				} else {
+					offerCancel.as(Amount.Fee, String.valueOf(Config.FEE));
+				}
+				offerCancel.flags(new UInt32(0));
+				tx = offerCancel.sign(secret);
 				tx_blob = tx.tx_blob;
 				break;
 			case "TrustSet":
@@ -423,6 +478,7 @@ public class Transaction {
 		params.put("command", this.command);
 		params.put("tx_json", txJson);
 		String msg = conn.submit(params);
+		System.out.println(msg);
 		TransactionInfo bean = JsonUtils.toEntity(msg, TransactionInfo.class);
 		return bean;
 	}

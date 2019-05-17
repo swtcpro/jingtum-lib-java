@@ -10,6 +10,8 @@ public class OfferCreate extends Transaction {
     public OfferCreate() {
         super(TransactionType.OfferCreate);
     }
+    
+    
     public UInt32 expiration() {return get(UInt32.Expiration);}
     public UInt32 offerSequence() {return get(UInt32.OfferSequence);}
     public Amount takerPays() {return get(Amount.TakerPays);}

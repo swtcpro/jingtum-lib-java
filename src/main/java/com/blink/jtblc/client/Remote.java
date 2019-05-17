@@ -33,10 +33,7 @@ import com.blink.jtblc.client.bean.LedgerClosed;
 import com.blink.jtblc.client.bean.LedgerInfo;
 import com.blink.jtblc.client.bean.Marker;
 import com.blink.jtblc.client.bean.Memo;
-import com.blink.jtblc.client.bean.OfferCancelInfo;
-import com.blink.jtblc.client.bean.OfferCreateInfo;
 import com.blink.jtblc.client.bean.OrderBook;
-import com.blink.jtblc.client.bean.PaymentInfo;
 import com.blink.jtblc.client.bean.RelationInfo;
 import com.blink.jtblc.client.bean.ServerInfo;
 import com.blink.jtblc.client.bean.Transactions;
@@ -959,63 +956,6 @@ public class Remote {
 		return JsonUtils.toEntity(msg, OrderBook.class);
 	}
 	
-	/**
-	 * 获取交易对象
-	 *
-	 * @param account 发起账号
-	 * @param to 目标账号
-	 * @param amount 支付金额对象Amount
-	 * @param value
-	 * @param currency
-	 * @param issuer
-	 * @param secret 密钥
-	 * @param memo 备注
-	 * @return
-	 */
-	public PaymentInfo buildPaymentTx(String account, String to, AmountInfo amount, List<String> memos, String secret) {
-		Transaction tx = new Transaction();
-		tx.setAccount(account);
-		tx.setTo(to);
-		// 校验,并将参数写入tx_json对象
-		Map tx_json = new HashMap();
-		if (!CheckUtils.isValidAddress(account)) {
-			throw new RemoteException("invalid source address");
-		}
-		if (!CheckUtils.isValidAddress(to)) {
-			throw new RemoteException("invalid destination address");
-		}
-		tx_json.put("TransactionType", "Payment");
-		tx_json.put("Account", account);
-		/*
-		 * Map amount = new HashMap();
-		 * amount.put("value", value);
-		 * amount.put("currency", currency);
-		 * amount.put("issuer", issuer);
-		 */
-		/*
-		 * AmountInfo amount = new Amount();
-		 * amount.setCurrency(currency);
-		 * amount.setValue(value);
-		 * amount.setIssuer(issuer);
-		 */
-		tx_json.put("Amount", toAmount(amount));
-		tx_json.put("Destination", to);
-		if (memos!=null) {
-			if (memos.toString().length() > 2048) {
-				throw new RemoteException("memo is too long");
-			} else {
-				// tx_json.put("MemoData", __stringToHex(utf8.encode(memo));
-			}
-		}
-		tx.setSecret(secret);
-		tx.setCommand("submit");
-		tx.addMemo(memos);
-		Map params = new HashMap();
-		params.put("tx_json", tx_json);
-		String msg = tx.submit(this.conn, this.localSign, params);
-		PaymentInfo bean = JsonUtils.toEntity(msg, PaymentInfo.class);
-		return bean;
-	}
 	
 	/**
 	 * 设置关系
@@ -1231,57 +1171,6 @@ public class Remote {
 	}
 	
 	/**
-	 * 挂单
-	 *
-	 * @param type 挂单类型，固定的两个值：Buy、Sell
-	 * @param account 挂单方账号
-	 * @param getsAmount 对方得到的，即挂单方支付的
-	 * @param paysAmount 对方支付的，即挂单方获得的
-	 * @param secret
-	 * @param memo
-	 * @return
-	 */
-	public OfferCreateInfo buildOfferCreateTx(String type, String account, AmountInfo getsAmount, AmountInfo paysAmount, List<String> memos,
-	        String secret) {
-		Transaction tx = new Transaction();
-		tx.setCommand("submit");
-		tx.setSecret(secret);
-		tx.addMemo(memos);
-		// 校验,并将参数写入tx_json对象
-		Map tx_json = new HashMap();
-		if (!CheckUtils.isValidAddress(account)) {
-			throw new RemoteException("invalid source address");
-		}
-		if (!CheckUtils.isValidType("offer", type)) {
-			throw new RemoteException("invalid offer type");
-		}
-		if (!CheckUtils.isValidAmountValue(getsAmount.getValue())) {
-			throw new RemoteException("invalid to pays amount");
-		}
-		if (!CheckUtils.isValidAmount(getsAmount)) {
-			throw new RemoteException("invalid to pays amount object");
-		}
-		if (!CheckUtils.isValidAmountValue(paysAmount.getValue())) {
-			throw new RemoteException("invalid to gets amount");
-		}
-		if (!CheckUtils.isValidAmount(paysAmount)) {
-			throw new RemoteException("invalid to gets amount object");
-		}
-		tx_json.put("TransactionType", "OfferCreate");
-		tx_json.put("Account", account);
-		if (type.equals("Sell")) {
-			tx.setFlags(type);
-		}
-		tx_json.put("TakerPays", toAmount(paysAmount));
-		tx_json.put("TakerGets", toAmount(getsAmount));
-		Map params = new HashMap();
-		params.put("tx_json", tx_json);
-		String msg = tx.submit(this.conn, this.localSign, params);
-		OfferCreateInfo bean = JsonUtils.toEntity(msg, OfferCreateInfo.class);
-		return bean;
-	}
-	
-	/**
 	 * 根据金额对象内容返回信息
 	 * 货币单位SWT转基本单位
 	 * 
@@ -1304,34 +1193,6 @@ public class Remote {
 		return amount;
 	}
 	
-	/**
-	 * 取消挂单
-	 *
-	 * @param account 挂单方账号
-	 * @param sequence 取消的单子号
-	 * @param secret
-	 * @param memo
-	 * @return
-	 */
-	public OfferCancelInfo buildOfferCancelTx(String account, Integer sequence, List<String> memos, String secret) {
-		Transaction tx = new Transaction();
-		tx.setCommand("submit");
-		tx.setSecret(secret);
-		tx.addMemo(memos);
-		// 校验,并将参数写入tx_json对象
-		Map tx_json = new HashMap();
-		if (!CheckUtils.isValidAddress(account)) {
-			throw new RemoteException("invalid source address");
-		}
-		tx_json.put("TransactionType", "OfferCancel");
-		tx_json.put("Account", account);
-		tx_json.put("OfferSequence", sequence);
-		Map params = new HashMap();
-		params.put("tx_json", tx_json);
-		String msg = tx.submit(this.conn, this.localSign, params);
-		OfferCancelInfo bean = JsonUtils.toEntity(msg, OfferCancelInfo.class);
-		return bean;
-	}
 
 	/**
 	 * 提交信息
@@ -1646,9 +1507,6 @@ public class Remote {
 	 */
 	public Transaction buildOfferCreateTx(String type, String account, AmountInfo getsAmount, AmountInfo paysAmount) {
 		Transaction tx = new Transaction();
-		tx.setCommand("submit");
-		tx.setConn(conn);
-		tx.setLocalSign(localSign);
 		// 校验,并将参数写入tx_json对象
 		Map tx_json = new HashMap();
 		if (!CheckUtils.isValidAddress(account)) {
@@ -1669,6 +1527,7 @@ public class Remote {
 		if (!CheckUtils.isValidAmount(paysAmount)) {
 			throw new RemoteException("invalid to gets amount object");
 		}
+		tx.setAccount(account);
 		tx_json.put("TransactionType", "OfferCreate");
 		tx_json.put("Account", account);
 		if (type.equals("Sell")) {
@@ -1677,6 +1536,10 @@ public class Remote {
 		tx_json.put("TakerPays", toAmount(paysAmount));
 		tx_json.put("TakerGets", toAmount(getsAmount));
 		tx.setTxJson(tx_json);
+		tx.setCommand("submit");
+		tx.setConn(conn);
+		tx.setRemote(this);
+		tx.setLocalSign(localSign);
 		return tx;
 	}
 
@@ -1689,18 +1552,20 @@ public class Remote {
 	 */
 	public Transaction buildOfferCancelTx(String account, Integer sequence) {
 		Transaction tx = new Transaction();
-		tx.setCommand("submit");
-		tx.setConn(conn);
-		tx.setLocalSign(localSign);
 		// 校验,并将参数写入tx_json对象
 		Map tx_json = new HashMap();
 		if (!CheckUtils.isValidAddress(account)) {
 			throw new RemoteException("invalid source address");
 		}
+		tx.setAccount(account);
 		tx_json.put("TransactionType", "OfferCancel");
 		tx_json.put("Account", account);
 		tx_json.put("OfferSequence", sequence);
 		tx.setTxJson(tx_json);
+		tx.setCommand("submit");
+		tx.setConn(conn);
+		tx.setRemote(this);
+		tx.setLocalSign(localSign);
 		return tx;
 	}
 

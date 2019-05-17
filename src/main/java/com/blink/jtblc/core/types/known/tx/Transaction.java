@@ -1,11 +1,8 @@
 package com.blink.jtblc.core.types.known.tx;
 
-import java.io.UnsupportedEncodingException;
 import java.util.List;
 
-import org.bouncycastle.util.encoders.Hex;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.blink.jtblc.core.coretypes.AccountID;
@@ -26,7 +23,6 @@ import com.blink.jtblc.core.serialized.enums.TransactionType;
 import com.blink.jtblc.core.types.known.tx.signed.SignedTransaction;
 import com.blink.jtblc.crypto.ecdsa.IKeyPair;
 import com.blink.jtblc.utils.HashUtils;
-import com.blink.jtblc.utils.JsonUtils;
 import com.blink.jtblc.utils.Utils;
 
 public class Transaction extends STObject {
