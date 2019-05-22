@@ -110,8 +110,8 @@ public class Utils {
 		if(!"0".equals(amount)){
 			BigDecimal temp = new BigDecimal(amount);
 			BigDecimal exchange_rate = new BigDecimal("1000000.0");
-			BigDecimal rs = temp.divide(exchange_rate);
-			return String.valueOf(rs.intValue());
+			BigDecimal rs = temp.divide(exchange_rate,6,BigDecimal.ROUND_HALF_UP);
+			return String.valueOf(rs.doubleValue());
 		}else{
 			return "0";
 		}

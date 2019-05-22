@@ -325,11 +325,15 @@ public class Transaction {
 				tx_blob = tx.tx_blob;
 				break;
 			case "RelationSet":
-				RelationSet relationSet = new RelationSet(remote);
-				//relationSet.as(Amount.RelationType, txJson.get("RelationType"));
+				RelationSet relationSet = new RelationSet();
+//				relationSet.as(Amount.RelationType, txJson.get("RelationType"));
 				relationSet.as(AccountID.Account, account);
 				relationSet.as(AccountID.Target, txJson.get("Target"));
-				relationSet.as(Amount.LimitAmount, txJson.get("LimitAmount"));
+				
+				AmountInfo amountInfo = (AmountInfo)txJson.get("LimitAmount");
+				BigDecimal temp = new BigDecimal(amountInfo.getValue());
+				Amount amount = new Amount(temp, Currency.fromString(amountInfo.getCurrency()), AccountID.fromAddress(amountInfo.getIssuer()));
+				relationSet.limitAmount(amount);
 				if(fee != null) {
 					relationSet.as(Amount.Fee, String.valueOf(fee));
 				}else {
@@ -477,6 +481,7 @@ public class Transaction {
 		}
 		params.put("command", this.command);
 		params.put("tx_json", txJson);
+		System.out.println(params.toString());
 		String msg = conn.submit(params);
 		System.out.println(msg);
 		TransactionInfo bean = JsonUtils.toEntity(msg, TransactionInfo.class);

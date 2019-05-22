@@ -115,6 +115,11 @@ public class TxFormat extends Format {
             Field.Paths,           Requirement.DEFAULT,
             Field.InvoiceID,       Requirement.OPTIONAL,
             Field.DestinationTag,  Requirement.OPTIONAL);
+    
+    static public TxFormat RelationSet = new TxFormat(
+            TransactionType.RelationSet,
+            Field.Target,          	Requirement.REQUIRED,
+            Field.LimitAmount,      Requirement.REQUIRED);
 
 
     static public TxFormat SuspendedPaymentCreate = new TxFormat(

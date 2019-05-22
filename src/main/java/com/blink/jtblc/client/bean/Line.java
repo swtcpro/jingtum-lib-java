@@ -5,6 +5,7 @@ package com.blink.jtblc.client.bean;
  */
 public class Line {
     private String account;//信任的银关
+    private String issuer;//发行人
     private String balance;//余额
     private String currency;//货币种类
     private String limit;//信任额度
@@ -67,4 +68,13 @@ public class Line {
     public void setQualityOut(Integer qualityOut) {
         this.qualityOut = qualityOut;
     }
+
+	public String getIssuer() {
+		return issuer;
+	}
+
+	public void setIssuer(String issuer) {
+		this.issuer = issuer;
+	}
+    
 }
