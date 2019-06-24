@@ -105,9 +105,9 @@ public class Remote {
 	 */
 	public LedgerInfo requestLedgerInfo() {
 		Map<String, Object> params = new HashMap();
-		params.put("streams", new String[] { "ledger", "server" });
+//		params.put("streams", new String[] { "ledger", "server" });
 		//订阅最新交易信息
-		//params.put("streams", new String[] { "transactions", "server" });
+		params.put("streams", new String[] { "transactions"});
 		String res = sendMessage("subscribe", params);
 		return JsonUtils.toEntity(res, LedgerInfo.class);
 	}
@@ -130,7 +130,7 @@ public class Remote {
 	 * @return
 	 * @throws Exception
 	 */
-	public LedgerClosed requestLedgerClosed() throws Exception {
+	public LedgerClosed requestLedgerClosed(){
 		Map params = new HashMap();
 		String msg = this.sendMessage("ledger_closed", params);
 		return JsonUtils.toEntity(msg, LedgerClosed.class);
@@ -181,6 +181,7 @@ public class Remote {
 		params.put("transaction", hash);
 		String msg = this.sendMessage("tx", params);
 		Map map = JsonUtils.toObject(msg, Map.class);
+		System.out.println(msg);
 		Account account = new Account();
 		if (map.get("status").equals("success")) {
 			JSONObject msgJson = JSONObject.parseObject(msg);
@@ -193,6 +194,30 @@ public class Remote {
 					amountJson.put("value", Utils.amountFormatDivide(resultJson.get("Amount").toString()));
 					amountJson.put("issuer", "");
 					resultJson.put("Amount", amountJson);
+					msgJson.put("result", resultJson);
+					msg = msgJson.toJSONString();
+				}
+			}
+			if(StringUtils.isNotBlank(resultJson.getString("TakerGets"))){
+				String type = resultJson.get("TakerGets").getClass().toString();
+				if(!type.equals(JSONObject.class.toString())){
+					JSONObject amountJson = new JSONObject();
+					amountJson.put("currency", Config.CURRENCY);
+					amountJson.put("value", Utils.amountFormatDivide(resultJson.get("TakerGets").toString()));
+					amountJson.put("issuer", "");
+					resultJson.put("TakerGets", amountJson);
+					msgJson.put("result", resultJson);
+					msg = msgJson.toJSONString();
+				}
+			}
+			if(StringUtils.isNotBlank(resultJson.getString("TakerPays"))){
+				String type = resultJson.get("TakerPays").getClass().toString();
+				if(!type.equals(JSONObject.class.toString())){
+					JSONObject amountJson = new JSONObject();
+					amountJson.put("currency", Config.CURRENCY);
+					amountJson.put("value", Utils.amountFormatDivide(resultJson.get("TakerPays").toString()));
+					amountJson.put("issuer", "");
+					resultJson.put("TakerPays", amountJson);
 					msgJson.put("result", resultJson);
 					msg = msgJson.toJSONString();
 				}
@@ -990,7 +1015,7 @@ public class Remote {
 		if (currency.equals("SWT")) {
 			BigDecimal exchange_rate = new BigDecimal("1000000.00");
 			BigDecimal rs = temp.multiply(exchange_rate);
-			return String.valueOf(rs.intValue());
+			return String.valueOf(rs.longValue());
 		}
 		return amount;
 	}

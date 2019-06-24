@@ -4,12 +4,9 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Timer;
 
-import com.blink.jtblc.listener.Impl.LedgerCloseImpl;
-import com.blink.jtblc.listener.Impl.TransactionsImpl;
-import com.blink.jtblc.utils.JsonUtils;
 import org.apache.commons.lang3.RandomUtils;
-import org.java_websocket.WebSocket.READYSTATE;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.drafts.Draft_6455;
 import org.java_websocket.framing.CloseFrame;
@@ -17,12 +14,35 @@ import org.java_websocket.handshake.ServerHandshake;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.blink.jtblc.listener.Impl.LedgerCloseImpl;
+import com.blink.jtblc.listener.Impl.TransactionsImpl;
+import com.blink.jtblc.utils.JsonUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class WebSocket extends WebSocketClient {
     final static Logger logger = LoggerFactory.getLogger(WebSocket.class);
     private volatile Map<String, String> results = new HashMap<String, String>();
     private volatile String status = "";
+    
+    private boolean debug = true;
+
+	private Integer reconnectInterval = 1000;
+
+	private Integer maxReconnectInterval = 30000;
+
+	private Double reconnectDecay = 1.5;
+
+	private Integer reconnectAttempts = 0;
+
+	private Integer maxReconnectAttempts = 5000;
+
+	private Boolean forcedClose = false;
+
+	private Timer reconnectTimer;
+
+	private Boolean isReconnecting = false;
+
+	private ReschedulableTimerTask reconnectTimerTask;
 
     private volatile Map<String,String> transationList = new HashMap<String, String>();
 
@@ -133,7 +153,10 @@ public class WebSocket extends WebSocketClient {
          	logger.info("已离线，主动关闭连接");
          }else {
          	logger.error("已离线，被动关闭连接，重新连接");
-         	this.reconnect();
+//         	this.reconnect();
+         	if(!isReconnecting){
+    			restartReconnectionTimer();
+    		}
  			logger.error("重新连接websocket，重连结果【" + this.getReadyState() + "】");
          }
     }
@@ -143,7 +166,10 @@ public class WebSocket extends WebSocketClient {
     	 logger.error(ex.getMessage(), ex);
          //连接断开导致异常时，直接重新连接
          if(this.getReadyState() != READYSTATE.OPEN) {
- 			this.reconnect();
+// 			this.reconnect();
+        	 if(!isReconnecting){
+     			restartReconnectionTimer();
+     		}
  			logger.error("重新连接websocket，重连结果【" + this.getReadyState() + "】");
  		}
     }
@@ -175,4 +201,57 @@ public class WebSocket extends WebSocketClient {
     public void setStatus(String status) {
         this.status = status;
     }
+    
+    
+	private void restartReconnectionTimer() {
+		cancelReconnectionTimer();
+		reconnectTimer = new Timer("reconnectTimer");
+		reconnectTimerTask = new ReschedulableTimerTask() {
+			
+			@Override
+			public void run() {
+				if (reconnectAttempts >= maxReconnectAttempts) {
+					cancelReconnectionTimer();
+					if (debug) {
+						logger.info("以达到最大重试次数:" + maxReconnectAttempts + "，已停止重试!!!!");
+					}
+				}
+				reconnectAttempts++;
+				try {
+					Boolean isOpen = reconnectBlocking();
+					if (isOpen) {
+						if (debug) {
+							logger.info("连接成功，重试次数为:" + reconnectAttempts);
+						}
+						cancelReconnectionTimer();
+						reconnectAttempts = 0;
+						isReconnecting = false;
+					} else {
+						if (debug) {
+							logger.info("连接失败，重试次数为:" + reconnectAttempts);
+						}
+						double timeoutd = reconnectInterval * Math.pow(reconnectDecay, reconnectAttempts);
+						int timeout = Integer.parseInt(new java.text.DecimalFormat("0").format(timeoutd));
+						timeout = timeout > maxReconnectInterval ? maxReconnectInterval : timeout;
+						logger.info(String.valueOf(timeout));
+						reconnectTimerTask.re_schedule2(timeout);
+					}
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		};
+		reconnectTimerTask.schedule(reconnectTimer, reconnectInterval);
+	}
+
+	private void cancelReconnectionTimer() {
+		if (reconnectTimer != null) {
+			reconnectTimer.cancel();
+			reconnectTimer = null;
+		}
+		if (reconnectTimerTask != null) {
+			reconnectTimerTask.cancel();
+			reconnectTimerTask = null;
+		}
+	}
 }

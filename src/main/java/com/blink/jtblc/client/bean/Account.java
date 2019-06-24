@@ -8,6 +8,8 @@ import java.util.List;
 public class Account {
 	private String account;// 钱包地址
 	private AmountInfo amount;// 交易金额
+	private AmountInfo takerGets;// 得到货币
+	private AmountInfo takerPays;// 支付货币
 	private String destination;// 交易对家地址
 	private String fee;// 交易费
 	private Long flags;// 交易标记
@@ -159,5 +161,21 @@ public class Account {
 
 	public void setMemos(List<Memo> memos) {
 		this.memos = memos;
+	}
+
+	public AmountInfo getTakerGets() {
+		return takerGets;
+	}
+
+	public void setTakerGets(AmountInfo takerGets) {
+		this.takerGets = takerGets;
+	}
+
+	public AmountInfo getTakerPays() {
+		return takerPays;
+	}
+
+	public void setTakerPays(AmountInfo takerPays) {
+		this.takerPays = takerPays;
 	}
 }
