@@ -1,4 +1,4 @@
-package com.blink.jtblc.client;
+/*package com.blink.jtblc.client;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,18 +47,18 @@ public class RemoteTest {
 		log.error("sl4j.error");
 	}
 	
-	/**
+	*//**
 	 * 4.1 创建Remote对象
-	 */
+	 *//*
 	public Remote initConnection() {
 		Connection conn = ConnectionFactory.getCollection(server);
 		Remote remote = new Remote(conn);
 		return remote;
 	}
 	
-	/**
+	*//**
 	 * 4.2建立连接后，查询节点信息及帐本信息。
-	 */
+	 *//*
 	// @Test
 	public void requestLedgerInfo() {
 		// Remote remote = initConnection();
@@ -66,9 +66,9 @@ public class RemoteTest {
 		System.out.println("4.2 requestLedgerInfo:\n" + JsonUtils.toJsonString(res));
 	}
 	
-	/**
+	*//**
 	 * 4.3 关闭websocket链接
-	 */
+	 *//*
 	// @Test
 	public void closeConnection() {
 		conn.close();
@@ -187,7 +187,7 @@ public class RemoteTest {
 	
 	// 4.14 支付
 	//@Test
-	/*public void buildPaymentTxTest() {
+	public void buildPaymentTxTest() {
 		// SWT支付
 		String currency = "SWT";
 		BigDecimal val = new BigDecimal(0.5);
@@ -205,7 +205,7 @@ public class RemoteTest {
 		// bean.setSecret(secret_2);
 		// bean.setMemo(memo);
 		// System.out.println("支付：" + bean.getEngineResultMessage());
-	}*/
+	}
 	//
 	// // 4.15 设置关系
 	// // @Test
@@ -272,10 +272,10 @@ public class RemoteTest {
 		String value = "0.000001";
 		String currency = "SWT";
 		String issuer = "";
-		/*其他货币支付
+		其他货币支付
 		String value = "1";
 		String currency = "CNY";
-		String issuer = "jGa9J9TkqtBcUoHe2zqhVFFbgUVED6o9or";*/
+		String issuer = "jGa9J9TkqtBcUoHe2zqhVFFbgUVED6o9or";
 		AmountInfo amount = new AmountInfo();
 		amount.setCurrency(currency);
 		amount.setValue(value);
@@ -363,14 +363,14 @@ public class RemoteTest {
 		System.out.println("4.18 buildOfferCancelTxTest_new:\n" + JsonUtils.toJsonString(bean));
 	}
 
-	/**
+	*//**
 	 *  监听信息
 	 * @throws Exception
-	 */
+	 *//*
 	// @Test
 	public void ledger() throws Exception{
 		remote.on("ledger_closed");
 		remote.on("transactions");
 		Thread.sleep(12000);
 	}
-}
+}*/

@@ -481,9 +481,7 @@ public class Transaction {
 		}
 		params.put("command", this.command);
 		params.put("tx_json", txJson);
-		System.out.println(params.toString());
 		String msg = conn.submit(params);
-		System.out.println(msg);
 		TransactionInfo bean = JsonUtils.toEntity(msg, TransactionInfo.class);
 		return bean;
 	}

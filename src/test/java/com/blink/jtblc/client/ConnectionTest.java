@@ -1,4 +1,4 @@
-package com.blink.jtblc.client;
+/*package com.blink.jtblc.client;
 import com.blink.jtblc.connection.Connection;
 import com.blink.jtblc.connection.ConnectionFactory;
 import org.junit.Test;
@@ -18,3 +18,4 @@ public class ConnectionTest {
     }
 
 }
+*/

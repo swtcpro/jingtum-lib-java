@@ -181,7 +181,6 @@ public class Remote {
 		params.put("transaction", hash);
 		String msg = this.sendMessage("tx", params);
 		Map map = JsonUtils.toObject(msg, Map.class);
-		System.out.println(msg);
 		Account account = new Account();
 		if (map.get("status").equals("success")) {
 			JSONObject msgJson = JSONObject.parseObject(msg);
@@ -305,7 +304,6 @@ public class Remote {
 	 */
 	public AccountOffers requestAccountOffers(String account,Object ledger) {
 		String msg = requestAccount("account_offers", account,ledger, "");
-		System.out.println(msg);
 		JSONObject json = JSONObject.parseObject(msg);
 		if("success".equals(json.get("status"))){
 			JSONObject result = JSONObject.parseObject(json.get("result").toString());
@@ -380,7 +378,6 @@ public class Remote {
 		}
 		
 		String msg = this.submit(params);
-		System.out.println(msg);
 		return msg;
 	}
 	
@@ -414,7 +411,6 @@ public class Remote {
 			params.put("marker", JSONObject.toJSON(marker));
 		}
 		// 新增参数end
-		System.out.println(params.toString());
 		String msg = this.submit(params);
 		AccountTx accountTx = new AccountTx();
 		JSONObject json = JSONObject.parseObject(msg);
