@@ -17,7 +17,7 @@ public class Config {
 	public static String CURRENCY = "SWT";
 	public static String ACCOUNT_ZERO = "jjjjjjjjjjjjjjjjjjjjjhoLvTp";
 	public static String ACCOUNT_ONE = "jjjjjjjjjjjjjjjjjjjjBZbvri";
-	public static Integer FEE = 10000;
+	public static Integer FEE = 100;
 	
 	public static void setAlphabet(String alphabet) {
 		b58 = new B58(alphabet);

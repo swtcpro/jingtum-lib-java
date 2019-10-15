@@ -238,7 +238,7 @@ public class Transaction {
 	public String sign(String secret) {
 		String tx_blob = "";
 		String type = (String) txJson.get("TransactionType");
-		AccountInfo ainfo = remote.requestAccountInfo(account, null, "trust");
+		AccountInfo ainfo = remote.requestAccountInfo(account, "current", "trust");
 		SignedTransaction tx = null;
 		switch(type) {
 			case "Payment":
@@ -481,6 +481,7 @@ public class Transaction {
 		}
 		params.put("command", this.command);
 		params.put("tx_json", txJson);
+		System.out.println(params.toString());
 		String msg = conn.submit(params);
 		TransactionInfo bean = JsonUtils.toEntity(msg, TransactionInfo.class);
 		return bean;
