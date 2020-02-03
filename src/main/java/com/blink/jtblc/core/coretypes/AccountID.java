@@ -5,6 +5,7 @@ import static com.blink.jtblc.config.Config.getB58IdentiferCodecs;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.blink.jtblc.client.Wallet;
 import com.blink.jtblc.core.coretypes.hash.Hash160;
 import com.blink.jtblc.core.coretypes.hash.Hash256;
 import com.blink.jtblc.core.coretypes.hash.Index;
@@ -52,7 +53,7 @@ public class AccountID extends Hash160 {
 		if (value.length() == 160 / 4) {
 			return fromAddressBytes(B16.decode(value));
 		} else {
-			if (value.startsWith("j") && value.length() >= 26) {
+			if (Wallet.isValidAddress(value)) {
 				return fromAddress(value);
 			}
 			AccountID accountID = accountForAlias(value);
