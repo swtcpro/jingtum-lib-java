@@ -8,7 +8,17 @@ public class AmountInfo {
 	private String currency;
 	// 货币发行方
 	private String issuer;
-	
+	// 是否是基础token
+	private Boolean isNative;
+
+	public Boolean getIsNative() {
+		return isNative;
+	}
+
+	public void setIsNative(Boolean isNative) {
+		this.isNative = isNative;
+	}
+
 	public String getValue() {
 		return value;
 	}
