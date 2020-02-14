@@ -6,6 +6,7 @@ import java.math.MathContext;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
+import com.blink.jtblc.config.Config;
 import com.blink.jtblc.core.coretypes.hash.Hash160;
 import com.blink.jtblc.core.coretypes.uint.UInt64;
 import com.blink.jtblc.core.serialized.BinaryParser;
@@ -143,7 +144,7 @@ public class Currency extends Hash160 {
 				return newInstance(B16.decode(value));
 //			} else if (value.equals("XRP")) {
 //				return XRP;//SWT
-			} else if (value.equals("SWT")) {
+			} else if (value.equals(Config.CURRENCY)) {
 				return SWT;//SWT
 			} else {
 				/*if (!(value.length() == 3)) {
@@ -170,11 +171,11 @@ public class Currency extends Hash160 {
 		switch (type) {
 			case ISO:
 				String code = getCurrencyCodeFromTLCBytes(bytes());
-				if (code.equals("SWT")) {
+				if (code.equals(Config.CURRENCY)) {
 					// HEX of the bytes
 					return super.toString();
 				} else if (code.equals("\0\0\0")) {
-					return "SWT";
+					return Config.CURRENCY;
 				} else {
 					// the 3 letter isoCode
 					return code;

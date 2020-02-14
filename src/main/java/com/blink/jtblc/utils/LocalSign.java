@@ -71,7 +71,7 @@ public class LocalSign {
 		}
 		Boolean isNative = amount.getIsNative();
 		String currency = amount.getCurrency();
-		if (isNative || currency.equals("SWT")) {
+		if (isNative || currency.equals(Config.CURRENCY)) {
 			BigDecimal exchange_rate = new BigDecimal("1000000.00");
 			BigDecimal rs = temp.multiply(exchange_rate);
 			return String.valueOf(rs.intValue());
