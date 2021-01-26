@@ -66,11 +66,12 @@ public class LocalSign {
 		String value = amount.getValue();
 		BigDecimal temp = new BigDecimal(value);
 		BigDecimal max_value = new BigDecimal("100000000000");
-		String currency = amount.getCurrency();
 		if (StringUtils.isNotEmpty(value) && temp.compareTo(max_value) > 0) {
 			throw new RemoteException("invalid amount: amount's maximum value is 100000000000");
 		}
-		if (currency.equals("SWT")) {
+		Boolean isNative = amount.getIsNative();
+		String currency = amount.getCurrency();
+		if (isNative || currency.equals(Config.CURRENCY)) {
 			BigDecimal exchange_rate = new BigDecimal("1000000.00");
 			BigDecimal rs = temp.multiply(exchange_rate);
 			return String.valueOf(rs.intValue());

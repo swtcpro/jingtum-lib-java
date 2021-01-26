@@ -2,9 +2,21 @@
 
 ## 1、项目介绍  
 
-    这是一个java语言开发的智能合约接口项目。  
-    
+    这是一个java语言开发的智能合约接口项目。
+
 ## 2、接口说明  
+
+默认支持井通链，如需支持联盟链，请首先配置ALPHABET，代码如下：
+
+```java
+
+import com.blink.jtblc.config.Config
+
+// 以商链举例
+String BIZAIN_ALPHABET = "bpshnaf39wBUDNEGHJKLM4PQRST7VWXYZ2jcdeCg65rkm8oFqi1tuvAxyz";
+Config.setAlphabet(BIZAIN_ALPHABET);
+
+```
 
 1）**创建钱包**  
 

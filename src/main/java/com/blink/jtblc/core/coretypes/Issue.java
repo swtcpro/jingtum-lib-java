@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 
 import org.json.JSONObject;
 
+import com.blink.jtblc.config.Config;
 import com.blink.jtblc.core.coretypes.hash.Hash160;
 
 /**
@@ -11,7 +12,7 @@ import com.blink.jtblc.core.coretypes.hash.Hash160;
  */
 public class Issue implements Comparable<Issue> {
 
-    public static final Issue SWT = fromString("SWT");
+    public static final Issue SWT = fromString(Config.CURRENCY);
     final Currency currency;
     final AccountID issuer;
 
@@ -28,7 +29,7 @@ public class Issue implements Comparable<Issue> {
     private static Issue fromStringPair(String[] split) {
         if (split.length == 2) {
             return new Issue(Currency.fromString(split[0]), AccountID.fromString(split[1]));
-        } else if (split[0].equals("SWT")) {
+        } else if (split[0].equals(Config.CURRENCY)) {
             return new Issue(Currency.SWT, AccountID.SWT_ISSUER);
         } else {
             throw new RuntimeException("Issue string must be XRP or $currency/$issuer");

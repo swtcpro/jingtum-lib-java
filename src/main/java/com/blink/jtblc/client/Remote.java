@@ -916,10 +916,10 @@ public class Remote {
 		if(amount.get("currency")==null||!isValidCurrency(amount)) {
 			return false;
 		}
-		if (amount.get("currency").toString().equals("SWT")&& amount.get("issuer")!=null) {
+		if (amount.get("currency").toString().equals(Config.CURRENCY)&& amount.get("issuer")!=null) {
 		    return false;
 		}
-		 if (amount.get("currency").toString().equals("SWT")) {
+		 if (amount.get("currency").toString().equals(Config.CURRENCY)) {
 			 //todo !baselib.isValidAddress(amount.issuer)
 			 return false;
 		 }
@@ -1004,11 +1004,12 @@ public class Remote {
 		String value = amount.getValue();
 		BigDecimal temp = new BigDecimal(value);
 		BigDecimal max_value = new BigDecimal("100000000000");
-		String currency = amount.getCurrency();
 		if (StringUtils.isNotEmpty(value) && temp.compareTo(max_value) > 0) {
 			throw new RemoteException("invalid amount: amount's maximum value is 100000000000");
 		}
-		if (currency.equals("SWT")) {
+		Boolean isNative = amount.getIsNative();
+		String currency = amount.getCurrency();
+		if ((isNative != null && isNative) || currency.equals(Config.CURRENCY)) {
 			BigDecimal exchange_rate = new BigDecimal("1000000.00");
 			BigDecimal rs = temp.multiply(exchange_rate);
 			return String.valueOf(rs.longValue());
